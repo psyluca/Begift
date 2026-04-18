@@ -137,13 +137,14 @@ Utente           Next.js              Supabase
 
 ## Deploy su Vercel
 
-```bash
-npx vercel --prod
-```
+Il deploy è **automatico via GitHub** (dal 2026-04-18):
 
-Nel pannello Vercel → **Settings → Environment Variables**, aggiungi le stesse variabili di `.env.local`.
+- Push su `main` → build automatica di produzione su `begift.app`
+- Push su qualsiasi altro branch → preview URL dedicato generato da Vercel
 
-Aggiorna poi Supabase → Authentication → URL Configuration con il dominio Vercel.
+Per modifiche alle variabili d'ambiente: Vercel → **Settings → Environment Variables**. Le modifiche sono rispecchiate alla prossima build.
+
+Aggiorna Supabase → Authentication → URL Configuration quando il dominio cambia.
 
 ---
 
