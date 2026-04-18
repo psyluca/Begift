@@ -31,6 +31,8 @@ export default function BottomNavWrapper() {
 
   // Nascondi nav sulla pagina regalo solo se non loggato
   if (pathname.startsWith("/gift/") && !loggedIn) return null;
+  // Nascondi nav sulla route sandbox /lab (esperienza immersiva in sviluppo)
+  if (pathname.startsWith("/lab")) return null;
 
   return <BottomNav/>;
 }
