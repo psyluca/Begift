@@ -39,17 +39,19 @@ export default function TopBar() {
         </a>
       )}
 
-      {loggedIn ? (
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <span style={{
-            fontSize: 13, color: MUTED,
-            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-            maxWidth: 180,
-          }}>
-            {email}
-          </span>
-          <div style={{ display:"flex", gap:6, alignItems:"center" }}>
-            <LangSwitcher/>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        {/* Il selezionatore di lingua è sempre visibile, anche ai visitatori anonimi */}
+        <LangSwitcher/>
+
+        {loggedIn ? (
+          <>
+            <span style={{
+              fontSize: 13, color: MUTED,
+              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+              maxWidth: 180,
+            }}>
+              {email}
+            </span>
             <button
               onClick={signOut}
               style={{
@@ -59,24 +61,24 @@ export default function TopBar() {
                 whiteSpace: "nowrap",
               }}
             >
-                {t("common.sign_out")}
+              {t("common.sign_out")}
             </button>
-          </div>
-        </div>
-      ) : (
-        !isCreate && (
-          <a
-            href="/auth/login"
-            style={{
-              background: DEEP, color: "#fff",
-              borderRadius: 40, padding: "8px 18px",
-              fontSize: 13, fontWeight: 600, textDecoration: "none",
-            }}
-          >
-            {t("auth.sign_in")}
-          </a>
-        )
-      )}
+          </>
+        ) : (
+          !isCreate && (
+            <a
+              href="/auth/login"
+              style={{
+                background: DEEP, color: "#fff",
+                borderRadius: 40, padding: "8px 18px",
+                fontSize: 13, fontWeight: 600, textDecoration: "none",
+              }}
+            >
+              {t("auth.sign_in")}
+            </a>
+          )
+        )}
+      </div>
     </div>
   );
 }
