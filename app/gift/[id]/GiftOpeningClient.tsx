@@ -684,6 +684,15 @@ export default function GiftOpeningClient({ gift }: { gift: Gift }) {
           </div>
         )}
 
+        {/* Share button — alimenta il trigger SQL che dà crediti al
+            creator (credit wallet). Visibile solo a destinatari
+            (non creator) dopo l'apertura. Usa Web Share API se
+            disponibile, fallback a copia link. Una sola invocazione
+            del trigger via IS NULL guard. */}
+        {opened && !isCreator && (
+          <ShareGiftButton giftId={gift.id} recipientName={gift.recipient_name} />
+        )}
+
         {/* Back to received gifts */}
         {opened && !isCreator && loggedIn && (
           <div style={{ textAlign:"center", marginTop:16 }}>
@@ -758,5 +767,72 @@ export default function GiftOpeningClient({ gift }: { gift: Gift }) {
         creatorName={(gift as any).sender_alias || undefined}
       />
     </main>
+  );
+}
+
+/**
+ * ShareGiftButton — bottone discreto che appare dopo l'apertura del
+ * gift. Al click:
+ *   1) Chiama Web Share API (nativa su mobile / Safari / Edge) con
+ *      title + url del gift. Se l'utente annulla, fallback a copia
+ *      link negli appunti.
+ *   2) In parallelo, POST /api/gifts/:id/share per far scattare il
+ *      trigger SQL che accredita 3 crediti (× moltiplicatore) al
+ *      creator del gift.
+ * La seconda chiamata è idempotente (IS NULL guard), quindi click
+ * multipli non duplicano crediti.
+ */
+function ShareGiftButton({ giftId, recipientName }: { giftId: string; recipientName: string }) {
+  const [shared, setShared] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = async () => {
+    const url = typeof window !== "undefined" ? window.location.href : "";
+    const title = `Un regalo per ${recipientName} 🎁`;
+    const text = "Guarda il regalo che ho ricevuto su BeGift!";
+
+    // Ping al backend per shared_at — in parallelo al UX flow
+    fetch(`/api/gifts/${giftId}/share`, { method: "POST" }).catch(() => { /* swallow */ });
+
+    // Web Share API nativa quando disponibile
+    if (typeof navigator !== "undefined" && (navigator as any).share) {
+      try {
+        await (navigator as any).share({ title, text, url });
+        setShared(true);
+        return;
+      } catch {
+        // Utente ha annullato o errore — cadiamo sul copy fallback
+      }
+    }
+
+    // Fallback: copia link negli appunti
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2200);
+    } catch {
+      // Clipboard bloccato (insecure context) — mostra URL selezionabile? Per ora no-op.
+    }
+  };
+
+  return (
+    <div style={{ textAlign: "center", marginTop: 14 }}>
+      <button
+        onClick={handleShare}
+        style={{
+          background: "#fff",
+          border: "1.5px solid #e0dbd5",
+          color: "#1a1a1a",
+          borderRadius: 40,
+          padding: "9px 20px",
+          fontSize: 13,
+          fontWeight: 600,
+          cursor: "pointer",
+          fontFamily: "inherit",
+        }}
+      >
+        {shared ? "✓ Condiviso!" : copied ? "✓ Link copiato!" : "🔗 Condividi questo regalo"}
+      </button>
+    </div>
   );
 }
