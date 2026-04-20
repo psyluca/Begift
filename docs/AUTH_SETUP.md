@@ -1,4 +1,4 @@
-# Auth Setup — Google OAuth + Magic-link email
+ # Auth Setup — Google OAuth + Magic-link email
 
 Guida step-by-step per abilitare Google Sign-In su BeGift. Magic-link email è già attivo (il login OTP attuale usa quella infrastruttura), qui configuriamo solo Google.
 
@@ -20,7 +20,15 @@ Prerequisiti: accesso a Supabase Dashboard del progetto BeGift + un account Goog
 
 ### 1.2 Configura l'OAuth consent screen
 
-1. Nel menu hamburger (≡) → **APIs & Services** → **OAuth consent screen**
+> ⚠️ Google ha riorganizzato la UI della console nel 2024-2025. La voce "OAuth consent screen" è stata spostata. Se non la trovi subito, usa uno di questi tre percorsi:
+>
+> - **Link diretto** (più affidabile): https://console.cloud.google.com/apis/credentials/consent — assicurati di avere il progetto BeGift selezionato in alto a sinistra.
+> - **Dalla barra di ricerca in alto** scrivi `OAuth consent` → appare come primo risultato.
+> - **Trucco scorciatoia**: vai in APIs & Services → Credentials → clicca **+ Create Credentials** → **OAuth client ID**. Se il consent screen non è configurato Google mostra un banner con "Configure consent screen" → ti porta al form giusto.
+>
+> Il percorso classico (potrebbe o non potrebbe esistere nella tua UI): ≡ → APIs & Services → Google Auth Platform → Branding / OAuth consent screen.
+
+1. Una volta arrivato al consent screen (con uno dei metodi sopra):
 2. User Type: **External** → Create
 3. App information:
    - App name: `BeGift`
