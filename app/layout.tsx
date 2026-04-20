@@ -4,6 +4,7 @@ import BottomNavWrapper from "@/components/BottomNavWrapper";
 import TopBarWrapper from "@/components/TopBarWrapper";
 import CookieBanner from "@/components/CookieBanner";
 import { I18nProvider } from "@/lib/i18n";
+import { CreditToast } from "@/components/wallet/CreditToast";
 
 export const viewport: Viewport = {
   themeColor: "#D4537E",
@@ -39,6 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {children}
           <BottomNavWrapper/>
           <CookieBanner/>
+          <CreditToast/>
         </I18nProvider>
       </body>
     </html>

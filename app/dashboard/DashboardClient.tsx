@@ -6,6 +6,8 @@ import { createBrowserClient } from "@supabase/ssr";
 import { createSupabaseClient, getSessionUser } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import type { Gift, Reaction } from "@/types";
+import { isFeatureEnabled } from "@/lib/featureFlags";
+import { CreditWallet } from "@/components/wallet/CreditWallet";
 
 const ACCENT = "#D4537E", DEEP = "#1a1a1a", MUTED = "#888", LIGHT = "#f7f5f2";
 
@@ -430,6 +432,13 @@ export default function DashboardClient({ user: initialUser, initialSentGifts, i
           ))}
         </div>
       </div>
+
+      {/* Credit Wallet — visibile solo con feature flag ENABLE_CREDITS_WALLET */}
+      {isFeatureEnabled("ENABLE_CREDITS_WALLET") && user && (
+        <div style={{ maxWidth: 640, margin: "14px auto 0", padding: "0 20px" }}>
+          <CreditWallet userId={user.id} />
+        </div>
+      )}
 
       {/* Multi-select toolbar */}
       {(
