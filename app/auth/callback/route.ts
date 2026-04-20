@@ -9,8 +9,20 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(new URL("/auth/login?error=nocode", req.url));
   }
 
-  const response = NextResponse.redirect(new URL(next, req.url));
+  // Redirige alla finalize page invece che direttamente a `next`:
+  // la finalize è un bridge client-side che sincronizza la session
+  // dai cookie (scritti da exchangeCodeForSession qui sotto) al
+  // localStorage, così il resto dell'app — che legge dallo storage
+  // legacy — vede l'utente come loggato anche dopo un F5. Senza
+  // questo bridge l'utente OAuth appariva "non loggato" al reload.
+  const finalizeUrl = new URL(`/auth/finalize?next=${encodeURIComponent(next)}`, req.url);
+  const response = NextResponse.redirect(finalizeUrl);
 
+  // Cookie options: NO httpOnly — il client deve poter leggere la
+  // session lato browser per specchiarla in localStorage. Secure è
+  // condizionato all'HTTPS (altrimenti i cookie non si impostano in
+  // dev su http://localhost).
+  const isHttps = req.nextUrl.protocol === "https:";
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -22,8 +34,8 @@ export async function GET(req: NextRequest) {
             req.cookies.set(name, value);
             response.cookies.set(name, value, {
               ...options,
-              httpOnly: true,
-              secure: true,
+              httpOnly: false,
+              secure: isHttps,
               sameSite: "lax",
               path: "/",
               maxAge: 60 * 60 * 24 * 7,

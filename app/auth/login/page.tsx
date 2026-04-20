@@ -3,6 +3,8 @@ import { useI18n } from "@/lib/i18n";
 import { useState, Suspense, useRef } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 import { useSearchParams } from "next/navigation";
+import { useFeatureFlag } from "@/lib/featureFlags";
+import { createSupabaseOAuthClient } from "@/lib/supabase/client";
 
 const ACCENT = "#D4537E", DEEP = "#1a1a1a", MUTED = "#888", LIGHT = "#f7f5f2";
 
@@ -15,8 +17,10 @@ function LoginForm() {
   const [otp,     setOtp]     = useState(["","","","","",""]);
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState<string | null>(null);
+  const [socialLoading, setSocialLoading] = useState<"google" | null>(null);
   const refs = useRef<(HTMLInputElement|null)[]>([]);
   const params = useSearchParams();
+  const socialLoginEnabled = useFeatureFlag("ENABLE_SOCIAL_LOGIN");
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -44,6 +48,31 @@ function LoginForm() {
     setLoading(false);
     if (err) { setError(err.message); return; }
     setSent(true);
+  };
+
+  const signInWithGoogle = async () => {
+    setSocialLoading("google");
+    setError(null);
+    const next = params.get("next") ?? "/dashboard";
+    // Uses the OAuth client with flowType=implicit (see
+    // lib/supabase/client.ts for the rationale). With implicit flow
+    // tokens come back in the URL hash, so we point `redirectTo`
+    // directly at our client-side /auth/finalize bridge — it lets
+    // supabase-js auto-parse the hash + establish the session in
+    // localStorage, then forwards to `next`. No server-side code
+    // exchange involved.
+    const oauth = createSupabaseOAuthClient();
+    const { error: err } = await oauth.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/finalize?next=${encodeURIComponent(next)}`,
+      },
+    });
+    if (err) {
+      setSocialLoading(null);
+      setError(err.message);
+    }
+    // On success the browser redirects to Google; no need to clear state.
   };
 
   const handleOtpChange = (i: number, val: string) => {
@@ -158,6 +187,40 @@ function LoginForm() {
       <h1 style={{ fontSize:32, fontWeight:800, margin:"0 0 8px", color:DEEP }}>Be<span style={{ color:ACCENT }}>Gift</span></h1>
       <h2 style={{ fontSize:20, fontWeight:700, margin:"0 0 8px", color:DEEP }}>{t("auth.title")}</h2>
       <p style={{ fontSize:14, color:MUTED, lineHeight:1.6, margin:"0 0 24px" }}>{t("auth.subtitle")}</p>
+
+      {/* Social login — shown when NEXT_PUBLIC_ENABLE_SOCIAL_LOGIN=true.
+          Google is offered above the email OTP form because it's the
+          fastest path (1 tap vs. 30-60s OTP cycle). OTP stays visible
+          below as the always-available fallback. */}
+      {socialLoginEnabled && (
+        <>
+          <button
+            onClick={signInWithGoogle}
+            disabled={socialLoading !== null}
+            style={{
+              display:"flex", alignItems:"center", justifyContent:"center", gap:10,
+              width:"100%", background:"#fff", color:DEEP,
+              border:"1.5px solid #e0dbd5", borderRadius:40, padding:"13px 24px",
+              fontSize:15, fontWeight:600, cursor: socialLoading ? "wait" : "pointer",
+              marginBottom:12, fontFamily:"inherit",
+              transition:"background .15s",
+            }}
+            onMouseEnter={(e) => { if (!socialLoading) (e.currentTarget as HTMLButtonElement).style.background = "#faf8f5"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#fff"; }}
+          >
+            <GoogleGlyph />
+            {socialLoading === "google" ? t("auth.connecting") : t("auth.continue_with_google")}
+          </button>
+          <div style={{ display:"flex", alignItems:"center", gap:10, margin:"10px 0 14px" }}>
+            <div style={{ flex:1, height:1, background:"#e0dbd5" }} />
+            <span style={{ fontSize:11, color:MUTED, letterSpacing:1, textTransform:"uppercase" }}>
+              {t("auth.or")}
+            </span>
+            <div style={{ flex:1, height:1, background:"#e0dbd5" }} />
+          </div>
+        </>
+      )}
+
       <input type="email" placeholder={t("auth.email_placeholder")} value={email}
         onChange={e => setEmail(e.target.value)}
         onKeyDown={e => e.key === "Enter" && sendOtp()}
@@ -169,6 +232,23 @@ function LoginForm() {
       </button>
     </div>
     </div>
+  );
+}
+
+/**
+ * Google "G" glyph — 4-colour official mark, inlined as SVG so we don't
+ * need a network asset. Size tracks the surrounding font size so the
+ * button reads balanced.
+ */
+function GoogleGlyph() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 48 48" aria-hidden="true">
+      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+      <path fill="none" d="M0 0h48v48H0z"/>
+    </svg>
   );
 }
 
