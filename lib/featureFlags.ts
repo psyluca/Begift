@@ -30,13 +30,38 @@ export type FeatureFlagName =
 
 /**
  * Reads a flag synchronously. Works in both client and server components
- * because `NEXT_PUBLIC_` env vars are inlined at build time.
+ * because `NEXT_PUBLIC_` env vars are inlined at build time — BUT ONLY
+ * when accessed with a LITERAL property name (`process.env.NEXT_PUBLIC_X`).
+ * Next.js does NOT substitute dynamic lookups like
+ * `process.env[`NEXT_PUBLIC_${name}`]`, which silently return `undefined`
+ * on the client and caused a flash-of-feature hydration bug here.
+ *
+ * Hence the boring-but-correct switch below: each flag name is hard-coded
+ * as a literal env access. When you add a new flag in the
+ * `FeatureFlagName` union, add a matching `case` below.
  *
  * Returns `false` when the env var is missing, malformed, or explicitly
  * set to a non-truthy value. Never throws.
  */
 export function isFeatureEnabled(name: FeatureFlagName): boolean {
-  const raw = process.env[`NEXT_PUBLIC_${name}`];
+  let raw: string | undefined;
+  switch (name) {
+    case "ENABLE_SOCIAL_LOGIN":
+      raw = process.env.NEXT_PUBLIC_ENABLE_SOCIAL_LOGIN;
+      break;
+    case "ENABLE_3D_EXPERIENCE":
+      raw = process.env.NEXT_PUBLIC_ENABLE_3D_EXPERIENCE;
+      break;
+    case "ENABLE_TIERS":
+      raw = process.env.NEXT_PUBLIC_ENABLE_TIERS;
+      break;
+    case "ENABLE_CREDITS_WALLET":
+      raw = process.env.NEXT_PUBLIC_ENABLE_CREDITS_WALLET;
+      break;
+    case "ENABLE_GIFT_CHAIN":
+      raw = process.env.NEXT_PUBLIC_ENABLE_GIFT_CHAIN;
+      break;
+  }
   if (!raw) return false;
   const normalised = raw.trim().toLowerCase();
   return normalised === "true" || normalised === "1" || normalised === "yes";
