@@ -4,6 +4,7 @@ import { useState, Suspense, useRef } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 import { useSearchParams } from "next/navigation";
 import { useFeatureFlag } from "@/lib/featureFlags";
+import { createSupabaseOAuthClient } from "@/lib/supabase/client";
 
 const ACCENT = "#D4537E", DEEP = "#1a1a1a", MUTED = "#888", LIGHT = "#f7f5f2";
 
@@ -53,10 +54,14 @@ function LoginForm() {
     setSocialLoading("google");
     setError(null);
     const next = params.get("next") ?? "/dashboard";
-    // redirectTo = our own callback, which will pass `next` along.
-    // The Supabase OAuth flow: user → Google consent → our /auth/callback
-    // (exchanges code for session + sets cookies) → `next` destination.
-    const { error: err } = await supabase.auth.signInWithOAuth({
+    // OAuth PKCE flow needs the code_verifier to live in a cookie
+    // (server callback reads it there). The page-level `supabase`
+    // client is configured with localStorage for the email-OTP flow;
+    // reusing it for OAuth causes pkce_code_verifier_not_found.
+    // We swap to a dedicated OAuth client that uses @supabase/ssr's
+    // default cookie storage. See lib/supabase/client.ts for details.
+    const oauth = createSupabaseOAuthClient();
+    const { error: err } = await oauth.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,

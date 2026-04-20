@@ -42,3 +42,29 @@ export function getSupabaseClient() {
   return _supabase;
 }
 export const supabase = typeof window !== "undefined" ? getSupabaseClient() : null as any;
+
+/**
+ * Separate client for OAuth flows (Google, Apple, Facebook, …).
+ *
+ * Why not reuse `createSupabaseClient()` above?
+ * That one forces `storage: localStorage`, which works fine for the
+ * existing email-OTP login but BREAKS the OAuth PKCE flow: the
+ * `code_verifier` generated at signInWithOAuth time is stashed under
+ * the Supabase storage key — if that key is localStorage, the
+ * server-side `/auth/callback` route handler can't read it when
+ * exchanging the code for a session, and you get
+ * `error=pkce_code_verifier_not_found`.
+ *
+ * This OAuth-only client omits the `storage` option entirely, so
+ * `@supabase/ssr`'s default cookie storage kicks in. The code_verifier
+ * lives in a cookie, the server sees it at callback time, and the
+ * exchange succeeds. We use this client ONLY for `signInWithOAuth`;
+ * all other auth calls (OTP, getUser, etc.) stay on the localStorage
+ * client to preserve behaviour for existing users.
+ */
+export function createSupabaseOAuthClient() {
+  return createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+}
