@@ -54,17 +54,18 @@ function LoginForm() {
     setSocialLoading("google");
     setError(null);
     const next = params.get("next") ?? "/dashboard";
-    // OAuth PKCE flow needs the code_verifier to live in a cookie
-    // (server callback reads it there). The page-level `supabase`
-    // client is configured with localStorage for the email-OTP flow;
-    // reusing it for OAuth causes pkce_code_verifier_not_found.
-    // We swap to a dedicated OAuth client that uses @supabase/ssr's
-    // default cookie storage. See lib/supabase/client.ts for details.
+    // Uses the OAuth client with flowType=implicit (see
+    // lib/supabase/client.ts for the rationale). With implicit flow
+    // tokens come back in the URL hash, so we point `redirectTo`
+    // directly at our client-side /auth/finalize bridge — it lets
+    // supabase-js auto-parse the hash + establish the session in
+    // localStorage, then forwards to `next`. No server-side code
+    // exchange involved.
     const oauth = createSupabaseOAuthClient();
     const { error: err } = await oauth.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+        redirectTo: `${window.location.origin}/auth/finalize?next=${encodeURIComponent(next)}`,
       },
     });
     if (err) {
