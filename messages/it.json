@@ -173,6 +173,8 @@
     "created_by_you": "Hai creato tu questo regalo 🎁",
     "go_to_gifts": "Vai ai tuoi regali →",
     "preview_banner": "👀 Stai visualizzando l'anteprima",
+    "preview_mode_banner": "Anteprima mittente — apertura non conteggiata",
+    "preview_gift_cta": "👀 Prova come apparirà",
     "close_preview": "✕ Chiudi anteprima",
     "download": "⬇️ Scarica {name}",
     "download_doc": "⬇️ Scarica il documento",
