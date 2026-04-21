@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useI18n } from "@/lib/i18n";
 import { useUpload } from "@/hooks/useUpload";
 import type { Packaging } from "@/types";
@@ -120,6 +120,23 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
   const [loading, setLoading] = useState(false);
   const [result,  setResult]  = useState<{id:string;url:string}|null>(null);
   const [copied,  setCopied]  = useState(false);
+
+  // Gift Chain: se arriviamo da un "Ringrazia con un regalo" post-apertura,
+  // /create riceve `?recipient={nome}&thankFor={giftId}`. Precompiliamo il
+  // destinatario e memorizziamo `thankingName` per mostrare il banner di
+  // contesto ("Stai ringraziando Marta con un regalo"). Lo leggiamo dopo
+  // il mount per evitare hydration mismatch (SSR non ha window.location).
+  const [thankingName, setThankingName] = useState<string>("");
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const rec = params.get("recipient");
+      if (rec) {
+        setName(rec);
+        setThankingName(rec);
+      }
+    } catch { /* ignore */ }
+  }, []);
 
   const { upload, uploading } = useUpload();
 
@@ -259,6 +276,28 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
       </div>
 
       <div style={{maxWidth:600,margin:"0 auto",padding:"32px 24px"}}>
+        {/* Gift Chain — banner di contesto quando arriviamo da un
+            "Ringrazia con un regalo" post-apertura. Visibile su tutti
+            gli step finché non si genera il regalo (poi si perde lo
+            stato). Se l'utente svuota il nome del destinatario, il
+            banner sparisce automaticamente (coerenza visiva). */}
+        {thankingName && name && (
+          <div style={{
+            background: "linear-gradient(135deg, #fff5f8, #ffeef4)",
+            border: "1px solid #f9c8d9",
+            borderRadius: 16,
+            padding: "14px 18px",
+            marginBottom: 20,
+          }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: DEEP, marginBottom: 3 }}>
+              {t("create.thanking_banner", { name: thankingName })}
+            </div>
+            <div style={{ fontSize: 12, color: MUTED, lineHeight: 1.4 }}>
+              {t("create.thanking_hint")}
+            </div>
+          </div>
+        )}
+
         {/* S1 — name */}
         {step===1&&<>
           <h2 style={{fontSize:24,fontWeight:800,color:DEEP,margin:"0 0 20px"}}>{t("create.step1_title")}</h2>

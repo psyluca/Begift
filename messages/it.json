@@ -143,6 +143,8 @@
     "cancel": "Annulla",
     "send_whatsapp": "WhatsApp",
     "go_dashboard": "Dashboard",
+    "thanking_banner": "🎁 Stai ringraziando {name} con un regalo",
+    "thanking_hint": "Abbiamo pre-compilato il destinatario. Aggiungi contenuto, messaggio e il gioco è fatto.",
     "recipient_label": "Nome del destinatario",
     "ready": "Pronto!",
     "gift_ready_for": "Il regalo per {name} è pronto.",
@@ -167,7 +169,10 @@
     "react_differently": "Reagisci in modo diverso →",
     "liked_begift": "Ti è piaciuto BeGift?",
     "create_free_account": "Crea il tuo account gratuito e inizia a inviare regali digitali indimenticabili.",
-    "create_account_cta": "Crea account — è gratis →"
+    "create_account_cta": "Crea account — è gratis →",
+    "thank_with_gift_title": "Ringrazia {name} con un regalo",
+    "thank_with_gift_desc": "Apri il creatore con il destinatario già pronto — dieci secondi e l'hai spedito.",
+    "thank_with_gift_cta": "Ringrazia con un regalo →"
   },
   "reaction_builder": {
     "sent_title": "Reazione inviata!",

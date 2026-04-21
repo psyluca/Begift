@@ -143,6 +143,8 @@
     "cancel": "キャンセル",
     "send_whatsapp": "WhatsApp",
     "go_dashboard": "ダッシュボード",
+    "thanking_banner": "🎁 {name}さんにギフトでお礼を送ります",
+    "thanking_hint": "宛先は入力済みです。コンテンツとメッセージを追加すれば完了。",
     "recipient_label": "受取人の名前",
     "ready": "完了！",
     "gift_ready_for": "{name}さんへのギフトが完成しました。",
@@ -167,7 +169,10 @@
     "react_differently": "別の方法でリアクション →",
     "liked_begift": "BeGiftはいかがでしたか？",
     "create_free_account": "無料アカウントを作成して、忘れられないデジタルギフトを送り始めましょう。",
-    "create_account_cta": "無料でアカウント作成 →"
+    "create_account_cta": "無料でアカウント作成 →",
+    "thank_with_gift_title": "{name}さんにギフトでお礼を",
+    "thank_with_gift_desc": "宛先が入力済みの作成画面が開きます — 10秒で送信完了。",
+    "thank_with_gift_cta": "ギフトでお礼を伝える →"
   },
   "reaction_builder": {
     "sent_title": "リアクション送信完了！",
