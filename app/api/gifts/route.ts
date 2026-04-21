@@ -45,6 +45,18 @@ export async function POST(req: NextRequest) {
     const userId = await getUserId(req);
     const supabase = createSupabaseAdmin();
 
+    // scheduled_at: accetta ISO string, verifica che sia nel futuro
+    // (altrimenti ignora — non ha senso programmare nel passato).
+    // 30s di margine per evitare programmazioni quasi-immediate.
+    let scheduledAt: string | null = null;
+    const rawSched = (body as { scheduledAt?: unknown }).scheduledAt;
+    if (typeof rawSched === "string" && rawSched.length > 0) {
+      const d = new Date(rawSched);
+      if (!isNaN(d.getTime()) && d.getTime() > Date.now() + 30_000) {
+        scheduledAt = d.toISOString();
+      }
+    }
+
     const { data, error } = await supabase
       .from("gifts")
       .insert({
@@ -57,6 +69,7 @@ export async function POST(req: NextRequest) {
         content_url:       body.contentUrl ?? null,
         content_text:      body.contentText ?? null,
         content_file_name: body.contentFileName ?? null,
+        scheduled_at:      scheduledAt,
       })
       .select()
       .single();

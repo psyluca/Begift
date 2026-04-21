@@ -347,6 +347,14 @@ export default function DashboardClient({ user: initialUser, initialSentGifts, i
                 ? `${t("dashboard.sent_on")} ${new Date(gift.created_at).toLocaleDateString()}`
                 : `${t("dashboard.received_on")} ${new Date((gift as any).receivedAt || gift.created_at).toLocaleDateString()}`}
             </div>
+            {/* Badge per gift programmati nel futuro: solo lato mittente,
+                solo se scheduled_at è valorizzato e ancora nel futuro. */}
+            {isSent && (gift as any).scheduled_at && new Date((gift as any).scheduled_at).getTime() > Date.now() && (
+              <div style={{display:"inline-flex",alignItems:"center",gap:4,background:"#fff5e1",border:"1px solid #f4d88a",borderRadius:20,padding:"2px 9px",marginBottom:4,fontSize:10,color:"#8a6520",fontWeight:700}}>
+                <span>⏰</span>
+                <span>Programmato: {new Date((gift as any).scheduled_at).toLocaleString("it-IT",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}</span>
+              </div>
+            )}
             {isSent && (() => {
               const opens = (gift as any).gift_opens;
               if (!opens || opens.length === 0) return <div style={{fontSize:11,color:"#bbb",marginBottom:lastReaction?4:0}}>{t("dashboard.not_opened")}</div>;
