@@ -404,38 +404,10 @@ function PolaroidPhoto({ src, caption }: { src: string; caption: string | null }
 function VideoFrame({ url }: { url: string }) {
   const youtubeId = extractYoutubeId(url);
   const vimeoId = extractVimeoId(url);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  // Nota: per YouTube/Vimeo iframe non possiamo detectare se il
-  // browser ha bloccato l'audio (l'iframe è cross-origin). Quindi
-  // partiamo SEMPRE muted — iOS Safari, PWA standalone e in generale
-  // tutti i browser autoplay-restrictive accettano l'autoplay muted.
-  // L'overlay "Tocca per attivare audio" sta visibile finché l'utente
-  // non lo rimuove. Al click ricarichiamo l'iframe senza &mute=1.
-  const [iframeMuted, setIframeMuted] = useState(true);
-  const [needsTapToUnmute, setNeedsTapToUnmute] = useState(false);
 
-  // Autoplay per <video> nativo: proviamo prima con audio (il click
-  // sul pacco può contare come user gesture). Se il browser rifiuta,
-  // fallback a muted + overlay.
-  useEffect(() => {
-    if (!videoRef.current) return;
-    const v = videoRef.current;
-    v.play().catch(() => {
-      v.muted = true;
-      setNeedsTapToUnmute(true);
-      v.play().catch(() => { /* se fallisce anche muted, utente deve cliccare */ });
-    });
-  }, []);
-
-  const handleUnmute = () => {
-    if (videoRef.current) {
-      videoRef.current.muted = false;
-      setNeedsTapToUnmute(false);
-    }
-    // Per iframe (YouTube/Vimeo) ricarichiamo senza mute
-    setIframeMuted(false);
-  };
-
+  // Nessun autoplay: UX più pulita e affidabile su tutti i browser/
+  // PWA standalone. Il player mostra il pulsante play standard, che
+  // l'utente aziona con un gesture chiaro. Audio garantito da subito.
   return (
     <div style={{
       marginBottom: 20,
@@ -454,13 +426,8 @@ function VideoFrame({ url }: { url: string }) {
       `}</style>
       <div style={{ position: "relative", width: "100%", aspectRatio: "16/9", background: "#000" }}>
         {youtubeId ? (
-          /* autoplay muted di default (iOS Safari / PWA lo accettano
-             sempre), l'utente può riattivare l'audio con l'overlay.
-             Ricarichiamo l'iframe via key quando iframeMuted cambia,
-             così senza mute=1 parte con audio. */
           <iframe
-            key={`yt-${youtubeId}-${iframeMuted ? "m" : "a"}`}
-            src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&rel=0&modestbranding=1&playsinline=1${iframeMuted ? "&mute=1" : ""}`}
+            src={`https://www.youtube.com/embed/${youtubeId}?rel=0&modestbranding=1&playsinline=1`}
             title="Video"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
@@ -468,8 +435,7 @@ function VideoFrame({ url }: { url: string }) {
           />
         ) : vimeoId ? (
           <iframe
-            key={`vm-${vimeoId}-${iframeMuted ? "m" : "a"}`}
-            src={`https://player.vimeo.com/video/${vimeoId}?autoplay=1&title=0&byline=0&portrait=0${iframeMuted ? "&muted=1" : ""}`}
+            src={`https://player.vimeo.com/video/${vimeoId}?title=0&byline=0&portrait=0`}
             title="Video"
             allow="autoplay; fullscreen; picture-in-picture"
             allowFullScreen
@@ -477,42 +443,12 @@ function VideoFrame({ url }: { url: string }) {
           />
         ) : (
           <video
-            ref={videoRef}
             src={url}
             controls
             playsInline
-            autoPlay
             style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain", background: "#000" }}
           />
         )}
-        {/* Overlay audio: visibile se iframe è muted (YouTube/Vimeo),
-            o se il <video> nativo è stato forzato a muted dal
-            browser. Sparisce al primo click. */}
-        {((youtubeId || vimeoId) && iframeMuted) || (!youtubeId && !vimeoId && needsTapToUnmute) ? (
-          <button
-            onClick={handleUnmute}
-            style={{
-              position: "absolute", top: 12, right: 12, zIndex: 5,
-              background: "rgba(0,0,0,.75)", color: "#fff",
-              border: "1px solid rgba(255,255,255,.3)",
-              borderRadius: 20, padding: "8px 14px",
-              fontSize: 12, fontWeight: 700, cursor: "pointer",
-              display: "flex", alignItems: "center", gap: 6,
-              fontFamily: "inherit",
-              backdropFilter: "blur(6px)",
-              WebkitBackdropFilter: "blur(6px)",
-              animation: "pulseAudio 2s ease-in-out infinite",
-            }}
-          >
-            🔊 Tocca per audio
-          </button>
-        ) : null}
-        <style>{`
-          @keyframes pulseAudio {
-            0%,100% { transform: scale(1); box-shadow: 0 2px 8px rgba(0,0,0,.3); }
-            50%     { transform: scale(1.05); box-shadow: 0 4px 14px rgba(212,83,126,.5); }
-          }
-        `}</style>
       </div>
     </div>
   );
