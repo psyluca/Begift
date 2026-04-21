@@ -218,7 +218,8 @@
     "video_label": "動画",
     "video_desc": "動画で返信",
     "gift_label": "ギフト",
-    "gift_gift_desc": "お返しのギフト"
+    "gift_gift_desc": "お返しのギフト",
+    "remove_media": "アップロードしたファイルを削除"
   },
   "reactions": {
     "title": "受信したリアクション 💌",
@@ -253,7 +254,9 @@
     "no_messages": "会話を始めましょう！",
     "typing": "入力中…",
     "anonymous": "匿名",
-    "user": "ユーザー"
+    "user": "ユーザー",
+    "close": "チャットを閉じる",
+    "emoji_picker": "絵文字を選ぶ"
   },
   "login_prompt": {
     "title": "アカウントを作成",

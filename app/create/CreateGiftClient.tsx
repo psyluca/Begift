@@ -461,9 +461,25 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
           )}
 
           <p style={{fontSize:13,color:MUTED,margin:"0 0 8px"}}>{t("create.recipient_label")}</p>
-          <input style={INP} placeholder={t("create.recipient_placeholder")} value={name} onChange={e=>setName(e.target.value)}/>
+          <input
+            style={INP}
+            placeholder={t("create.recipient_placeholder")}
+            value={name}
+            onChange={e=>setName(e.target.value)}
+            autoComplete="name"
+            autoCapitalize="words"
+            spellCheck={false}
+          />
           <p style={{fontSize:13,color:MUTED,margin:"16px 0 8px"}}>{t("create.sender_label")}</p>
-          <input style={INP} placeholder={t("create.sender_placeholder")} value={senderAlias} onChange={e=>setSenderAlias(e.target.value)}/>
+          <input
+            style={INP}
+            placeholder={t("create.sender_placeholder")}
+            value={senderAlias}
+            onChange={e=>setSenderAlias(e.target.value)}
+            autoComplete="nickname"
+            autoCapitalize="words"
+            spellCheck={false}
+          />
           <button onClick={next} disabled={!name.trim()} style={{display:"block",width:"100%",background:name.trim()?ACCENT:"#e0dbd5",color:"#fff",border:"none",borderRadius:40,padding:"15px",fontSize:15,fontWeight:700,cursor:name.trim()?"pointer":"not-allowed",marginTop:14}}>{t("create.continue")}</button>
         </>}
 
@@ -510,7 +526,7 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
           {cType==="link" ? <input style={INP} placeholder="https://…" value={cUrl} onChange={e=>setCUrl(e.target.value)}/> : (
             <div style={{position:"relative"}}>
               <textarea style={{...INP,minHeight:130,resize:"vertical"}} placeholder={t("create.special_placeholder")} value={cText} onChange={e=>setCText(e.target.value)}/>
-              <button type="button" onClick={()=>setShowEmoji(p=>!p)} style={{position:"absolute",bottom:10,right:10,background:"none",border:"none",fontSize:20,cursor:"pointer",lineHeight:1}}>😊</button>
+              <button type="button" onClick={()=>setShowEmoji(p=>!p)} aria-label={t("chat.emoji_picker")} style={{position:"absolute",bottom:6,right:6,background:"none",border:"none",fontSize:20,cursor:"pointer",lineHeight:1,width:36,height:36,display:"flex",alignItems:"center",justifyContent:"center",padding:0,borderRadius:8}}>😊</button>
               {showEmoji && (
                 <div style={{position:"absolute",bottom:48,right:0,background:"#fff",border:"1.5px solid #e0dbd5",borderRadius:16,padding:12,zIndex:50,boxShadow:"0 4px 24px #0000001a",width:280}}>
                   <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
@@ -531,7 +547,7 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
           </div>
           <div style={{position:"relative"}}>
             <textarea style={{...INP,minHeight:140,resize:"vertical"}} placeholder={t("create.message_placeholder", { name: name || "te" })} value={msg} onChange={e=>setMsg(e.target.value)}/>
-            <button type="button" onClick={()=>setShowEmoji(p=>!p)} style={{position:"absolute",bottom:10,right:10,background:"none",border:"none",fontSize:20,cursor:"pointer",lineHeight:1}}>😊</button>
+            <button type="button" onClick={()=>setShowEmoji(p=>!p)} aria-label={t("chat.emoji_picker")} style={{position:"absolute",bottom:6,right:6,background:"none",border:"none",fontSize:20,cursor:"pointer",lineHeight:1,width:36,height:36,display:"flex",alignItems:"center",justifyContent:"center",padding:0,borderRadius:8}}>😊</button>
             {showEmoji && (
               <div style={{position:"absolute",bottom:48,right:0,background:"#fff",border:"1.5px solid #e0dbd5",borderRadius:16,padding:12,zIndex:50,boxShadow:"0 4px 24px #0000001a",width:280}}>
                 <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
@@ -559,7 +575,7 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
           </div>
           <div style={{position:"relative"}}>
             <textarea style={{...INP,minHeight:cType==="message"?180:130,resize:"vertical"}} placeholder={t("create.message_placeholder", { name: name || "te" })} value={msg} onChange={e=>setMsg(e.target.value)}/>
-            <button type="button" onClick={()=>setShowEmoji(p=>!p)} style={{position:"absolute",bottom:10,right:10,background:"none",border:"none",fontSize:20,cursor:"pointer",lineHeight:1}}>😊</button>
+            <button type="button" onClick={()=>setShowEmoji(p=>!p)} aria-label={t("chat.emoji_picker")} style={{position:"absolute",bottom:6,right:6,background:"none",border:"none",fontSize:20,cursor:"pointer",lineHeight:1,width:36,height:36,display:"flex",alignItems:"center",justifyContent:"center",padding:0,borderRadius:8}}>😊</button>
             {showEmoji && (
               <div style={{position:"absolute",bottom:48,right:0,background:"#fff",border:"1.5px solid #e0dbd5",borderRadius:16,padding:12,zIndex:50,boxShadow:"0 4px 24px #0000001a",width:280}}>
                 <div style={{display:"flex",flexWrap:"wrap",gap:4}}>

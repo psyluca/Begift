@@ -218,7 +218,8 @@
     "video_label": "Video",
     "video_desc": "Registra una risposta",
     "gift_label": "Regalo",
-    "gift_gift_desc": "Sorprendili a tua volta"
+    "gift_gift_desc": "Sorprendili a tua volta",
+    "remove_media": "Rimuovi il file caricato"
   },
   "reactions": {
     "title": "Reazioni ricevute 💌",
@@ -253,7 +254,9 @@
     "no_messages": "Inizia la conversazione!",
     "typing": "sta scrivendo…",
     "anonymous": "Anonimo",
-    "user": "Utente"
+    "user": "Utente",
+    "close": "Chiudi chat",
+    "emoji_picker": "Scegli emoji"
   },
   "login_prompt": {
     "title": "Crea il tuo account",

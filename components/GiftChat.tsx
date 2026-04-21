@@ -251,7 +251,7 @@ export default function GiftChat({ giftId, isCreator, recipientName, creatorName
                 <p style={{ margin:0, fontWeight:800, color:DEEP, fontSize:16 }}>{t("chat.title")}</p>
                 <p style={{ margin:0, fontSize:12, color:MUTED }}>{isCreator ? `${t("chat.with")} ${recipientName}` : (creatorName ? `${t("chat.with")} ${creatorName}` : t("chat.with_sender"))}</p>
               </div>
-              <button onClick={() => setOpen(false)} style={{ background:"none", border:"none", fontSize:22, cursor:"pointer", color:MUTED }}>×</button>
+              <button onClick={() => setOpen(false)} aria-label={t("chat.close")} style={{ background:"none", border:"none", fontSize:22, cursor:"pointer", color:MUTED, width:36, height:36, display:"flex", alignItems:"center", justifyContent:"center", padding:0, lineHeight:1 }}>×</button>
             </div>
 
             {/* Messages */}
@@ -318,7 +318,7 @@ export default function GiftChat({ giftId, isCreator, recipientName, creatorName
                 </div>
               )}
               <div style={{ display:"flex", gap:10, alignItems:"center" }}>
-              <button type="button" onClick={()=>setShowEmoji(p=>!p)} style={{background:"none",border:"none",fontSize:20,cursor:"pointer",flexShrink:0,lineHeight:1,padding:0}}>😊</button>
+              <button type="button" onClick={()=>setShowEmoji(p=>!p)} aria-label={t("chat.emoji_picker")} style={{background:"none",border:"none",fontSize:20,cursor:"pointer",flexShrink:0,lineHeight:1,padding:8,minWidth:44,minHeight:44,display:"flex",alignItems:"center",justifyContent:"center"}}>😊</button>
               <input
                 type="text"
                 value={text}
