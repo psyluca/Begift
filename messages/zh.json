@@ -218,7 +218,8 @@
     "video_label": "视频",
     "video_desc": "用视频回复",
     "gift_label": "礼物",
-    "gift_gift_desc": "回赠礼物"
+    "gift_gift_desc": "回赠礼物",
+    "remove_media": "移除已上传的文件"
   },
   "reactions": {
     "title": "收到的回应 💌",
@@ -253,7 +254,9 @@
     "no_messages": "开始对话吧！",
     "typing": "正在输入…",
     "anonymous": "匿名",
-    "user": "用户"
+    "user": "用户",
+    "close": "关闭聊天",
+    "emoji_picker": "选择表情"
   },
   "login_prompt": {
     "title": "创建您的账户",

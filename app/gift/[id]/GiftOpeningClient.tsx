@@ -687,7 +687,7 @@ function ReactionBuilder({ gift, onSent, senderName = "Destinatario" }: { gift: 
         ) : (
           <div style={{ position: "relative" }}>
             {rType === "photo" ? <img src={mediaUrl} alt="" style={{ width: "100%", maxHeight: 260, objectFit: "cover", borderRadius: 14, display: "block" }}/> : <video src={mediaUrl} controls style={{ width: "100%", borderRadius: 14, display: "block" }}/>}
-            <button onClick={() => setMediaUrl("")} style={{ position: "absolute", top: 8, right: 8, background: "rgba(0,0,0,.5)", color: "#fff", border: "none", borderRadius: "50%", width: 32, height: 32, fontSize: 16, cursor: "pointer" }}>×</button>
+            <button onClick={() => setMediaUrl("")} aria-label={t("reaction_builder.remove_media") || "Rimuovi"} style={{ position: "absolute", top: 8, right: 8, background: "rgba(0,0,0,.5)", color: "#fff", border: "none", borderRadius: "50%", width: 36, height: 36, fontSize: 16, cursor: "pointer", display:"flex", alignItems:"center", justifyContent:"center", padding:0, lineHeight:1 }}>×</button>
           </div>
         )
       )}
