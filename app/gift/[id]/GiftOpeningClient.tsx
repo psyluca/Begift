@@ -404,6 +404,30 @@ function PolaroidPhoto({ src, caption }: { src: string; caption: string | null }
 function VideoFrame({ url }: { url: string }) {
   const youtubeId = extractYoutubeId(url);
   const vimeoId = extractVimeoId(url);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [needsTapToUnmute, setNeedsTapToUnmute] = useState(false);
+
+  // Autoplay per <video> nativo: il click iniziale sul pacco è una
+  // user gesture valida per il browser, quindi play() dovrebbe
+  // funzionare anche con audio. Se viene bloccato (browser severo
+  // tipo iOS Safari), mutiamo + setiamo flag per mostrare un overlay
+  // "Tocca per attivare l'audio".
+  useEffect(() => {
+    if (!videoRef.current) return;
+    const v = videoRef.current;
+    v.play().catch(() => {
+      // Browser ha bloccato: proviamo muted
+      v.muted = true;
+      setNeedsTapToUnmute(true);
+      v.play().catch(() => { /* se fallisce anche muted, utente deve cliccare */ });
+    });
+  }, []);
+
+  const handleUnmute = () => {
+    if (!videoRef.current) return;
+    videoRef.current.muted = false;
+    setNeedsTapToUnmute(false);
+  };
 
   return (
     <div style={{
@@ -423,8 +447,11 @@ function VideoFrame({ url }: { url: string }) {
       `}</style>
       <div style={{ position: "relative", width: "100%", aspectRatio: "16/9", background: "#000" }}>
         {youtubeId ? (
+          /* autoplay=1 + enablejsapi: il browser consente autoplay
+             con audio perché siamo arrivati qui dopo il click/tap
+             dell'utente sul pacco (user gesture propagata). */
           <iframe
-            src={`https://www.youtube.com/embed/${youtubeId}?rel=0&modestbranding=1&playsinline=1`}
+            src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&rel=0&modestbranding=1&playsinline=1`}
             title="Video"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
@@ -432,19 +459,39 @@ function VideoFrame({ url }: { url: string }) {
           />
         ) : vimeoId ? (
           <iframe
-            src={`https://player.vimeo.com/video/${vimeoId}?title=0&byline=0&portrait=0`}
+            src={`https://player.vimeo.com/video/${vimeoId}?autoplay=1&title=0&byline=0&portrait=0`}
             title="Video"
             allow="autoplay; fullscreen; picture-in-picture"
             allowFullScreen
             style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }}
           />
         ) : (
-          <video
-            src={url}
-            controls
-            playsInline
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain", background: "#000" }}
-          />
+          <>
+            <video
+              ref={videoRef}
+              src={url}
+              controls
+              playsInline
+              autoPlay
+              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain", background: "#000" }}
+            />
+            {needsTapToUnmute && (
+              <button
+                onClick={handleUnmute}
+                style={{
+                  position: "absolute", top: 12, right: 12, zIndex: 5,
+                  background: "rgba(0,0,0,.75)", color: "#fff",
+                  border: "1px solid rgba(255,255,255,.3)",
+                  borderRadius: 20, padding: "8px 14px",
+                  fontSize: 12, fontWeight: 700, cursor: "pointer",
+                  display: "flex", alignItems: "center", gap: 6,
+                  fontFamily: "inherit",
+                }}
+              >
+                🔊 Attiva audio
+              </button>
+            )}
+          </>
         )}
       </div>
     </div>
