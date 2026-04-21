@@ -6,6 +6,7 @@ import { createBrowserClient } from "@supabase/ssr";
 import { createSupabaseClient, getSessionUser } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import type { Gift, Reaction } from "@/types";
+import { WhatsAppShareButton } from "@/components/WhatsAppShareButton";
 
 const ACCENT = "#D4537E", DEEP = "#1a1a1a", MUTED = "#888", LIGHT = "#f7f5f2";
 
@@ -373,7 +374,15 @@ export default function DashboardClient({ user: initialUser, initialSentGifts, i
             )}
           </div>
           {!selecting && (
-            <div style={{display:"flex",gap:6,flexShrink:0}}>
+            <div style={{display:"flex",gap:6,flexShrink:0,alignItems:"center"}}>
+              {isSent && typeof window !== "undefined" && (
+                <WhatsAppShareButton
+                  giftUrl={`${window.location.origin}/gift/${gift.id}`}
+                  recipientName={gift.recipient_name}
+                  variant="compact"
+                  label="WhatsApp"
+                />
+              )}
               {isSent && (
                 <button onClick={()=>copyLink(gift.id)} style={{background:copied===gift.id?"#3CB371":"transparent",color:copied===gift.id?"#fff":DEEP,border:"1.5px solid #e0dbd5",borderRadius:18,padding:"6px 11px",fontSize:11,cursor:"pointer",transition:"all .2s",whiteSpace:"nowrap"}}>
                   {copied===gift.id?t("dashboard.link_copied"):t("dashboard.copy_link")}

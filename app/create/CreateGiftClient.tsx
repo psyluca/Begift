@@ -6,6 +6,7 @@ import type { Packaging } from "@/types";
 import GiftSVG from "@/components/GiftSVG";
 import InAppSend from "@/components/InAppSend";
 import { AIMessageHelper } from "@/components/AIMessageHelper";
+import { WhatsAppShareButton } from "@/components/WhatsAppShareButton";
 
 const ACCENT = "#D4537E", DEEP = "#1a1a1a", MUTED = "#888", LIGHT = "#f7f5f2";
 
@@ -219,12 +220,18 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
           <button onClick={copy} style={{background:copied?"#3CB371":ACCENT,color:"#fff",border:"none",borderRadius:9,padding:"10px 14px",fontSize:13,fontWeight:700,cursor:"pointer",transition:"background .2s",whiteSpace:"nowrap"}}>{copied?t("create.copied"):t("create.copy")}</button>
         </div>
       </div>
+      {/* WhatsApp primary CTA — pre-compilato col nome del destinatario
+          e URL, è il percorso di distribuzione principale nel mercato
+          italiano. Massimo 1-tap share. */}
+      <div style={{maxWidth:480,width:"100%",marginBottom:14}}>
+        <WhatsAppShareButton giftUrl={result.url} recipientName={name} />
+      </div>
+
       <div style={{maxWidth:480,width:"100%",marginBottom:20}}>
         <InAppSend giftId={result.id}/>
       </div>
       <div style={{display:"flex",gap:10,flexWrap:"wrap",justifyContent:"center"}}>
         <a href={result.url + "?from=create"} target="_blank" style={{background:DEEP,color:"#fff",borderRadius:40,padding:"13px 24px",fontSize:14,fontWeight:600,textDecoration:"none"}}>{t("create.open_gift")}</a>
-        <a href={`https://wa.me/?text=${encodeURIComponent(t("share.whatsapp_text",{url:result.url}))}`} target="_blank" style={{background:"#25D366",color:"#fff",borderRadius:40,padding:"13px 24px",fontSize:14,fontWeight:600,textDecoration:"none"}}>{t("create.send_whatsapp")}</a>
         <a href="/dashboard" style={{background:"#fff",color:DEEP,border:"1.5px solid #e0dbd5",borderRadius:40,padding:"13px 24px",fontSize:14,fontWeight:600,textDecoration:"none"}}>{t("create.go_dashboard")}</a>
       </div>
       <div style={{display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap",marginTop:16}}>
