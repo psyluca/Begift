@@ -5,6 +5,7 @@ import { useUpload } from "@/hooks/useUpload";
 import type { Packaging } from "@/types";
 import GiftSVG from "@/components/GiftSVG";
 import InAppSend from "@/components/InAppSend";
+import { AIMessageHelper } from "@/components/AIMessageHelper";
 
 const ACCENT = "#D4537E", DEEP = "#1a1a1a", MUTED = "#888", LIGHT = "#f7f5f2";
 
@@ -296,6 +297,9 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
         </>}
         {step===3&&isFile&&<>
           <h2 style={{fontSize:24,fontWeight:800,color:DEEP,margin:"0 0 20px"}}>{t("create.message_title")}</h2>
+          <div style={{marginBottom:10}}>
+            <AIMessageHelper recipientName={name} senderName={senderAlias} onPick={(text)=>setMsg(text)} />
+          </div>
           <div style={{position:"relative"}}>
             <textarea style={{...INP,minHeight:140,resize:"vertical"}} placeholder={t("create.message_placeholder", { name: name || "te" })} value={msg} onChange={e=>setMsg(e.target.value)}/>
             <button type="button" onClick={()=>setShowEmoji(p=>!p)} style={{position:"absolute",bottom:10,right:10,background:"none",border:"none",fontSize:20,cursor:"pointer",lineHeight:1}}>😊</button>
@@ -316,6 +320,9 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
         {/* S4 — message for link/message, packaging for file */}
         {step===4&&!isFile&&<>
           <h2 style={{fontSize:24,fontWeight:800,color:DEEP,margin:"0 0 20px"}}>{t("create.message_title")}</h2>
+          <div style={{marginBottom:10}}>
+            <AIMessageHelper recipientName={name} senderName={senderAlias} onPick={(text)=>setMsg(text)} />
+          </div>
           <div style={{position:"relative"}}>
             <textarea style={{...INP,minHeight:130,resize:"vertical"}} placeholder={t("create.message_placeholder_short", { name: name || "te" })} value={msg} onChange={e=>setMsg(e.target.value)}/>
             <button type="button" onClick={()=>setShowEmoji(p=>!p)} style={{position:"absolute",bottom:10,right:10,background:"none",border:"none",fontSize:20,cursor:"pointer",lineHeight:1}}>😊</button>
