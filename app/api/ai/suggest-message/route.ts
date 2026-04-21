@@ -27,10 +27,10 @@ import { createSupabaseServer } from "@/lib/supabase/server";
  *   429 { error: "rate_limited" }
  *   500 { error: "ai_unavailable" | "internal" }
  *
- * Modello: Claude Haiku 4.5 (`claude-haiku-4-5-20251001`). Haiku è il
- * tier più economico di Anthropic, ideale per questo use-case che
- * chiede output brevi, creativi ma non long-form. Costo tipico per
- * richiesta: <€0.001.
+ * Modello: default `claude-3-5-haiku-latest` (alias stabile, disponibile
+ * su tutti i piani). Via env `ANTHROPIC_MODEL` si può forzare un
+ * modello specifico se serve (es. `claude-haiku-4-5-20251001` o
+ * `claude-3-5-haiku-20241022`). Costo tipico per richiesta: <€0.001.
  */
 
 export const runtime = "nodejs";
@@ -117,7 +117,7 @@ export async function POST(req: NextRequest) {
         "content-type": "application/json",
       },
       body: JSON.stringify({
-        model: "claude-haiku-4-5-20251001",
+        model: process.env.ANTHROPIC_MODEL || "claude-3-5-haiku-latest",
         max_tokens: 600,
         messages: [{ role: "user", content: prompt }],
       }),
@@ -125,7 +125,17 @@ export async function POST(req: NextRequest) {
 
     if (!response.ok) {
       const errText = await response.text().catch(() => "");
-      console.error("[ai/suggest-message] Anthropic error:", response.status, errText);
+      console.error("[ai/suggest-message] Anthropic error:");
+      console.error("  status:", response.status);
+      console.error("  body:", errText);
+      console.error("  model tried:", process.env.ANTHROPIC_MODEL || "claude-3-5-haiku-latest");
+      // In dev ritorniamo il dettaglio al client per debugging
+      if (process.env.NODE_ENV !== "production") {
+        return NextResponse.json({
+          error: "ai_unavailable",
+          debug: { status: response.status, body: errText.slice(0, 500) },
+        }, { status: 502 });
+      }
       return NextResponse.json({ error: "ai_unavailable" }, { status: 502 });
     }
 
