@@ -117,7 +117,7 @@ export async function POST(req: NextRequest) {
         "content-type": "application/json",
       },
       body: JSON.stringify({
-        model: process.env.ANTHROPIC_MODEL || "claude-3-5-haiku-latest",
+        model: process.env.ANTHROPIC_MODEL || "claude-haiku-4-5",
         max_tokens: 600,
         messages: [{ role: "user", content: prompt }],
       }),
