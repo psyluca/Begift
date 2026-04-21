@@ -3,7 +3,6 @@ import { useEffect, useState, Suspense } from "react";
 import { getStoredUser } from "@/hooks/useAuth";
 import { createSupabaseClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
-import LangSwitcher from "@/components/LangSwitcher";
 import CreateGiftClient from "./CreateGiftClient";
 
 function CreatePageInner() {
@@ -29,7 +28,6 @@ function CreatePageInner() {
 
   if (!loggedIn) return (
     <main style={{ minHeight:"100vh", background:"#f7f5f2", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:24, textAlign:"center", fontFamily:"system-ui,sans-serif", position:"relative" }}>
-      <LangSwitcher style={{ position:"absolute", top:16, right:16 }}/>
       <div style={{ fontSize:52, marginBottom:16 }}>🎁</div>
       <h2 style={{ fontSize:22, fontWeight:800, color:"#1a1a1a", margin:"0 0 8px" }}>{t("create.login_title")}</h2>
       <p style={{ fontSize:14, color:"#888", lineHeight:1.6, maxWidth:320, margin:"0 0 24px" }}>
