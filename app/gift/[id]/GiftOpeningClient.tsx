@@ -703,15 +703,19 @@ function ReactionBuilder({ gift, onSent, senderName = "Destinatario" }: { gift: 
       <h3 style={{ fontSize: 18, fontWeight: 800, color: DEEP, margin: "0 0 4px" }}>{t("reaction_builder.respond_title")}</h3>
       <p style={{ color: MUTED, fontSize: 13, marginBottom: 16 }}>{t("reaction_builder.respond_desc")}</p>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+        {/* "gift" rimosso dalle reazioni: ora esiste la CTA dedicata
+            "Ringrazia con un regalo" post-apertura che apre direttamente
+            /create con recipient pre-compilato. La mini-reazione 🎁 era
+            ridondante e meno chiara. Il tipo "gift" resta nel ReactionType
+            per compat con eventuali reazioni storiche in DB. */}
         {([
           { id: "emoji", icon: "😄", label: t("reaction_builder.emoji_label"), desc: t("reaction_builder.emoji_desc") },
           { id: "text",  icon: "✍️",  label: t("reaction_builder.message_label"), desc: t("reaction_builder.message_desc") },
           { id: "photo", icon: "📸", label: t("reaction_builder.photo_label"), desc: t("reaction_builder.photo_desc") },
           { id: "video", icon: "🎬", label: t("reaction_builder.video_label"), desc: t("reaction_builder.video_desc") },
-          { id: "gift",  icon: "🎁", label: t("reaction_builder.gift_label"), desc: t("reaction_builder.gift_gift_desc") },
         ] as {id: ReactionType; icon: string; label: string; desc: string}[]).map(r => (
           <button key={r.id} onClick={() => { setRType(r.id); setStep("compose"); }}
-            style={{ background: "#fff", border: "1.5px solid #e0dbd5", borderRadius: 16, padding: "18px 12px", textAlign: "center", cursor: "pointer", gridColumn: r.id === "gift" ? "1/-1" : "auto" }}>
+            style={{ background: "#fff", border: "1.5px solid #e0dbd5", borderRadius: 16, padding: "18px 12px", textAlign: "center", cursor: "pointer" }}>
             <div style={{ fontSize: 30, marginBottom: 6 }}>{r.icon}</div>
             <div style={{ fontWeight: 700, color: DEEP, fontSize: 14, marginBottom: 2 }}>{r.label}</div>
             <div style={{ fontSize: 11, color: MUTED }}>{r.desc}</div>
