@@ -119,9 +119,24 @@ function AIMessageModal({ recipientName, senderName, locale, onClose, onPick }: 
     setError(null);
     setSuggestions(null);
     try {
+      // Passo il Bearer token dal localStorage se presente. Il resto
+      // dell'app usa questo pattern perché la session è salvata in
+      // localStorage (non solo nei cookie) — senza Bearer la route
+      // server-side restituisce 401 anche se l'utente è loggato.
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      try {
+        const stored = localStorage.getItem("sb-acoettfsxcfpvhjzreoy-auth-token");
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed?.access_token) {
+            headers["Authorization"] = `Bearer ${parsed.access_token}`;
+          }
+        }
+      } catch { /* no session in localStorage */ }
+
       const res = await fetch("/api/ai/suggest-message", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({
           recipientName,
           senderName,

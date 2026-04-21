@@ -62,14 +62,32 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "ai_unavailable" }, { status: 500 });
   }
 
-  // Auth check — l'assistente AI è riservato a utenti loggati per
-  // prevenire abuso costi.
-  const sb = createSupabaseServer();
-  const { data: userData, error: userErr } = await sb.auth.getUser();
-  if (userErr || !userData.user) {
+  // Auth check — prova prima il Bearer token dell'Authorization header
+  // (pattern usato dal resto del progetto quando il client ha la
+  // session in localStorage anziché nei cookie), poi fallback ai
+  // cookie server-side via createSupabaseServer.
+  let userId: string | null = null;
+  const authHeader = req.headers.get("authorization") ?? req.headers.get("Authorization");
+  if (authHeader?.startsWith("Bearer ")) {
+    const token = authHeader.slice(7).trim();
+    try {
+      const { createClient } = await import("@supabase/supabase-js");
+      const sbAnon = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
+      const { data, error } = await sbAnon.auth.getUser(token);
+      if (!error && data?.user) userId = data.user.id;
+    } catch { /* fall through to cookie */ }
+  }
+  if (!userId) {
+    const sb = createSupabaseServer();
+    const { data, error } = await sb.auth.getUser();
+    if (!error && data?.user) userId = data.user.id;
+  }
+  if (!userId) {
     return NextResponse.json({ error: "not_authenticated" }, { status: 401 });
   }
-  const userId = userData.user.id;
 
   if (!checkRateLimit(userId)) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
