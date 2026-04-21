@@ -162,12 +162,16 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
         if (parsed.access_token) authHeader = { "Authorization": `Bearer ${parsed.access_token}` };
       }
     } catch(_) {}
+    // Quando il tipo contenuto è "message", abbiamo unificato in un
+    // solo campo testo (il `msg`). Copiamo msg anche in contentText
+    // così il backend riceve il testo principale nel campo atteso.
+    const effectiveContentText = cType === "message" ? (cText || msg) : cText;
     const res = await fetch("/api/gifts", {
       method: "POST",
       headers: { "Content-Type": "application/json", ...authHeader },
       body: JSON.stringify({
         recipientName: name, senderAlias: senderAlias||undefined, message: msg, packaging: {...pkg, ...(customSoundUrl ? {customSoundUrl, customSoundTitle: customSoundTitle||undefined} : {})},
-        contentType: cType, contentUrl: cUrl, contentText: cText, contentFileName: cFile,
+        contentType: cType, contentUrl: cUrl, contentText: effectiveContentText, contentFileName: cFile,
       }),
     });
     const data = await res.json();
@@ -266,7 +270,14 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
                 <input type="file" accept="application/pdf" style={{display:"none"}} onChange={e=>onFile(e,"pdf")}/>
               </label>
               {[{type:"link",icon:"🔗",labelKey:"create.link"},{type:"message",icon:"💌",labelKey:"create.message"}].map(({type,icon,labelKey})=>(
-                <button key={type} className="tile" onClick={()=>{setCType(type);next();}} style={{background:"#fff",border:"1.5px dashed #d5cfc8",borderRadius:14,padding:"24px 10px",textAlign:"center",cursor:"pointer",transition:"all .14s"}}>
+                <button key={type} className="tile" onClick={()=>{
+                  setCType(type);
+                  // Per "message": il messaggio stesso È il contenuto del regalo,
+                  // non serve uno step dedicato al content prima della dedica.
+                  // Salta direttamente allo step 4 dove l'utente scrive il testo.
+                  if (type === "message") { setStep(4); }
+                  else { next(); }
+                }} style={{background:"#fff",border:"1.5px dashed #d5cfc8",borderRadius:14,padding:"24px 10px",textAlign:"center",cursor:"pointer",transition:"all .14s"}}>
                   <div style={{fontSize:28,marginBottom:7}}>{icon}</div>
                   <div style={{fontSize:13,fontWeight:700,color:DEEP}}>{t(labelKey)}</div>
                 </button>
@@ -317,14 +328,19 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
           <button onClick={next} style={{display:"block",width:"100%",background:"none",border:"none",color:MUTED,padding:"10px",fontSize:13,cursor:"pointer",marginTop:4}}>{t("common.skip")}</button>
         </>}
 
-        {/* S4 — message for link/message, packaging for file */}
+        {/* S4 — message for link/message, packaging for file.
+            Per cType="message" il titolo e il placeholder cambiano:
+            il messaggio qui È il contenuto principale del regalo,
+            non un accompagnamento alla dedica file. */}
         {step===4&&!isFile&&<>
-          <h2 style={{fontSize:24,fontWeight:800,color:DEEP,margin:"0 0 20px"}}>{t("create.message_title")}</h2>
+          <h2 style={{fontSize:24,fontWeight:800,color:DEEP,margin:"0 0 20px"}}>
+            {cType === "message" ? t("create.write_message") : t("create.message_title")}
+          </h2>
           <div style={{marginBottom:10}}>
             <AIMessageHelper recipientName={name} senderName={senderAlias} onPick={(text)=>setMsg(text)} />
           </div>
           <div style={{position:"relative"}}>
-            <textarea style={{...INP,minHeight:130,resize:"vertical"}} placeholder={t("create.message_placeholder_short", { name: name || "te" })} value={msg} onChange={e=>setMsg(e.target.value)}/>
+            <textarea style={{...INP,minHeight:cType==="message"?180:130,resize:"vertical"}} placeholder={t("create.message_placeholder", { name: name || "te" })} value={msg} onChange={e=>setMsg(e.target.value)}/>
             <button type="button" onClick={()=>setShowEmoji(p=>!p)} style={{position:"absolute",bottom:10,right:10,background:"none",border:"none",fontSize:20,cursor:"pointer",lineHeight:1}}>😊</button>
             {showEmoji && (
               <div style={{position:"absolute",bottom:48,right:0,background:"#fff",border:"1.5px solid #e0dbd5",borderRadius:16,padding:12,zIndex:50,boxShadow:"0 4px 24px #0000001a",width:280}}>
