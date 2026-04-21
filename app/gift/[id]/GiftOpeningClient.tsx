@@ -283,43 +283,184 @@ function GiftContent({ gift }: { gift: Gift }) {
   const { t } = useI18n();
   return (
     <div style={{ maxWidth: 420, margin: "0 auto" }}>
-      {gift.content_type && (
+      {gift.content_type === "image" && gift.content_url && (
+        <PolaroidPhoto src={gift.content_url} caption={gift.message} />
+      )}
+      {gift.content_type === "video" && gift.content_url && (
+        <VideoFrame url={gift.content_url} />
+      )}
+      {gift.content_type === "pdf" && gift.content_url && (
         <div style={{ marginBottom: 20, borderRadius: 16, overflow: "hidden", boxShadow: "0 8px 32px #0000001e" }}>
-          {gift.content_type === "image" && gift.content_url && (
-            <img src={gift.content_url} alt="" style={{ width: "100%", display: "block", maxHeight: 320, objectFit: "cover" }}/>
-          )}
-          {gift.content_type === "video" && gift.content_url && (
-            <video src={gift.content_url} controls style={{ width: "100%", display: "block" }}/>
-          )}
-          {gift.content_type === "pdf" && gift.content_url && (
-            <div>
-              <iframe src={gift.content_url} style={{ width: "100%", height: 480, display: "block", border: "none" }} title={gift.content_file_name || "PDF"}/>
-              <a href={gift.content_url} download={gift.content_file_name || "documento.pdf"}
-                style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 18px", background: LIGHT, textDecoration: "none", color: DEEP, fontSize: 14, fontWeight: 600, borderTop: "1px solid #ede8e0" }}>
-                {gift.content_file_name ? t("gift.download", { name: gift.content_file_name }) : t("gift.download_doc")}
-              </a>
-            </div>
-          )}
-          {gift.content_type === "link" && gift.content_url && (
-            <a href={gift.content_url} target="_blank" rel="noopener noreferrer"
-              style={{ display: "block", padding: "24px 20px", background: "#f0f0f0", textDecoration: "none", color: DEEP, fontSize: 16 }}>
-              🔗 {gift.content_url}
-            </a>
-          )}
-          {gift.content_type === "message" && gift.content_text && (
-            <div style={{ padding: "28px 24px", background: "#fffef8", fontSize: 16, lineHeight: 1.7, color: "#3d3d3d", whiteSpace: "pre-wrap" }}>
-              {gift.content_text}
-            </div>
-          )}
+          <iframe src={gift.content_url} style={{ width: "100%", height: 480, display: "block", border: "none" }} title={gift.content_file_name || "PDF"}/>
+          <a href={gift.content_url} download={gift.content_file_name || "documento.pdf"}
+            style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 18px", background: LIGHT, textDecoration: "none", color: DEEP, fontSize: 14, fontWeight: 600, borderTop: "1px solid #ede8e0" }}>
+            {gift.content_file_name ? t("gift.download", { name: gift.content_file_name }) : t("gift.download_doc")}
+          </a>
         </div>
       )}
-      {gift.message && (
+      {gift.content_type === "link" && gift.content_url && (
+        <a href={gift.content_url} target="_blank" rel="noopener noreferrer"
+          style={{ display: "block", marginBottom: 20, padding: "24px 20px", background: "#f0f0f0", borderRadius: 16, textDecoration: "none", color: DEEP, fontSize: 16, boxShadow: "0 8px 32px #0000001e", wordBreak: "break-all" }}>
+          🔗 {gift.content_url}
+        </a>
+      )}
+      {gift.content_type === "message" && gift.content_text && (
+        <div style={{ marginBottom: 20, padding: "28px 24px", background: "#fffef8", borderRadius: 16, fontSize: 16, lineHeight: 1.7, color: "#3d3d3d", whiteSpace: "pre-wrap", boxShadow: "0 8px 32px #0000001e" }}>
+          {gift.content_text}
+        </div>
+      )}
+      {/* Messaggio di accompagnamento — mostrato SOTTO il contenuto a
+          meno che il contenuto sia già un'immagine (dove la didascalia
+          è già integrata nella Polaroid), una message-gift (dove msg e
+          content_text coincidono), o nullo. */}
+      {gift.message && gift.content_type !== "image" && gift.content_type !== "message" && (
         <div style={{ background: "#fffef8", border: "1px solid #ede8e0", borderRadius: 16, padding: "24px 22px", fontSize: 16, lineHeight: 1.8, color: "#3d3d3d", fontStyle: "italic" }}>
-          "{gift.message}"
+          &ldquo;{gift.message}&rdquo;
         </div>
       )}
     </div>
   );
+}
+
+/**
+ * PolaroidPhoto — cornice polaroid stile anni '70: bordo bianco
+ * spesso, bottone più alto per caption in italico, leggera
+ * rotazione (-1.5°), ombra profonda, animazione di apparizione
+ * che simula l'istantanea che si sviluppa.
+ *
+ * Se la caption è troppo lunga (>140 char) viene troncata con
+ * ellipsis per preservare il layout Polaroid. Le didascalie medie
+ * funzionano meglio per l'effetto visivo.
+ */
+function PolaroidPhoto({ src, caption }: { src: string; caption: string | null }) {
+  const shortCaption = caption && caption.length > 140 ? caption.slice(0, 137) + "…" : caption;
+  return (
+    <div style={{ display: "flex", justifyContent: "center", marginBottom: 24, perspective: 1000 }}>
+      <div style={{
+        background: "#fff",
+        padding: "14px 14px 0",
+        borderRadius: 4,
+        boxShadow: "0 20px 40px -12px rgba(0,0,0,0.35), 0 8px 16px -8px rgba(0,0,0,0.2)",
+        transform: "rotate(-1.5deg)",
+        maxWidth: 360,
+        width: "100%",
+        animation: "polaroidIn .7s cubic-bezier(.34,1.56,.64,1) both",
+      }}>
+        <style>{`
+          @keyframes polaroidIn {
+            from { opacity: 0; transform: rotate(-8deg) scale(.85) translateY(40px); }
+            60%  { transform: rotate(0.5deg) scale(1.02) translateY(-6px); }
+            to   { opacity: 1; transform: rotate(-1.5deg) scale(1) translateY(0); }
+          }
+        `}</style>
+        {/* Bordo scuro sottile per suggerire l'istantanea */}
+        <div style={{ background: "#1a1a1a", padding: 0, borderRadius: 1 }}>
+          <img
+            src={src}
+            alt=""
+            style={{
+              width: "100%",
+              display: "block",
+              aspectRatio: "4/3",
+              objectFit: "cover",
+              borderRadius: 1,
+            }}
+          />
+        </div>
+        {/* Spazio caption — sempre presente per carattere Polaroid,
+            anche se la caption è vuota l'istantanea ha il margine
+            bianco in basso tipico */}
+        <div style={{
+          padding: "18px 8px 22px",
+          textAlign: "center",
+          minHeight: 24,
+          fontFamily: "'Caveat', 'Kalam', 'Brush Script MT', cursive",
+          fontSize: 20,
+          color: "#2a2a2a",
+          lineHeight: 1.3,
+          fontStyle: "italic",
+        }}>
+          {shortCaption || ""}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * VideoFrame — cornice TV/schermo per video (YouTube embed o file MP4).
+ * Auto-detect YouTube: estrae l'ID dal link e costruisce un embed
+ * iframe con parametri ottimizzati (no suggested videos, modest branding).
+ * Per MP4/WebM/MOV usa <video controls> nativo. Aspect 16:9 fisso, bordo
+ * accent color, ombra profonda.
+ */
+function VideoFrame({ url }: { url: string }) {
+  const youtubeId = extractYoutubeId(url);
+
+  return (
+    <div style={{
+      marginBottom: 20,
+      borderRadius: 18,
+      overflow: "hidden",
+      boxShadow: "0 16px 40px -12px rgba(0,0,0,0.35), 0 6px 16px -6px rgba(0,0,0,0.2)",
+      border: `3px solid ${ACCENT}`,
+      background: "#000",
+      animation: "videoFrameIn .55s cubic-bezier(.34,1.56,.64,1) both",
+    }}>
+      <style>{`
+        @keyframes videoFrameIn {
+          from { opacity: 0; transform: scale(.92) translateY(30px); }
+          to   { opacity: 1; transform: scale(1) translateY(0); }
+        }
+      `}</style>
+      <div style={{ position: "relative", width: "100%", aspectRatio: "16/9", background: "#000" }}>
+        {youtubeId ? (
+          <iframe
+            src={`https://www.youtube.com/embed/${youtubeId}?rel=0&modestbranding=1&playsinline=1`}
+            title="Video"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }}
+          />
+        ) : (
+          <video
+            src={url}
+            controls
+            playsInline
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain", background: "#000" }}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Estrae l'ID video YouTube da URL di varia forma:
+ * - youtube.com/watch?v=ID
+ * - youtu.be/ID
+ * - youtube.com/embed/ID
+ * - youtube.com/shorts/ID
+ * Ritorna null se l'URL non è YouTube.
+ */
+function extractYoutubeId(url: string): string | null {
+  try {
+    const u = new URL(url);
+    const host = u.hostname.replace(/^www\./, "");
+    if (host === "youtu.be") {
+      const id = u.pathname.slice(1).split("/")[0];
+      return id.length >= 8 ? id : null;
+    }
+    if (host.endsWith("youtube.com")) {
+      if (u.pathname === "/watch") {
+        const id = u.searchParams.get("v");
+        return id && id.length >= 8 ? id : null;
+      }
+      const m = u.pathname.match(/\/(embed|shorts)\/([^/?#]+)/);
+      if (m && m[2].length >= 8) return m[2];
+    }
+    return null;
+  } catch { return null; }
 }
 
 // ── Reaction Builder ──────────────────────────────────────────────────────────
