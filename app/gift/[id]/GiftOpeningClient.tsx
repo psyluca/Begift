@@ -289,6 +289,13 @@ function GiftContent({ gift }: { gift: Gift }) {
       {gift.content_type === "video" && gift.content_url && (
         <VideoFrame url={gift.content_url} />
       )}
+      {/* Link: se punta a un video embeddabile (YouTube, Vimeo, file
+          mp4/webm/mov, ecc.) lo mostriamo nel VideoFrame, non come
+          link testuale. Molti utenti scelgono "🔗 Link" e incollano
+          YouTube — deve funzionare lo stesso. */}
+      {gift.content_type === "link" && gift.content_url && isEmbeddableVideo(gift.content_url) && (
+        <VideoFrame url={gift.content_url} />
+      )}
       {gift.content_type === "pdf" && gift.content_url && (
         <div style={{ marginBottom: 20, borderRadius: 16, overflow: "hidden", boxShadow: "0 8px 32px #0000001e" }}>
           <iframe src={gift.content_url} style={{ width: "100%", height: 480, display: "block", border: "none" }} title={gift.content_file_name || "PDF"}/>
@@ -298,7 +305,7 @@ function GiftContent({ gift }: { gift: Gift }) {
           </a>
         </div>
       )}
-      {gift.content_type === "link" && gift.content_url && (
+      {gift.content_type === "link" && gift.content_url && !isEmbeddableVideo(gift.content_url) && (
         <a href={gift.content_url} target="_blank" rel="noopener noreferrer"
           style={{ display: "block", marginBottom: 20, padding: "24px 20px", background: "#f0f0f0", borderRadius: 16, textDecoration: "none", color: DEEP, fontSize: 16, boxShadow: "0 8px 32px #0000001e", wordBreak: "break-all" }}>
           🔗 {gift.content_url}
@@ -396,6 +403,7 @@ function PolaroidPhoto({ src, caption }: { src: string; caption: string | null }
  */
 function VideoFrame({ url }: { url: string }) {
   const youtubeId = extractYoutubeId(url);
+  const vimeoId = extractVimeoId(url);
 
   return (
     <div style={{
@@ -422,6 +430,14 @@ function VideoFrame({ url }: { url: string }) {
             allowFullScreen
             style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }}
           />
+        ) : vimeoId ? (
+          <iframe
+            src={`https://player.vimeo.com/video/${vimeoId}?title=0&byline=0&portrait=0`}
+            title="Video"
+            allow="autoplay; fullscreen; picture-in-picture"
+            allowFullScreen
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }}
+          />
         ) : (
           <video
             src={url}
@@ -433,6 +449,37 @@ function VideoFrame({ url }: { url: string }) {
       </div>
     </div>
   );
+}
+
+/**
+ * Rileva se un URL punta a un video che il VideoFrame può embeddare:
+ * - YouTube (youtube.com / youtu.be / shorts)
+ * - Vimeo (vimeo.com/ID)
+ * - File video diretti (estensioni .mp4 .webm .mov .ogg .m4v,
+ *   anche con query string tipo ?sig=...)
+ */
+function isEmbeddableVideo(url: string): boolean {
+  if (extractYoutubeId(url)) return true;
+  if (extractVimeoId(url)) return true;
+  try {
+    const u = new URL(url);
+    const path = u.pathname.toLowerCase();
+    if (/\.(mp4|webm|mov|ogg|m4v|avi|mkv)$/.test(path)) return true;
+  } catch { /* invalid URL */ }
+  return false;
+}
+
+/**
+ * Estrae l'ID Vimeo da URL standard vimeo.com/12345678 o
+ * player.vimeo.com/video/12345678.
+ */
+function extractVimeoId(url: string): string | null {
+  try {
+    const u = new URL(url);
+    if (!u.hostname.includes("vimeo.com")) return null;
+    const m = u.pathname.match(/(?:\/video)?\/(\d+)/);
+    return m ? m[1] : null;
+  } catch { return null; }
 }
 
 /**
