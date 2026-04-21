@@ -673,7 +673,16 @@ export default function GiftOpeningClient({ gift }: { gift: Gift }) {
   const t0  = useRef<number | null>(null);
 
   const pkg        = gift.packaging;
-  const fromCreate = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("from") === "create";
+  // fromCreate: non calcolarlo inline — `typeof window` restituisce
+  // valori diversi tra SSR (false) e client (true) → hydration mismatch
+  // sul banner "preview". Stato inizializzato a false, letto da
+  // window.location.search solo DOPO il mount.
+  const [fromCreate, setFromCreate] = useState(false);
+  useEffect(() => {
+    try {
+      setFromCreate(new URLSearchParams(window.location.search).get("from") === "create");
+    } catch { /* ignore */ }
+  }, []);
   const fromName   = (gift as any).sender_alias || null;
   const songTitle  = (pkg as any)?.customSoundTitle || null;
   const paper   = pkg?.paperColor  || "#D85A5A";
