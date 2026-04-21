@@ -485,12 +485,16 @@ export default function GiftOpeningClient({ gift }: { gift: Gift }) {
   const [playing,   setPlaying]   = useState(false);
   const audioRef = useRef<HTMLAudioElement|null>(null);
 
-  // Schedulazione: se il gift è programmato per il futuro e il viewer
-  // non è il creator, mostriamo la waiting page con countdown invece
-  // del contenuto. Il creator può sempre visualizzare il gift (per
-  // verificare anteprima) anche se scheduled_at è nel futuro.
+  // Schedulazione: se il gift è programmato per il futuro, mostriamo
+  // la waiting page con countdown invece del contenuto — per TUTTI i
+  // visitatori, inclusi i creator. Il creator vede anche un banner
+  // "Sei il mittente, puoi aprire in anteprima" con bottone di bypass.
+  // Questo evita il flash di countdown (che succedeva quando isCreator
+  // era undefined durante l'async auth load e poi veniva risolto a true,
+  // facendo passare istantaneamente dal waiting al gift aperto).
   const scheduledAt = gift.scheduled_at ? new Date(gift.scheduled_at) : null;
   const [tick, setTick] = useState(0);
+  const [bypassSchedule, setBypassSchedule] = useState(false);
   useEffect(() => {
     if (!scheduledAt) return;
     const id = setInterval(() => setTick(t => t + 1), 1000);
@@ -594,16 +598,19 @@ export default function GiftOpeningClient({ gift }: { gift: Gift }) {
 
   const exitStyle: React.CSSProperties = {};
 
-  // Gift programmato nel futuro + visitatore non creator → waiting page.
-  // Il creator può sempre visualizzare per verifica. tick è usato per
-  // forzare il re-render ogni secondo e aggiornare il countdown.
-  if (scheduledAt && scheduledAt.getTime() > Date.now() && !isCreator) {
-    void tick; // mantiene la dipendenza
+  // Gift programmato nel futuro → waiting page per tutti (evita flash).
+  // Il creator ha un bottone extra "apri in anteprima" che setta
+  // bypassSchedule=true e skippa la waiting. tick forza re-render
+  // ogni secondo per aggiornare il countdown.
+  if (scheduledAt && scheduledAt.getTime() > Date.now() && !bypassSchedule) {
+    void tick;
     return (
       <WaitingPage
         scheduledAt={scheduledAt}
         recipientName={gift.recipient_name}
         senderAlias={(gift as any).sender_alias ?? null}
+        isCreator={isCreator}
+        onBypass={() => setBypassSchedule(true)}
       />
     );
   }
@@ -797,10 +804,14 @@ function WaitingPage({
   scheduledAt,
   recipientName,
   senderAlias,
+  isCreator,
+  onBypass,
 }: {
   scheduledAt: Date;
   recipientName: string;
   senderAlias: string | null;
+  isCreator: boolean;
+  onBypass: () => void;
 }) {
   const ACCENT = "#D4537E";
   const DEEP = "#1a1a1a";
@@ -853,6 +864,35 @@ function WaitingPage({
       <p style={{ fontSize: 12, color: MUTED, maxWidth: 340, lineHeight: 1.5, margin: 0 }}>
         Torna su questo link all&apos;orario indicato. Salva la pagina nei preferiti per non perdertelo.
       </p>
+
+      {/* Banner per il creator: può aprire in anteprima per verificare */}
+      {isCreator && (
+        <div style={{
+          marginTop: 32, padding: "14px 18px",
+          background: "#fff5e1", border: "1px solid #f4d88a",
+          borderRadius: 14, maxWidth: 400,
+          textAlign: "left",
+        }}>
+          <div style={{ fontSize: 12, color: "#8a6520", fontWeight: 700, marginBottom: 6 }}>
+            👋 Sei tu il mittente
+          </div>
+          <div style={{ fontSize: 12, color: "#5d4a15", lineHeight: 1.5, marginBottom: 10 }}>
+            Il destinatario vedrà questo countdown fino all&apos;arrivo del regalo.
+            Tu puoi aprirlo in anteprima per verificare.
+          </div>
+          <button
+            onClick={onBypass}
+            style={{
+              background: "#8a6520", color: "#fff", border: "none",
+              borderRadius: 20, padding: "8px 16px",
+              fontSize: 12, fontWeight: 700, cursor: "pointer",
+              fontFamily: "inherit",
+            }}
+          >
+            👁️ Apri in anteprima →
+          </button>
+        </div>
+      )}
 
       <div style={{ marginTop: 40, fontSize: 11, color: "#bbb" }}>
         Made with ❤️ by Be<span style={{ color: ACCENT }}>Gift</span>

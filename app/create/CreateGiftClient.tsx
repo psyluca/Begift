@@ -598,31 +598,78 @@ function ScheduleSection({
       </div>
       {mode === "later" && (
         <>
-          <input
-            type="datetime-local"
-            value={value}
-            min={minStr}
-            onChange={(e) => setValue(e.target.value)}
-            style={{
-              width: "100%",
-              boxSizing: "border-box",
-              border: `1.5px solid ${BORDER}`,
-              borderRadius: 10,
-              padding: "11px 12px",
-              fontSize: 14,
-              color: DEEP,
-              outline: "none",
-              fontFamily: "inherit",
-              background: "#fff",
-            }}
-          />
+          {/* Due input separati: date (apre calendario nativo cliccando
+              sull'icona o sul campo) + time (spinner ora/minuti). Il
+              datetime-local unico non mostrava il calendario su desktop. */}
+          <DateTimePair minStr={minStr} value={value} setValue={setValue} />
           {value && (
-            <div style={{ fontSize: 11, color: MUTED, marginTop: 6, lineHeight: 1.4 }}>
+            <div style={{ fontSize: 11, color: MUTED, marginTop: 8, lineHeight: 1.4 }}>
               Il destinatario vedrà un countdown fino all&apos;arrivo del regalo. Tu potrai monitorarlo dal dashboard.
             </div>
           )}
         </>
       )}
+    </div>
+  );
+}
+
+/**
+ * DateTimePair — combina input type=date (col picker calendario nativo)
+ * + type=time in una riga, salvando il risultato nel formato
+ * datetime-local YYYY-MM-DDTHH:MM che il parent si aspetta.
+ */
+function DateTimePair({
+  minStr,
+  value,
+  setValue,
+}: {
+  minStr: string;          // YYYY-MM-DDTHH:MM del min accettato
+  value: string;           // YYYY-MM-DDTHH:MM corrente (vuoto se non impostato)
+  setValue: (v: string) => void;
+}) {
+  const DEEP = "#1a1a1a";
+  const BORDER = "#e0dbd5";
+
+  // Default ragionevole al primo render: domani alle 9:00
+  const [datePart, timePart] = value ? value.split("T") : ["", ""];
+  const [minDate, minTime] = minStr.split("T");
+
+  const onDateChange = (d: string) => {
+    setValue(d ? `${d}T${timePart || "09:00"}` : "");
+  };
+  const onTimeChange = (t: string) => {
+    setValue(datePart ? `${datePart}T${t || "09:00"}` : "");
+  };
+
+  const inputStyle: React.CSSProperties = {
+    boxSizing: "border-box",
+    border: `1.5px solid ${BORDER}`,
+    borderRadius: 10,
+    padding: "11px 12px",
+    fontSize: 14,
+    color: DEEP,
+    outline: "none",
+    fontFamily: "inherit",
+    background: "#fff",
+  };
+
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 8 }}>
+      <input
+        type="date"
+        value={datePart}
+        min={minDate}
+        onChange={(e) => onDateChange(e.target.value)}
+        style={inputStyle}
+        placeholder="gg/mm/aaaa"
+      />
+      <input
+        type="time"
+        value={timePart}
+        min={datePart === minDate ? minTime : undefined}
+        onChange={(e) => onTimeChange(e.target.value)}
+        style={inputStyle}
+      />
     </div>
   );
 }
