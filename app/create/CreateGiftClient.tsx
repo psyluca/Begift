@@ -96,11 +96,98 @@ const EMOJIS  = ["❤️","🎁","🎉","🎊","🥳","😍","🤗","😘","💖
 const THEMES  = [{id:"standard",label:"🎁 Standard"},{id:"easter",label:"🥚 Pasqua"},{id:"graduation",label:"🎓 Laurea"},{id:"birthday",label:"🎂 Compleanno"},{id:"kawaii",label:"✨ Kawaii"}];
 
 const DEFAULT_PKG: Packaging = { paperColor:"#D85A5A",ribbonColor:"#E8C84A",bowColor:"#E8C84A",bowType:"classic",openAnimation:"lift",sound:"bells" };
+
+/**
+ * Template per occasioni comuni. Ogni tile applica:
+ *  - packaging completo (carta + nastro + fiocco + animazione + suono)
+ *  - messaggio starter localizzato (se il campo msg è vuoto)
+ * L'utente può sempre ritoccare i colori, cambiare suono, riscrivere
+ * il messaggio. "none" è no-op (non tocca niente) per chi vuole
+ * libertà totale. La scelta è facoltativa: si può saltare e andare
+ * dritti al form. Obiettivo: ridurre il carico cognitivo del
+ * first-timer — il 60-70% dei regali cade in 3 occasioni (compleanno,
+ * anniversario, San Valentino), avere 1-click per quei casi migliora
+ * molto la conversione.
+ */
+interface OccasionTemplate {
+  id: string;
+  emoji: string;
+  labelKey: string;          // i18n key per l'etichetta
+  pkg?: Packaging;           // packaging (assente per "none")
+  messageIt: string;         // starter message IT
+  messageEn: string;         // starter message EN
+  messageJa?: string;        // starter message JA (fallback a IT se omesso)
+  messageZh?: string;        // starter message ZH
+}
+const OCCASIONS: OccasionTemplate[] = [
+  {
+    id: "birthday", emoji: "🎂", labelKey: "create.occasion_birthday",
+    pkg: { paperColor:"#E8C84A", ribbonColor:"#D85A5A", bowColor:"#D85A5A", bowType:"rosette", openAnimation:"explode", sound:"bells" },
+    messageIt: "Tanti auguri di buon compleanno! 🎂 Che questa sia una giornata piena di gioia.",
+    messageEn: "Happy birthday! 🎂 May today be full of joy.",
+    messageJa: "お誕生日おめでとう！🎂 素敵な一日になりますように。",
+    messageZh: "生日快乐！🎂 祝你今天充满欢乐。",
+  },
+  {
+    id: "anniversary", emoji: "💍", labelKey: "create.occasion_anniversary",
+    pkg: { paperColor:"#E8A0A0", ribbonColor:"#E8C84A", bowColor:"#E8C84A", bowType:"classic", openAnimation:"lift", sound:"chime" },
+    messageIt: "Per il nostro anniversario ❤️ Ogni giorno con te è un regalo.",
+    messageEn: "Happy anniversary ❤️ Every day with you is a gift.",
+    messageJa: "記念日おめでとう ❤️ 毎日があなたと過ごすギフトです。",
+    messageZh: "纪念日快乐 ❤️ 与你共度的每一天都是礼物。",
+  },
+  {
+    id: "graduation", emoji: "🎓", labelKey: "create.occasion_graduation",
+    pkg: { paperColor:"#1A3A6B", ribbonColor:"#E8C84A", bowColor:"#E8C84A", bowType:"star", openAnimation:"explode", sound:"chime" },
+    messageIt: "Congratulazioni per la laurea! 🎓 Il meglio deve ancora venire.",
+    messageEn: "Congratulations on your graduation! 🎓 The best is yet to come.",
+    messageJa: "卒業おめでとう！🎓 これからの活躍を楽しみにしています。",
+    messageZh: "祝贺毕业！🎓 最精彩的还在后头。",
+  },
+  {
+    id: "birth", emoji: "👶", labelKey: "create.occasion_birth",
+    pkg: { paperColor:"#F5C6C6", ribbonColor:"#F8F5ED", bowColor:"#F8F5ED", bowType:"pompom", openAnimation:"unfold", sound:"kawaii" },
+    messageIt: "Benvenuto/a al mondo! 👶 Tanti auguri ai genitori.",
+    messageEn: "Welcome to the world! 👶 Congratulations to the parents.",
+    messageJa: "ようこそ世界へ！👶 ご両親にお祝い申し上げます。",
+    messageZh: "欢迎来到这个世界！👶 恭喜新手爸妈。",
+  },
+  {
+    id: "valentine", emoji: "❤️", labelKey: "create.occasion_valentine",
+    pkg: { paperColor:"#D85A5A", ribbonColor:"#E8A0BC", bowColor:"#E8A0BC", bowType:"rosette", openAnimation:"lift", sound:"chime" },
+    messageIt: "Sei il mio tutto ❤️ Buon San Valentino.",
+    messageEn: "You are my everything ❤️ Happy Valentine's Day.",
+    messageJa: "あなたは私のすべて ❤️ ハッピーバレンタイン。",
+    messageZh: "你是我的一切 ❤️ 情人节快乐。",
+  },
+  {
+    id: "christmas", emoji: "🎄", labelKey: "create.occasion_christmas",
+    pkg: { paperColor:"#3B8C5A", ribbonColor:"#D85A5A", bowColor:"#E8C84A", bowType:"classic", openAnimation:"unfold", sound:"bells" },
+    messageIt: "Buon Natale! 🎄 Che queste feste siano calde e serene.",
+    messageEn: "Merry Christmas! 🎄 Wishing you warm and peaceful holidays.",
+    messageJa: "メリークリスマス！🎄 温かく穏やかな休日をお過ごしください。",
+    messageZh: "圣诞快乐！🎄 愿你度过温暖平静的节日。",
+  },
+  {
+    id: "thanks", emoji: "🙏", labelKey: "create.occasion_thanks",
+    pkg: { paperColor:"#8EC49A", ribbonColor:"#E8C84A", bowColor:"#E8C84A", bowType:"simple", openAnimation:"lift", sound:"chime" },
+    messageIt: "Grazie di cuore 🙏 Per tutto quello che hai fatto.",
+    messageEn: "Thank you from the heart 🙏 For everything you've done.",
+    messageJa: "心から感謝しています 🙏 いつもありがとう。",
+    messageZh: "衷心感谢 🙏 感谢你所做的一切。",
+  },
+  {
+    id: "none", emoji: "✨", labelKey: "create.occasion_none",
+    messageIt: "", messageEn: "",
+  },
+];
+
 const INP: React.CSSProperties = { width:"100%",padding:"13px 15px",fontSize:15,border:"1.5px solid #e0dbd5",borderRadius:11,outline:"none",boxSizing:"border-box",background:"#fff",color:DEEP,fontFamily:"inherit" };
 
 export default function CreateGiftClient({ userId }: { userId: string }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [step,    setStep]    = useState(1);
+  const [occasion, setOccasion] = useState<string | null>(null);
   const [name,    setName]    = useState("");
   const [senderAlias, setSenderAlias] = useState("");
   const [cType,   setCType]   = useState<string|null>(null);
@@ -139,6 +226,25 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
   }, []);
 
   const { upload, uploading } = useUpload();
+
+  /**
+   * Applica un template occasione: setta packaging e messaggio starter
+   * (solo se il messaggio è vuoto — non sovrascriviamo quello che
+   * l'utente ha già scritto). Il messaggio è localizzato in base al
+   * locale corrente, con fallback IT.
+   */
+  const applyOccasion = (tpl: OccasionTemplate) => {
+    setOccasion(tpl.id);
+    if (tpl.pkg) setPkg(tpl.pkg);
+    if (!msg.trim()) {
+      const localized =
+        locale === "en" ? tpl.messageEn :
+        locale === "ja" ? (tpl.messageJa || tpl.messageIt) :
+        locale === "zh" ? (tpl.messageZh || tpl.messageIt) :
+        tpl.messageIt;
+      if (localized) setMsg(localized);
+    }
+  };
 
   const next = () => setStep(s => s+1);
   const back = () => setStep(s => s-1);
@@ -255,7 +361,7 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
         <button onClick={()=>{setStep(isFile?4:5);setIsEditing(true);}} style={{background:"#f0f4ff",color:"#3B5BDB",border:"2px solid #3B5BDB",borderRadius:40,padding:"12px 24px",fontSize:14,fontWeight:700,cursor:"pointer"}}>
           {t("create.edit_packaging")}
         </button>
-        <button onClick={()=>{setResult(null);setStep(1);setName("");setSenderAlias("");setMsg("");setCType(null);setCUrl("");setCText("");setCFile("");setCustomSoundUrl("");setCustomSoundName("");setCustomSoundTitle("");setPkg(DEFAULT_PKG);}} style={{background:"transparent",color:ACCENT,border:"1.5px solid #f9c8d9",borderRadius:40,padding:"12px 24px",fontSize:14,fontWeight:600,cursor:"pointer"}}>
+        <button onClick={()=>{setResult(null);setStep(1);setOccasion(null);setName("");setSenderAlias("");setMsg("");setCType(null);setCUrl("");setCText("");setCFile("");setCustomSoundUrl("");setCustomSoundName("");setCustomSoundTitle("");setPkg(DEFAULT_PKG);}} style={{background:"transparent",color:ACCENT,border:"1.5px solid #f9c8d9",borderRadius:40,padding:"12px 24px",fontSize:14,fontWeight:600,cursor:"pointer"}}>
           {t("create.create_another")}
         </button>
       </div>
@@ -298,9 +404,62 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
           </div>
         )}
 
-        {/* S1 — name */}
+        {/* S1 — name + occasione */}
         {step===1&&<>
           <h2 style={{fontSize:24,fontWeight:800,color:DEEP,margin:"0 0 20px"}}>{t("create.step1_title")}</h2>
+
+          {/* Occasion picker: se nessuna scelta, mostra griglia 4x2 di
+              template. Se già scelta, mostra badge "preset applicato"
+              + link per cambiare. Gli utenti che non vogliono preset
+              cliccano "Nessuna occasione" (tile ✨) e vedono comunque
+              il form senza modifiche al packaging. */}
+          {!occasion ? (
+            <div style={{marginBottom:22}}>
+              <p style={{fontSize:14,fontWeight:700,color:DEEP,margin:"0 0 4px"}}>{t("create.occasion_title")}</p>
+              <p style={{fontSize:12,color:MUTED,margin:"0 0 14px",lineHeight:1.4}}>{t("create.occasion_hint")}</p>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8}}>
+                {OCCASIONS.map(o => (
+                  <button
+                    key={o.id}
+                    onClick={() => applyOccasion(o)}
+                    style={{
+                      background:"#fff",
+                      border:"1.5px solid #e0dbd5",
+                      borderRadius:14,
+                      padding:"14px 6px",
+                      textAlign:"center",
+                      cursor:"pointer",
+                      transition:"all .14s",
+                      fontFamily:"inherit",
+                    }}
+                    onMouseEnter={(e)=>{(e.currentTarget as HTMLButtonElement).style.borderColor=ACCENT;(e.currentTarget as HTMLButtonElement).style.transform="translateY(-2px)";}}
+                    onMouseLeave={(e)=>{(e.currentTarget as HTMLButtonElement).style.borderColor="#e0dbd5";(e.currentTarget as HTMLButtonElement).style.transform="translateY(0)";}}
+                  >
+                    <div style={{fontSize:26,marginBottom:4,lineHeight:1}}>{o.emoji}</div>
+                    <div style={{fontSize:11,fontWeight:700,color:DEEP,lineHeight:1.2}}>{t(o.labelKey)}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div style={{
+              display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,
+              background:"#fff5f8",border:"1px solid #f9c8d9",borderRadius:14,
+              padding:"10px 14px",marginBottom:20,
+            }}>
+              <div style={{fontSize:13,color:DEEP,fontWeight:600}}>
+                <span style={{fontSize:18,marginRight:8}}>{OCCASIONS.find(o=>o.id===occasion)?.emoji}</span>
+                {t("create.occasion_applied")}
+              </div>
+              <button
+                onClick={() => setOccasion(null)}
+                style={{background:"transparent",border:"none",color:ACCENT,fontSize:12,fontWeight:700,cursor:"pointer",padding:0,fontFamily:"inherit",textDecoration:"underline"}}
+              >
+                {t("create.occasion_change")}
+              </button>
+            </div>
+          )}
+
           <p style={{fontSize:13,color:MUTED,margin:"0 0 8px"}}>{t("create.recipient_label")}</p>
           <input style={INP} placeholder={t("create.recipient_placeholder")} value={name} onChange={e=>setName(e.target.value)}/>
           <p style={{fontSize:13,color:MUTED,margin:"16px 0 8px"}}>{t("create.sender_label")}</p>
