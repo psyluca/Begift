@@ -32,6 +32,14 @@ export interface Gift {
   content_text:      string | null;
   content_file_name: string | null;
   created_at:        string;
+  /** Se valorizzato, il gift è programmato per essere consegnato a
+   *  quella data/ora. Fino ad allora il destinatario vede una waiting
+   *  page con countdown, non il contenuto. Null = consegna immediata. */
+  scheduled_at?:     string | null;
+  /** Timestamp della prima apertura (migration 003). Null se mai aperto. */
+  opened_at?:        string | null;
+  /** Timestamp della prima condivisione (migration 003). */
+  shared_at?:        string | null;
 }
 
 export interface Reaction {

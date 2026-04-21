@@ -485,6 +485,18 @@ export default function GiftOpeningClient({ gift }: { gift: Gift }) {
   const [playing,   setPlaying]   = useState(false);
   const audioRef = useRef<HTMLAudioElement|null>(null);
 
+  // Schedulazione: se il gift è programmato per il futuro e il viewer
+  // non è il creator, mostriamo la waiting page con countdown invece
+  // del contenuto. Il creator può sempre visualizzare il gift (per
+  // verificare anteprima) anche se scheduled_at è nel futuro.
+  const scheduledAt = gift.scheduled_at ? new Date(gift.scheduled_at) : null;
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    if (!scheduledAt) return;
+    const id = setInterval(() => setTick(t => t + 1), 1000);
+    return () => clearInterval(id);
+  }, [scheduledAt]);
+
   const stopMusic = () => {
     if (audioRef.current) { audioRef.current.pause(); audioRef.current.currentTime = 0; audioRef.current = null; }
     setPlaying(false);
@@ -581,6 +593,20 @@ export default function GiftOpeningClient({ gift }: { gift: Gift }) {
   };
 
   const exitStyle: React.CSSProperties = {};
+
+  // Gift programmato nel futuro + visitatore non creator → waiting page.
+  // Il creator può sempre visualizzare per verifica. tick è usato per
+  // forzare il re-render ogni secondo e aggiornare il countdown.
+  if (scheduledAt && scheduledAt.getTime() > Date.now() && !isCreator) {
+    void tick; // mantiene la dipendenza
+    return (
+      <WaitingPage
+        scheduledAt={scheduledAt}
+        recipientName={gift.recipient_name}
+        senderAlias={(gift as any).sender_alias ?? null}
+      />
+    );
+  }
 
   return (
     <main style={{ minHeight: "100vh", background: "#fafaf8", fontFamily: "system-ui, sans-serif" }}>
@@ -757,6 +783,80 @@ export default function GiftOpeningClient({ gift }: { gift: Gift }) {
         recipientName={gift.recipient_name}
         creatorName={(gift as any).sender_alias || undefined}
       />
+    </main>
+  );
+}
+
+/**
+ * WaitingPage — mostrata al destinatario quando il gift è programmato
+ * per una data/ora futura. Grande orologio + countdown D/H/M/S che
+ * si aggiorna live, messaggio "arriva il [data]", call-to-action
+ * discreta (niente spoiler sul contenuto).
+ */
+function WaitingPage({
+  scheduledAt,
+  recipientName,
+  senderAlias,
+}: {
+  scheduledAt: Date;
+  recipientName: string;
+  senderAlias: string | null;
+}) {
+  const ACCENT = "#D4537E";
+  const DEEP = "#1a1a1a";
+  const MUTED = "#888";
+
+  const now = Date.now();
+  const diff = Math.max(0, scheduledAt.getTime() - now);
+  const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  const s = Math.floor((diff % (1000 * 60)) / 1000);
+
+  const arrivalLocal = scheduledAt.toLocaleString("it-IT", {
+    weekday: "long", day: "numeric", month: "long", year: "numeric",
+    hour: "2-digit", minute: "2-digit",
+  });
+
+  return (
+    <main style={{ minHeight: "100vh", background: "#fafaf8", fontFamily: "system-ui, sans-serif", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24, textAlign: "center" }}>
+      <div style={{ fontSize: 72, marginBottom: 20, animation: "floatWait 3s ease-in-out infinite" }}>🎁</div>
+      <style>{`@keyframes floatWait { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }`}</style>
+
+      <h1 style={{ fontSize: 28, fontWeight: 800, color: DEEP, margin: "0 0 10px" }}>
+        {recipientName ? <>Un regalo per <span style={{ color: ACCENT }}>{recipientName}</span></> : "Un regalo in arrivo"}
+      </h1>
+      {senderAlias && (
+        <p style={{ fontSize: 14, color: MUTED, margin: "0 0 28px" }}>
+          da <strong style={{ color: DEEP }}>{senderAlias}</strong>
+        </p>
+      )}
+
+      <p style={{ fontSize: 14, color: MUTED, margin: "0 0 18px", maxWidth: 400, lineHeight: 1.5 }}>
+        Il tuo regalo si aprirà il<br/>
+        <strong style={{ color: DEEP, fontSize: 15 }}>{arrivalLocal}</strong>
+      </p>
+
+      <div style={{ display: "flex", gap: 14, marginBottom: 28, flexWrap: "wrap", justifyContent: "center" }}>
+        {[{v:d,l:"giorni"},{v:h,l:"ore"},{v:m,l:"minuti"},{v:s,l:"secondi"}].map(({v,l}) => (
+          <div key={l} style={{ background: "#fff", borderRadius: 14, padding: "14px 16px", minWidth: 70, border: "1px solid #e0dbd5", boxShadow: "0 2px 8px #0000000a" }}>
+            <div style={{ fontSize: 30, fontWeight: 800, color: DEEP, fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>
+              {v.toString().padStart(2, "0")}
+            </div>
+            <div style={{ fontSize: 10, color: MUTED, textTransform: "uppercase", letterSpacing: 1, marginTop: 4 }}>
+              {l}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <p style={{ fontSize: 12, color: MUTED, maxWidth: 340, lineHeight: 1.5, margin: 0 }}>
+        Torna su questo link all&apos;orario indicato. Salva la pagina nei preferiti per non perdertelo.
+      </p>
+
+      <div style={{ marginTop: 40, fontSize: 11, color: "#bbb" }}>
+        Made with ❤️ by Be<span style={{ color: ACCENT }}>Gift</span>
+      </div>
     </main>
   );
 }

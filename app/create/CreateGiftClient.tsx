@@ -113,6 +113,9 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
   const [customSoundUrl, setCustomSoundUrl] = useState<string>("");
   const [customSoundName, setCustomSoundName] = useState<string>("");
   const [customSoundTitle, setCustomSoundTitle] = useState<string>("");
+  // Scheduling: "now" = invio immediato, "later" = programmato a scheduledAt
+  const [schedMode, setSchedMode] = useState<"now"|"later">("now");
+  const [scheduledAt, setScheduledAt] = useState<string>(""); // datetime-local format YYYY-MM-DDTHH:MM
   const [loading, setLoading] = useState(false);
   const [result,  setResult]  = useState<{id:string;url:string}|null>(null);
   const [copied,  setCopied]  = useState(false);
@@ -166,12 +169,22 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
     // solo campo testo (il `msg`). Copiamo msg anche in contentText
     // così il backend riceve il testo principale nel campo atteso.
     const effectiveContentText = cType === "message" ? (cText || msg) : cText;
+    // Se l'utente ha scelto "programma invio", converto il valore
+    // datetime-local (interpretato come ora locale del browser) in
+    // ISO stringa UTC. Il server valida poi che sia nel futuro.
+    let scheduledAtIso: string | undefined;
+    if (schedMode === "later" && scheduledAt) {
+      const d = new Date(scheduledAt);
+      if (!isNaN(d.getTime())) scheduledAtIso = d.toISOString();
+    }
+
     const res = await fetch("/api/gifts", {
       method: "POST",
       headers: { "Content-Type": "application/json", ...authHeader },
       body: JSON.stringify({
         recipientName: name, senderAlias: senderAlias||undefined, message: msg, packaging: {...pkg, ...(customSoundUrl ? {customSoundUrl, customSoundTitle: customSoundTitle||undefined} : {})},
         contentType: cType, contentUrl: cUrl, contentText: effectiveContentText, contentFileName: cFile,
+        scheduledAt: scheduledAtIso,
       }),
     });
     const data = await res.json();
@@ -491,7 +504,12 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
               <button onClick={()=>{setStep(99);setIsEditing(false);}} style={{display:"block",width:"100%",background:"none",border:"none",color:MUTED,fontSize:13,cursor:"pointer",padding:"8px"}}>{t("create.cancel")}</button>
             </div>
           ) : (
-            <button onClick={submit} disabled={loading} style={{display:"block",width:"100%",background:loading?"#e0dbd5":ACCENT,color:"#fff",border:"none",borderRadius:40,padding:"15px",fontSize:15,fontWeight:700,cursor:loading?"not-allowed":"pointer",marginTop:8}}>{loading?t("create.creating"):t("create.create_link")}</button>
+            <>
+              <ScheduleSection mode={schedMode} setMode={setSchedMode} value={scheduledAt} setValue={setScheduledAt} />
+              <button onClick={submit} disabled={loading || (schedMode==="later" && !scheduledAt)} style={{display:"block",width:"100%",background:(loading || (schedMode==="later" && !scheduledAt))?"#e0dbd5":ACCENT,color:"#fff",border:"none",borderRadius:40,padding:"15px",fontSize:15,fontWeight:700,cursor:loading?"not-allowed":"pointer",marginTop:8}}>
+                {loading ? t("create.creating") : (schedMode === "later" ? "⏰ Programma regalo" : t("create.create_link"))}
+              </button>
+            </>
           )}
         </>}
         {step===5&&isFile&&(
@@ -499,10 +517,112 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
             <div style={{fontSize:64,marginBottom:16}}>🎀</div>
             <h2 style={{fontSize:24,fontWeight:800,color:DEEP,margin:"0 0 10px"}}>{t("create.ready")}</h2>
             <p style={{color:MUTED,marginBottom:24}}>{t("create.gift_ready_for", { name })}</p>
-            <button onClick={submit} disabled={loading} style={{display:"block",width:"100%",background:loading?"#e0dbd5":ACCENT,color:"#fff",border:"none",borderRadius:40,padding:"15px",fontSize:15,fontWeight:700,cursor:loading?"not-allowed":"pointer"}}>{loading?t("create.creating"):t("create.create_link")}</button>
+            <ScheduleSection mode={schedMode} setMode={setSchedMode} value={scheduledAt} setValue={setScheduledAt} />
+            <button onClick={submit} disabled={loading || (schedMode==="later" && !scheduledAt)} style={{display:"block",width:"100%",background:(loading || (schedMode==="later" && !scheduledAt))?"#e0dbd5":ACCENT,color:"#fff",border:"none",borderRadius:40,padding:"15px",fontSize:15,fontWeight:700,cursor:loading?"not-allowed":"pointer"}}>
+              {loading ? t("create.creating") : (schedMode === "later" ? "⏰ Programma regalo" : t("create.create_link"))}
+            </button>
           </div>
         )}
       </div>
     </main>
+  );
+}
+
+/**
+ * ScheduleSection — toggle + datetime picker per programmare l'invio.
+ *
+ * - Default "now" = invio immediato (comportamento standard)
+ * - "later" = mostra input datetime-local. Il valore è in ora locale del
+ *   browser; viene convertito a UTC ISO al submit.
+ * - Min set a "now + 1 minuto" per prevenire programmazioni nel passato
+ *   o quasi-immediate (l'API accetta solo date > now+30s).
+ *
+ * Mobile-friendly: l'input datetime-local su iOS/Android usa il picker
+ * nativo dell'OS (ruota data + ora). Su desktop è un input standard con
+ * spinner.
+ */
+function ScheduleSection({
+  mode,
+  setMode,
+  value,
+  setValue,
+}: {
+  mode: "now" | "later";
+  setMode: (m: "now" | "later") => void;
+  value: string;
+  setValue: (v: string) => void;
+}) {
+  const ACCENT = "#D4537E";
+  const DEEP = "#1a1a1a";
+  const MUTED = "#888";
+  const BORDER = "#e0dbd5";
+
+  // Min = ora corrente + 5 minuti, formato YYYY-MM-DDTHH:MM
+  const now = new Date(Date.now() + 5 * 60 * 1000);
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  const minStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+
+  return (
+    <div style={{ marginTop: 18, marginBottom: 6, padding: "14px 14px 12px", border: `1px solid ${BORDER}`, borderRadius: 14, background: "#fafaf7" }}>
+      <div style={{ fontSize: 11, color: MUTED, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>
+        Quando arriva il regalo
+      </div>
+      <div style={{ display: "flex", gap: 6, marginBottom: mode === "later" ? 10 : 0 }}>
+        {([
+          { v: "now",   label: "🚀 Invia ora" },
+          { v: "later", label: "⏰ Programma" },
+        ] as const).map((opt) => {
+          const active = mode === opt.v;
+          return (
+            <button
+              key={opt.v}
+              type="button"
+              onClick={() => setMode(opt.v)}
+              style={{
+                flex: 1,
+                background: active ? ACCENT : "#fff",
+                border: `1.5px solid ${active ? ACCENT : BORDER}`,
+                color: active ? "#fff" : DEEP,
+                borderRadius: 12,
+                padding: "10px",
+                fontSize: 13,
+                fontWeight: active ? 700 : 500,
+                cursor: "pointer",
+                fontFamily: "inherit",
+              }}
+            >
+              {opt.label}
+            </button>
+          );
+        })}
+      </div>
+      {mode === "later" && (
+        <>
+          <input
+            type="datetime-local"
+            value={value}
+            min={minStr}
+            onChange={(e) => setValue(e.target.value)}
+            style={{
+              width: "100%",
+              boxSizing: "border-box",
+              border: `1.5px solid ${BORDER}`,
+              borderRadius: 10,
+              padding: "11px 12px",
+              fontSize: 14,
+              color: DEEP,
+              outline: "none",
+              fontFamily: "inherit",
+              background: "#fff",
+            }}
+          />
+          {value && (
+            <div style={{ fontSize: 11, color: MUTED, marginTop: 6, lineHeight: 1.4 }}>
+              Il destinatario vedrà un countdown fino all&apos;arrivo del regalo. Tu potrai monitorarlo dal dashboard.
+            </div>
+          )}
+        </>
+      )}
+    </div>
   );
 }
