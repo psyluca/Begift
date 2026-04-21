@@ -173,6 +173,8 @@
     "created_by_you": "You created this gift 🎁",
     "go_to_gifts": "Go to your gifts →",
     "preview_banner": "👀 You are viewing a preview",
+    "preview_mode_banner": "Sender preview — this open won't be counted",
+    "preview_gift_cta": "👀 See how it will look",
     "close_preview": "✕ Close preview",
     "download": "⬇️ Download {name}",
     "download_doc": "⬇️ Download document",

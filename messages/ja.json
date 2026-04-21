@@ -173,6 +173,8 @@
     "created_by_you": "あなたが作成したギフト 🎁",
     "go_to_gifts": "ギフト一覧へ →",
     "preview_banner": "👀 プレビュー表示中",
+    "preview_mode_banner": "送信者プレビュー — 開封はカウントされません",
+    "preview_gift_cta": "👀 受け取り画面を確認",
     "close_preview": "✕ プレビューを閉じる",
     "download": "⬇️ {name}をダウンロード",
     "download_doc": "⬇️ ドキュメントをダウンロード",

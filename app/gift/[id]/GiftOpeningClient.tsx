@@ -789,9 +789,17 @@ export default function GiftOpeningClient({ gift }: { gift: Gift }) {
   // sul banner "preview". Stato inizializzato a false, letto da
   // window.location.search solo DOPO il mount.
   const [fromCreate, setFromCreate] = useState(false);
+  // previewMode: se ?preview=1 nella URL (dalla dashboard del mittente),
+  // NON registriamo l'apertura (niente riga in gift_opens) e NON
+  // salviamo in begift_received localStorage. Il mittente può vedere
+  // il regalo come apparirà al destinatario senza "consumare" l'apertura
+  // reale. Banner ambrato avvisa che è modalità preview.
+  const [previewMode, setPreviewMode] = useState(false);
   useEffect(() => {
     try {
-      setFromCreate(new URLSearchParams(window.location.search).get("from") === "create");
+      const params = new URLSearchParams(window.location.search);
+      setFromCreate(params.get("from") === "create");
+      setPreviewMode(params.get("preview") === "1");
     } catch { /* ignore */ }
   }, []);
   const fromName   = (gift as any).sender_alias || null;
@@ -819,40 +827,46 @@ export default function GiftOpeningClient({ gift }: { gift: Gift }) {
         const ease = 1 - Math.pow(1 - raw, 3);
         setLidY(82 - ease * 72);
         if (raw < 1) { raf.current = requestAnimationFrame(tick); }
-        else { setTimeout(() => { 
+        else { setTimeout(() => {
           setPhase("revealed"); setOpened(true);
-          // Save to localStorage
+          // Save to localStorage — SKIP in preview mode (mittente che
+          // sta vedendo l'anteprima, non deve apparire in 'ricevuti')
+          if (!previewMode) {
+            try {
+              const stored = JSON.parse(localStorage.getItem("begift_received") || "[]");
+              if (!stored.find((g: any) => g.id === gift.id)) {
+                localStorage.setItem("begift_received", JSON.stringify([{ ...gift, receivedAt: new Date().toISOString() }, ...stored]));
+              }
+            } catch {}
+            // Save to DB — anche qui skip in preview mode (niente
+            // riga in gift_opens, il contatore aperture resta genuino)
+            try {
+              let deviceId = localStorage.getItem("begift_device_id");
+              if (!deviceId) { deviceId = Math.random().toString(36).slice(2); localStorage.setItem("begift_device_id", deviceId); }
+              // Save device_id in cookie for login callback
+              document.cookie = `begift_device_id=${deviceId}; path=/; max-age=86400; SameSite=Lax`;
+              fetch("/api/gift-opens", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ giftId: gift.id, deviceId }) });
+            } catch {}
+          }
+        }, 280); }
+      };
+      raf.current = requestAnimationFrame(tick);
+    } else {
+      setTimeout(() => {
+        setPhase("revealed"); setOpened(true);
+        if (!previewMode) {
           try {
             const stored = JSON.parse(localStorage.getItem("begift_received") || "[]");
             if (!stored.find((g: any) => g.id === gift.id)) {
               localStorage.setItem("begift_received", JSON.stringify([{ ...gift, receivedAt: new Date().toISOString() }, ...stored]));
             }
           } catch {}
-          // Save to DB
           try {
             let deviceId = localStorage.getItem("begift_device_id");
             if (!deviceId) { deviceId = Math.random().toString(36).slice(2); localStorage.setItem("begift_device_id", deviceId); }
-            // Save device_id in cookie for login callback
-            document.cookie = `begift_device_id=${deviceId}; path=/; max-age=86400; SameSite=Lax`;
             fetch("/api/gift-opens", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ giftId: gift.id, deviceId }) });
           } catch {}
-        }, 280); }
-      };
-      raf.current = requestAnimationFrame(tick);
-    } else {
-      setTimeout(() => { 
-        setPhase("revealed"); setOpened(true);
-        try {
-          const stored = JSON.parse(localStorage.getItem("begift_received") || "[]");
-          if (!stored.find((g: any) => g.id === gift.id)) {
-            localStorage.setItem("begift_received", JSON.stringify([{ ...gift, receivedAt: new Date().toISOString() }, ...stored]));
-          }
-        } catch {}
-        try {
-          let deviceId = localStorage.getItem("begift_device_id");
-          if (!deviceId) { deviceId = Math.random().toString(36).slice(2); localStorage.setItem("begift_device_id", deviceId); }
-          fetch("/api/gift-opens", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ giftId: gift.id, deviceId }) });
-        } catch {}
+        }
       }, 1250);
     }
   };
@@ -917,6 +931,14 @@ export default function GiftOpeningClient({ gift }: { gift: Gift }) {
           <button onClick={() => window.close()} style={{ background:"#5d4037", color:"#fff", border:"none", borderRadius:20, padding:"8px 16px", fontSize:12, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap" }}>
             {t("gift.close_preview")}
           </button>
+        </div>
+      )}
+      {previewMode && !fromCreate && (
+        <div style={{ background:"#fff8e1", borderBottom:"1px solid #ffe082", padding:"12px 20px", display:"flex", alignItems:"center", justifyContent:"space-between", gap:12 }}>
+          <span style={{ fontSize:13, color:"#5d4037", fontWeight:600 }}>👀 {t("gift.preview_mode_banner")}</span>
+          <a href="/dashboard" style={{ background:"#5d4037", color:"#fff", border:"none", borderRadius:20, padding:"8px 16px", fontSize:12, fontWeight:700, textDecoration:"none", whiteSpace:"nowrap" }}>
+            {t("gift.close_preview")}
+          </a>
         </div>
       )}
       <div style={{ maxWidth: 480, margin: "0 auto", padding: "14px 24px" }}>
@@ -1034,7 +1056,7 @@ export default function GiftOpeningClient({ gift }: { gift: Gift }) {
             recipient + (eventualmente) riferimento al gift originale già
             pre-compilati nell'URL di /create. Solo per utenti loggati
             non-creator con un sender_alias disponibile. */}
-        {opened && !isCreator && loggedIn && fromName && (
+        {opened && !isCreator && loggedIn && fromName && !previewMode && (
           <div style={{ marginTop: 32, paddingTop: 28, borderTop: "1px solid #ede8e0" }}>
             <ThankWithGiftCTA senderName={fromName} originalGiftId={gift.id} />
           </div>
@@ -1057,12 +1079,16 @@ export default function GiftOpeningClient({ gift }: { gift: Gift }) {
       <div style={{ marginTop: 24, padding: "14px 24px 80px", textAlign: "center" }}>
         <p style={{ margin: "3px 0 0", fontSize: 11, color: "#bbb" }}>Made with ❤️ by BeGift</p>
       </div>
-      <GiftChat
-        giftId={gift.id}
-        isCreator={isCreator}
-        recipientName={gift.recipient_name}
-        creatorName={(gift as any).sender_alias || undefined}
-      />
+      {/* GiftChat nascosto in preview mode: il mittente sta solo guardando
+          l'anteprima, non deve aprire/interagire con la chat reale */}
+      {!previewMode && (
+        <GiftChat
+          giftId={gift.id}
+          isCreator={isCreator}
+          recipientName={gift.recipient_name}
+          creatorName={(gift as any).sender_alias || undefined}
+        />
+      )}
     </main>
   );
 }

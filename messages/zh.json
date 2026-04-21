@@ -173,6 +173,8 @@
     "created_by_you": "这是您创建的礼物 🎁",
     "go_to_gifts": "前往礼物列表 →",
     "preview_banner": "👀 正在查看预览",
+    "preview_mode_banner": "发送者预览 — 不会计入打开次数",
+    "preview_gift_cta": "👀 预览收件人视角",
     "close_preview": "✕ 关闭预览",
     "download": "⬇️ 下载{name}",
     "download_doc": "⬇️ 下载文档",
