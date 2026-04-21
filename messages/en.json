@@ -143,6 +143,8 @@
     "cancel": "Cancel",
     "send_whatsapp": "WhatsApp",
     "go_dashboard": "Dashboard",
+    "thanking_banner": "🎁 You're thanking {name} with a gift",
+    "thanking_hint": "We've pre-filled the recipient. Add content, a message, and you're done.",
     "recipient_label": "Recipient's name",
     "ready": "Ready!",
     "gift_ready_for": "The gift for {name} is ready.",
@@ -167,7 +169,10 @@
     "react_differently": "React in a different way →",
     "liked_begift": "Did you enjoy BeGift?",
     "create_free_account": "Create your free account and start sending unforgettable digital gifts.",
-    "create_account_cta": "Create account — it's free →"
+    "create_account_cta": "Create account — it's free →",
+    "thank_with_gift_title": "Thank {name} with a gift",
+    "thank_with_gift_desc": "Open the creator with the recipient already filled in — ten seconds and it's sent.",
+    "thank_with_gift_cta": "Thank with a gift →"
   },
   "reaction_builder": {
     "sent_title": "Reaction sent!",

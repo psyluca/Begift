@@ -966,6 +966,18 @@ export default function GiftOpeningClient({ gift }: { gift: Gift }) {
             />
           </div>
         )}
+
+        {/* Gift Chain — "Ringrazia con un regalo".
+            Loop di viralità: dopo aver ricevuto un regalo, il destinatario
+            può ringraziare creando un nuovo regalo per il mittente, con
+            recipient + (eventualmente) riferimento al gift originale già
+            pre-compilati nell'URL di /create. Solo per utenti loggati
+            non-creator con un sender_alias disponibile. */}
+        {opened && !isCreator && loggedIn && fromName && (
+          <div style={{ marginTop: 32, paddingTop: 28, borderTop: "1px solid #ede8e0" }}>
+            <ThankWithGiftCTA senderName={fromName} originalGiftId={gift.id} />
+          </div>
+        )}
       </div>
 
       {opened && !loggedIn && (
@@ -1098,5 +1110,61 @@ function WaitingPage({
         Made with ❤️ by Be<span style={{ color: ACCENT }}>Gift</span>
       </div>
     </main>
+  );
+}
+
+/**
+ * ThankWithGiftCTA — bottone "Ringrazia {sender} con un regalo" che appare
+ * dopo l'apertura per il destinatario loggato, quando conosciamo il nome
+ * del mittente (sender_alias). Porta a /create con `recipient` e `thankFor`
+ * pre-compilati via query-string, così CreateGiftClient può:
+ *  - riempire subito il campo `name`
+ *  - mostrare un banner "Stai ringraziando {name}"
+ *  - tracciare in futuro la gift-chain (thankFor = id del gift originale)
+ *
+ * Copy + CTA separati dal blocco "crea account gratis" (che è per non-loggati)
+ * e dalla reaction zone (reazione leggera vs regalo vero e proprio).
+ */
+function ThankWithGiftCTA({ senderName, originalGiftId }: { senderName: string; originalGiftId: string }) {
+  const { t } = useI18n();
+  const ACCENT = "#D4537E";
+  const DEEP = "#1a1a1a";
+  const MUTED = "#888";
+  const href = `/create?thankFor=${encodeURIComponent(originalGiftId)}&recipient=${encodeURIComponent(senderName)}`;
+  return (
+    <div
+      style={{
+        background: "linear-gradient(135deg, #fff5f8, #ffeef4)",
+        border: "1px solid #f9c8d9",
+        borderRadius: 20,
+        padding: "22px 20px",
+        textAlign: "center",
+      }}
+    >
+      <div style={{ fontSize: 28, marginBottom: 8 }}>💝</div>
+      <h3 style={{ fontSize: 16, fontWeight: 800, color: DEEP, margin: "0 0 6px" }}>
+        {t("gift.thank_with_gift_title", { name: senderName })}
+      </h3>
+      <p style={{ fontSize: 13, color: MUTED, lineHeight: 1.5, margin: "0 0 16px", maxWidth: 360, marginLeft: "auto", marginRight: "auto" }}>
+        {t("gift.thank_with_gift_desc")}
+      </p>
+      <a
+        href={href}
+        style={{
+          display: "inline-block",
+          background: ACCENT,
+          color: "#fff",
+          border: "none",
+          borderRadius: 40,
+          padding: "13px 26px",
+          fontSize: 14,
+          fontWeight: 700,
+          textDecoration: "none",
+          boxShadow: "0 4px 14px rgba(212, 83, 126, 0.25)",
+        }}
+      >
+        {t("gift.thank_with_gift_cta")}
+      </a>
+    </div>
   );
 }

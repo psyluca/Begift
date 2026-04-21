@@ -143,6 +143,8 @@
     "cancel": "取消",
     "send_whatsapp": "WhatsApp",
     "go_dashboard": "控制面板",
+    "thanking_banner": "🎁 你正在用礼物感谢 {name}",
+    "thanking_hint": "收件人已预填。添加内容和留言即可完成。",
     "recipient_label": "收件人姓名",
     "ready": "完成！",
     "gift_ready_for": "送给{name}的礼物已准备好。",
@@ -167,7 +169,10 @@
     "react_differently": "换一种方式回应 →",
     "liked_begift": "BeGift体验如何？",
     "create_free_account": "创建免费账户，开始发送难忘的数字礼物。",
-    "create_account_cta": "免费创建账户 →"
+    "create_account_cta": "免费创建账户 →",
+    "thank_with_gift_title": "用礼物感谢 {name}",
+    "thank_with_gift_desc": "打开创建页面，收件人已预填 — 十秒即可送出。",
+    "thank_with_gift_cta": "用礼物表达感谢 →"
   },
   "reaction_builder": {
     "sent_title": "回应已发送！",
