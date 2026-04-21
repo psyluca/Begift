@@ -30,6 +30,7 @@
 
 import { useState } from "react";
 import { useI18n } from "@/lib/i18n";
+import { createSupabaseClient } from "@/lib/supabase/client";
 
 const ACCENT = "#D4537E";
 const DEEP = "#1a1a1a";
@@ -119,20 +120,35 @@ function AIMessageModal({ recipientName, senderName, locale, onClose, onPick }: 
     setError(null);
     setSuggestions(null);
     try {
-      // Passo il Bearer token dal localStorage se presente. Il resto
-      // dell'app usa questo pattern perché la session è salvata in
-      // localStorage (non solo nei cookie) — senza Bearer la route
-      // server-side restituisce 401 anche se l'utente è loggato.
+      // Leggo il Bearer token dalla session Supabase corrente. Uso il
+      // client ufficiale (che gestisce auto-refresh, sa dove trovare
+      // lo storage key qualunque sia il project ref, e recupera da
+      // cookie se localStorage è vuoto). Fallback ad una scansione
+      // manuale di tutte le chiavi localStorage `sb-*-auth-token` in
+      // caso il client non trovi la session (es. dopo un refresh
+      // recente).
       const headers: Record<string, string> = { "Content-Type": "application/json" };
       try {
-        const stored = localStorage.getItem("sb-acoettfsxcfpvhjzreoy-auth-token");
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          if (parsed?.access_token) {
-            headers["Authorization"] = `Bearer ${parsed.access_token}`;
+        const sb = createSupabaseClient();
+        const { data } = await sb.auth.getSession();
+        let token = data?.session?.access_token;
+        if (!token && typeof window !== "undefined") {
+          // Fallback: cerca qualunque chiave sb-*-auth-token
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith("sb-") && key.endsWith("-auth-token")) {
+              try {
+                const raw = localStorage.getItem(key);
+                if (raw) {
+                  const parsed = JSON.parse(raw);
+                  if (parsed?.access_token) { token = parsed.access_token; break; }
+                }
+              } catch { /* skip */ }
+            }
           }
         }
-      } catch { /* no session in localStorage */ }
+        if (token) headers["Authorization"] = `Bearer ${token}`;
+      } catch { /* proceed without auth header, server will 401 */ }
 
       const res = await fetch("/api/ai/suggest-message", {
         method: "POST",
