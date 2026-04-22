@@ -50,6 +50,15 @@ function BellIcon({ active }: { active: boolean }) {
   );
 }
 
+function SettingsIcon({ active }: { active: boolean }) {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? ACCENT : MUTED} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+    </svg>
+  );
+}
+
 function Badge({ count }: { count: number }) {
   if (count <= 0) return null;
   return (
@@ -168,10 +177,11 @@ export default function BottomNav() {
   };
 
   const items = [
-    { id: "home",      label: t("nav.home"),     onClick: () => router.push("/"),       icon: (a: boolean) => <HomeIcon active={a}/>,  active: pathname === "/" },
-    { id: "create",    label: t("nav.create"),     onClick: () => router.push("/create"), icon: (a: boolean) => <PlusIcon active={a}/>,  active: pathname === "/create" },
-    { id: "dashboard", label: t("nav.gifts"),   onClick: handleGiftClick,              icon: (a: boolean) => <GiftIcon active={a}/>,  active: pathname === "/dashboard",  giftBadge: true },
-    { id: "reactions", label: t("nav.reactions"), onClick: handleReactionsClick,         icon: (a: boolean) => <BellIcon active={a}/>,  active: pathname === "/reactions",   reactionBadge: true },
+    { id: "home",      label: t("nav.home"),      onClick: () => router.push("/"),             icon: (a: boolean) => <HomeIcon active={a}/>,     active: pathname === "/" },
+    { id: "create",    label: t("nav.create"),    onClick: () => router.push("/create"),       icon: (a: boolean) => <PlusIcon active={a}/>,     active: pathname === "/create" },
+    { id: "dashboard", label: t("nav.gifts"),     onClick: handleGiftClick,                    icon: (a: boolean) => <GiftIcon active={a}/>,     active: pathname === "/dashboard",  giftBadge: true },
+    { id: "reactions", label: t("nav.reactions"), onClick: handleReactionsClick,               icon: (a: boolean) => <BellIcon active={a}/>,     active: pathname === "/reactions",   reactionBadge: true },
+    { id: "settings",  label: t("nav.settings"),  onClick: () => router.push("/settings"),     icon: (a: boolean) => <SettingsIcon active={a}/>, active: pathname.startsWith("/settings") },
   ];
 
   return (

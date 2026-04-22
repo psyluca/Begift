@@ -3,7 +3,8 @@
     "home": "Home",
     "create": "Create",
     "gifts": "Gifts",
-    "reactions": "Reactions"
+    "reactions": "Reactions",
+    "settings": "Settings"
   },
   "auth": {
     "title": "Sign in to your account",

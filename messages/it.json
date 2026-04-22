@@ -3,7 +3,8 @@
     "home": "Home",
     "create": "Crea",
     "gifts": "Regali",
-    "reactions": "Reazioni"
+    "reactions": "Reazioni",
+    "settings": "Impostazioni"
   },
   "auth": {
     "title": "Accedi al tuo account",

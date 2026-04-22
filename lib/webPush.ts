@@ -35,6 +35,13 @@ export interface PushPayload {
   tag?: string;
 }
 
+/**
+ * Tipo di notifica — mappa alle colonne notify_* su profiles.
+ * Il server controlla la pref corrispondente prima di inviare:
+ * se false, skip silenzioso (user ha disabilitato questo tipo).
+ */
+export type NotificationType = "gift_received" | "gift_opened" | "reaction";
+
 let vapidConfigured = false;
 function configureVapid() {
   if (vapidConfigured) return;
@@ -52,13 +59,34 @@ function configureVapid() {
  * Invia una push a tutti gli endpoint dell'utente.
  * Ritorna il numero di endpoint che hanno ricevuto la push con successo.
  * Non lancia eccezioni per errori su singoli endpoint (li logga e pulisce).
+ *
+ * Se `type` è specificato, controlla la pref utente (colonna
+ * notify_<type> su profiles): se false, skip senza errori.
  */
 export async function sendPushToUser(
   userId: string,
-  payload: PushPayload
-): Promise<{ sent: number; failed: number; pruned: number }> {
+  payload: PushPayload,
+  type?: NotificationType
+): Promise<{ sent: number; failed: number; pruned: number; skipped?: boolean }> {
   configureVapid();
   const admin = createSupabaseAdmin();
+
+  // Pref check: se l'utente ha disabilitato questo tipo, skip.
+  if (type) {
+    const col = `notify_${type}`;
+    const { data: pref } = await admin
+      .from("profiles")
+      .select(col)
+      .eq("id", userId)
+      .maybeSingle();
+    // Se la colonna manca (backfill non ancora eseguito) o è null,
+    // trattiamo come TRUE (default sicuro). Se esplicitamente false,
+    // skippiamo.
+    const prefValue = (pref as Record<string, boolean | null> | null)?.[col];
+    if (prefValue === false) {
+      return { sent: 0, failed: 0, pruned: 0, skipped: true };
+    }
+  }
 
   const { data: subs, error } = await admin
     .from("push_subscriptions")

@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
         url: `/reactions`,
         giftId: body.giftId,
         tag: `begift-reaction-${body.giftId}`,
-      }).catch((e) => console.error("[reactions] push failed", e));
+      }, "reaction").catch((e) => console.error("[reactions] push failed", e));
     }
   } catch (e) {
     console.error("[reactions] push setup failed", e);
