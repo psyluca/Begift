@@ -13,6 +13,16 @@ export default function TopBar() {
   const { t } = useI18n();
   const loggedIn = !!user;
   const email = user?.email ?? null;
+  // Username derivato dall'email: "psyluca@gmail.com" → "psyluca".
+  // Troncato a 14 char per non crescere troppo su mobile stretto.
+  // Quando introdurremo il campo `username` univoco su profiles,
+  // userà quello in preferenza all'email split.
+  const username = email
+    ? (() => {
+        const u = email.split("@")[0];
+        return u.length > 14 ? u.slice(0, 14) + "…" : u;
+      })()
+    : null;
 
   // Nascondi sulla pagina regalo (esperienza immersiva)
   if (pathname.startsWith("/gift/")) return null;
@@ -52,13 +62,38 @@ export default function TopBar() {
 
         {loggedIn ? (
           <>
-            <span className="topbar-email" style={{
-              fontSize: 13, color: MUTED,
-              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-              maxWidth: 160,
-            }}>
-              {email}
-            </span>
+            {/* Avatar circolare con iniziale — sempre visibile (anche
+                su mobile) così l'utente ha conferma visiva di essere
+                loggato. Il title attribute mostra l'email completa
+                al long-press / hover, utile per chi ha più account. */}
+            <div
+              title={email ?? undefined}
+              aria-label={email ? `Loggato come ${email}` : "Loggato"}
+              style={{
+                width: 30, height: 30, borderRadius: "50%",
+                background: ACCENT, color: "#fff",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 13, fontWeight: 700,
+                flexShrink: 0,
+                textTransform: "uppercase",
+                letterSpacing: 0,
+                lineHeight: 1,
+              }}
+            >
+              {email?.[0] || "?"}
+            </div>
+            {/* Username compatto (parte prima di @): visibile SEMPRE,
+                anche su mobile, così si capisce sempre con quale
+                account si è loggati. Troncato a 14 caratteri. */}
+            {username && (
+              <span style={{
+                fontSize: 13, color: DEEP, fontWeight: 600,
+                overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                maxWidth: 120,
+              }}>
+                {username}
+              </span>
+            )}
             <button
               onClick={signOut}
               style={{
