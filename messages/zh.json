@@ -103,6 +103,8 @@
     "uploading_file": "正在上传文件…",
     "photo": "照片",
     "video": "视频",
+    "link": "链接",
+    "message": "留言",
     "link_label": "链接",
     "message_label": "留言",
     "paste_link": "粘贴链接 🔗",

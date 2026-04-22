@@ -103,6 +103,8 @@
     "uploading_file": "Uploading file…",
     "photo": "Photo",
     "video": "Video",
+    "link": "link",
+    "message": "message",
     "link_label": "Link",
     "message_label": "Message",
     "paste_link": "Paste the link 🔗",

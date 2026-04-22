@@ -103,6 +103,8 @@
     "uploading_file": "ファイルをアップロード中…",
     "photo": "写真",
     "video": "動画",
+    "link": "リンク",
+    "message": "メッセージ",
     "link_label": "リンク",
     "message_label": "メッセージ",
     "paste_link": "リンクを貼り付け 🔗",
