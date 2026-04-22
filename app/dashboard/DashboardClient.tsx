@@ -388,32 +388,6 @@ export default function DashboardClient({ user: initialUser, initialSentGifts, i
                   {copied===gift.id?t("dashboard.link_copied"):t("dashboard.copy_link")}
                 </button>
               )}
-              {/* Preview mode: il mittente apre il regalo col flag
-                  ?preview=1 per vedere esattamente cosa riceverà il
-                  destinatario — senza contare come apertura reale e
-                  senza attivare chat. */}
-              {isSent && (
-                <a
-                  href={`/gift/${gift.id}?preview=1`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    background:"transparent",
-                    color:"#5d4037",
-                    border:"1.5px solid #ffe082",
-                    borderRadius:18,
-                    padding:"6px 11px",
-                    fontSize:11,
-                    textDecoration:"none",
-                    whiteSpace:"nowrap",
-                    display:"flex",
-                    alignItems:"center",
-                    fontWeight:600,
-                  }}
-                >
-                  {t("gift.preview_gift_cta")}
-                </a>
-              )}
               <a href={`/gift/${gift.id}`} target="_blank" onClick={async () => {
                 if(!isSent && !(gift as any).isOpened) {
                   setReceived(prev => prev.map(g => g.id === gift.id ? {...g, isOpened: true} : g));
