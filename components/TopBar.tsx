@@ -74,6 +74,12 @@ export default function TopBar() {
       background: "rgba(255,255,255,0.96)",
       backdropFilter: "blur(14px)",
       borderBottom: isCreate ? "none" : "0.5px solid #e8e4de",
+      // iOS PWA: rispetta safe-area (notch + rounded corner) sul
+      // padding laterale del wrapper sticky. Senza questo, su
+      // iPhone installato come PWA il bottone Esci finiva a metà
+      // fuori dal bordo curvo dello schermo.
+      paddingLeft: "env(safe-area-inset-left, 0px)",
+      paddingRight: "env(safe-area-inset-right, 0px)",
     }}>
       {/* Inner wrapper con maxWidth coerente col body (640px) così
           logo/lingua/esci sono allineati al riquadro centrale sotto

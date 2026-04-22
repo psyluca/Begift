@@ -217,27 +217,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── FEATURE GRID (esistente, tenuto) ────────────────── */}
-      <section style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit,minmax(190px,1fr))",
-        gap: 14, padding: "0 24px 70px",
-        maxWidth: 820, margin: "0 auto",
-      }}>
-        {[
-          { e: "🎨", tk: "home.feature1_title", dk: "home.feature1_desc" },
-          { e: "⚡", tk: "home.feature2_title", dk: "home.feature2_desc" },
-          { e: "🔗", tk: "home.feature3_title", dk: "home.feature3_desc" },
-          { e: "💝", tk: "home.feature4_title", dk: "home.feature4_desc" },
-        ].map(f => (
-          <div key={f.tk} style={{ background: "#fff", borderRadius: 18, padding: "20px 16px", boxShadow: "0 2px 14px #0000000a" }}>
-            <div style={{ fontSize: 26, marginBottom: 6 }}>{f.e}</div>
-            <div style={{ fontWeight: 700, color: DEEP, fontSize: 14, marginBottom: 4 }}>{t(f.tk)}</div>
-            <div style={{ color: MUTED, fontSize: 13, lineHeight: 1.55 }}>{t(f.dk)}</div>
-          </div>
-        ))}
-      </section>
-
       {/* ── SOCIAL PROOF / TRUST ────────────────────────────── */}
       <section style={{
         background: "linear-gradient(135deg, #fff5f8, #ffeef4)",
