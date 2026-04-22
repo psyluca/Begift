@@ -225,6 +225,28 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
     } catch { /* ignore */ }
   }, []);
 
+  // Pre-fill senderAlias con @handle dell'utente (se impostato):
+  // l'utente può comunque sovrascriverlo nel campo (es. "Papà",
+  // "Mamma", "Amore mio" per contestualizzare a QUESTO regalo).
+  // Prefill solo se il campo è vuoto — non sovrascrivere scelte
+  // dell'utente o valori arrivati da query string.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/profile/me");
+        if (!res.ok) return;
+        const p = await res.json();
+        if (cancelled) return;
+        if (p?.username && !senderAlias) {
+          setSenderAlias(`@${p.username}`);
+        }
+      } catch { /* ignore */ }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const { upload, uploading } = useUpload();
 
   /**

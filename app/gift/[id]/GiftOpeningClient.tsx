@@ -777,6 +777,19 @@ export default function GiftOpeningClient({ gift }: { gift: Gift }) {
         if (p.user?.email) setSenderName(p.user.email.split("@")[0]);
       }
     } catch(_) {}
+    // Preferisci l'@handle come identità per le reazioni inviate:
+    // è l'ID univoco dell'utente nell'app, quindi il mittente della
+    // reazione vedrà una label riconoscibile e unica ("@luca ha
+    // reagito ❤️"), non l'email-split generica. Fetch best-effort:
+    // se fallisce, resta il fallback email-split impostato sopra.
+    (async () => {
+      try {
+        const res = await fetch("/api/profile/me");
+        if (!res.ok) return;
+        const profile = await res.json();
+        if (profile?.username) setSenderName(`@${profile.username}`);
+      } catch { /* ignore */ }
+    })();
   }, []);
   const [showReact, setShowReact] = useState(false);
   const [sentReaction, setSentReaction] = useState<any>(null);
