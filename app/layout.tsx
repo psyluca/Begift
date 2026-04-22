@@ -6,6 +6,7 @@ import CookieBanner from "@/components/CookieBanner";
 import { I18nProvider } from "@/lib/i18n";
 import { GiftReceivedNotification } from "@/components/GiftReceivedNotification";
 import { IOSInstallBanner } from "@/components/IOSInstallBanner";
+import { UsernameOnboarding } from "@/components/UsernameOnboarding";
 
 export const viewport: Viewport = {
   themeColor: "#D4537E",
@@ -43,6 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <CookieBanner/>
           <GiftReceivedNotification/>
           <IOSInstallBanner/>
+          <UsernameOnboarding/>
         </I18nProvider>
       </body>
     </html>
