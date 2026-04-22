@@ -52,6 +52,17 @@ export default function DashboardClient({ user: initialUser, initialSentGifts, i
   useEffect(() => {
     if (!user && authUser) {
       setUser(authUser as unknown as User);
+      // Trigger loadGifts anche qui: il loadUser() del primo
+      // useEffect ha già restituito null, quindi gifts resterebbero
+      // vuoti. Al sync con authUser, ricarichiamo.
+      // loadGifts è dichiarato più sotto, ma JS hoisting permette
+      // l'accesso perché questo useEffect si esegue DOPO la fase
+      // di rendering (quindi dopo tutte le funzioni del component).
+      // Eslint exhaustive-deps disabilitato perché loadGifts ha
+      // identità stabile (closure captura solo sb che è stabile).
+      if ((authUser as { id?: string })?.id) {
+        loadGifts((authUser as { id: string }).id);
+      }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authUser]);
@@ -329,11 +340,27 @@ export default function DashboardClient({ user: initialUser, initialSentGifts, i
     }
   };
 
-  // Mostriamo il gate "accedi" solo quando SIAMO SICURI che l'utente
-  // non è loggato: user locale null E useAuth ha finito di caricare
-  // senza trovare authUser. Altrimenti durante il caricamento/refresh
-  // mostreremmo un flash "accedi" fastidioso.
-  if (!user && !authLoading && !authUser) return (
+  // Mostriamo il gate "accedi" SOLO se siamo davvero sicuri che
+  // l'utente è anonimo. Oltre ai check di user locale e useAuth,
+  // come ultima verifica scansioniamo localStorage per QUALSIASI
+  // chiave Supabase auth — se esiste, la session è reale anche se
+  // getUser() è temporaneamente flakey. Previene il bug "TopBar
+  // mostra psyluca ma Dashboard dice accedi".
+  const hasAnyStoredToken = (() => {
+    if (typeof window === "undefined") return false;
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith("sb-") && key.endsWith("-auth-token")) {
+          const raw = localStorage.getItem(key);
+          if (raw && raw.length > 10) return true;
+        }
+      }
+    } catch { /* ignore */ }
+    return false;
+  })();
+
+  if (!user && !authLoading && !authUser && !hasAnyStoredToken) return (
     <div style={{minHeight:"100vh",background:"#f7f5f2",fontFamily:"system-ui,sans-serif",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:24,textAlign:"center"}}>
       <div style={{fontSize:52,marginBottom:16}}>🔐</div>
       <h2 style={{fontSize:22,fontWeight:800,color:DEEP,margin:"0 0 10px"}}>{t("dashboard.login_title")}</h2>
