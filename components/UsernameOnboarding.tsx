@@ -27,9 +27,10 @@
  */
 
 import { useEffect, useRef, useState } from "react";
+import { useI18n } from "@/lib/i18n";
 import { getSessionUser } from "@/lib/supabase/client";
 import { fetchAuthed } from "@/lib/clientAuth";
-import { normalizeHandle, validateUsername, validationMessageIt } from "@/lib/username";
+import { normalizeHandle, validateUsername } from "@/lib/username";
 
 const ACCENT = "#D4537E";
 const DEEP = "#1a1a1a";
@@ -44,6 +45,7 @@ type CheckState =
   | { state: "unavailable"; reason: "taken" | "invalid" | "reserved" };
 
 export function UsernameOnboarding() {
+  const { t } = useI18n();
   const [show, setShow] = useState(false);
   const [handle, setHandle] = useState("");
   const [check, setCheck] = useState<CheckState>({ state: "idle" });
@@ -144,10 +146,10 @@ export function UsernameOnboarding() {
       const json = await res.json();
       if (!res.ok) {
         if (json.error === "taken") {
-          setSubmitError("Questo nome è stato appena preso. Prova un altro.");
+          setSubmitError(t("username_onboarding.err_taken"));
           setCheck({ state: "unavailable", reason: "taken" });
         } else {
-          setSubmitError("Errore nel salvataggio. Riprova.");
+          setSubmitError(t("username_onboarding.err_save_failed"));
         }
         return;
       }
@@ -156,7 +158,7 @@ export function UsernameOnboarding() {
       setShow(false);
     } catch (e) {
       console.error("[UsernameOnboarding] submit failed", e);
-      setSubmitError("Errore di rete. Riprova.");
+      setSubmitError(t("username_onboarding.err_net"));
     } finally {
       setSubmitting(false);
     }
@@ -165,12 +167,22 @@ export function UsernameOnboarding() {
   if (!show) return null;
 
   const hint = (() => {
-    if (check.state === "checking") return { color: MUTED, text: "Controllo disponibilità…" };
-    if (check.state === "available") return { color: OK_GREEN, text: `✓ @${handle} è libero!` };
+    if (check.state === "checking") return { color: MUTED, text: t("username_onboarding.hint_checking") };
+    if (check.state === "available") return { color: OK_GREEN, text: t("username_onboarding.hint_available", { handle }) };
     if (check.state === "unavailable") {
-      if (check.reason === "taken") return { color: ERR_RED, text: `✗ @${handle} è già preso` };
-      if (check.reason === "reserved") return { color: ERR_RED, text: "Questo nome è riservato" };
-      return { color: ERR_RED, text: validationMessageIt(validateUsername(handle)) };
+      if (check.reason === "taken") return { color: ERR_RED, text: t("username_onboarding.hint_taken", { handle }) };
+      if (check.reason === "reserved") return { color: ERR_RED, text: t("username_onboarding.hint_reserved") };
+      // Validation error locale-aware
+      const v = validateUsername(handle);
+      if (v.ok) return { color: ERR_RED, text: "" };
+      const keyMap: Record<string, string> = {
+        empty: "username_onboarding.val_empty",
+        too_short: "username_onboarding.val_too_short",
+        too_long: "username_onboarding.val_too_long",
+        invalid_chars: "username_onboarding.val_invalid_chars",
+        reserved: "username_onboarding.val_reserved",
+      };
+      return { color: ERR_RED, text: t(keyMap[v.reason]) };
     }
     return { color: MUTED, text: "" };
   })();
@@ -214,11 +226,10 @@ export function UsernameOnboarding() {
         <div style={{ textAlign: "center", marginBottom: 18 }}>
           <div style={{ fontSize: 42, marginBottom: 8, lineHeight: 1 }}>👋</div>
           <h2 id="username-onboarding-title" style={{ fontSize: 22, fontWeight: 800, color: DEEP, margin: "0 0 6px" }}>
-            Scegli il tuo nome utente
+            {t("username_onboarding.title")}
           </h2>
           <p style={{ fontSize: 13, color: MUTED, lineHeight: 1.5, margin: 0 }}>
-            Sarà come ti identificano gli altri in BeGift.<br/>
-            Solo lettere minuscole, numeri e <code style={{ background: "#f5f2ed", padding: "1px 5px", borderRadius: 4 }}>_</code>.
+            {t("username_onboarding.desc_before_code")} <code style={{ background: "#f5f2ed", padding: "1px 5px", borderRadius: 4 }}>_</code>.
           </p>
         </div>
 
@@ -238,7 +249,7 @@ export function UsernameOnboarding() {
             type="text"
             value={handle}
             onChange={onChange}
-            placeholder="il_tuo_nome"
+            placeholder={t("username_onboarding.placeholder")}
             autoFocus
             autoCapitalize="none"
             autoComplete="off"
@@ -288,11 +299,11 @@ export function UsernameOnboarding() {
             transition: "background .15s",
           }}
         >
-          {submitting ? "Salvataggio…" : "Conferma"}
+          {submitting ? t("username_onboarding.submitting") : t("username_onboarding.submit")}
         </button>
 
         <p style={{ fontSize: 11, color: "#bbb", textAlign: "center", margin: "14px 0 0", lineHeight: 1.5 }}>
-          Potrai cambiarlo in qualsiasi momento<br/>dalle impostazioni del profilo.
+          {t("username_onboarding.change_later")}
         </p>
       </div>
     </div>

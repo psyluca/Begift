@@ -19,6 +19,7 @@
  */
 
 import { useEffect, useState } from "react";
+import { useI18n } from "@/lib/i18n";
 
 const ACCENT = "#D4537E";
 const DEEP = "#1a1a1a";
@@ -26,6 +27,7 @@ const DISMISS_KEY = "begift_ios_install_dismissed_at";
 const DISMISS_COOLDOWN_MS = 1000 * 60 * 60 * 24 * 7; // 7 giorni
 
 export function IOSInstallBanner() {
+  const { t } = useI18n();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -100,11 +102,16 @@ export function IOSInstallBanner() {
       <div style={{ fontSize: 30, flexShrink: 0, lineHeight: 1 }}>📲</div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 14, fontWeight: 800, color: DEEP, marginBottom: 4 }}>
-          Installa BeGift sulla Home
+          {t("ios_install.title")}
         </div>
         <div style={{ fontSize: 12, color: "#555", lineHeight: 1.45, marginBottom: 8 }}>
-          Tocca <InlineSquareShare /> in basso nel browser, poi <strong>&quot;Aggiungi a Home&quot;</strong> per avere
-          BeGift come un&apos;app e ricevere notifiche quando ti arriva un regalo.
+          {/* Descrizione con icona inline + CTA in bold. Splittiamo
+              la copy sul placeholder {icon} per inserire il componente
+              SVG, e sul {addCta} per il testo in bold. */}
+          <IosInstallDesc
+            template={t("ios_install.desc")}
+            addCtaLabel={t("ios_install.add_cta")}
+          />
         </div>
         <button
           onClick={dismiss}
@@ -119,12 +126,12 @@ export function IOSInstallBanner() {
             fontFamily: "inherit",
           }}
         >
-          Non ora
+          {t("ios_install.not_now")}
         </button>
       </div>
       <button
         onClick={dismiss}
-        aria-label="Chiudi"
+        aria-label={t("ios_install.close")}
         style={{
           background: "transparent",
           border: "none",
@@ -148,6 +155,29 @@ export function IOSInstallBanner() {
 }
 
 /** Piccola icona inline "share" tipo iOS (quadrato con freccia su) */
+/**
+ * Renderizza la descrizione sostituendo:
+ *   {icon}  → componente InlineSquareShare (SVG icona share iOS)
+ *   {addCta} → addCtaLabel in <strong>
+ * Lavora su stringa singola con 2 placeholder, quindi split in
+ * parti. Niente innerHTML — tutto JSX safe.
+ */
+function IosInstallDesc({ template, addCtaLabel }: { template: string; addCtaLabel: string }) {
+  // Split sul primo placeholder {icon}
+  const [before, rest] = template.split("{icon}");
+  // Poi split sul secondo placeholder {addCta}
+  const [between, after] = (rest ?? "").split("{addCta}");
+  return (
+    <>
+      {before}
+      <InlineSquareShare />
+      {between}
+      <strong>{addCtaLabel}</strong>
+      {after}
+    </>
+  );
+}
+
 function InlineSquareShare() {
   return (
     <span

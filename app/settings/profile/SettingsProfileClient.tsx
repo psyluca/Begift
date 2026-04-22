@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useI18n } from "@/lib/i18n";
 import { fetchAuthed } from "@/lib/clientAuth";
-import { normalizeHandle, validateUsername, validationMessageIt } from "@/lib/username";
+import { normalizeHandle, validateUsername } from "@/lib/username";
 
 const ACCENT = "#D4537E";
 const DEEP = "#1a1a1a";
@@ -18,6 +19,7 @@ type CheckState =
   | { state: "unavailable"; reason: "taken" | "invalid" | "reserved" };
 
 export default function SettingsProfileClient() {
+  const { t } = useI18n();
   const [loading, setLoading] = useState(true);
   const [currentHandle, setCurrentHandle] = useState<string | null>(null);
   const [handle, setHandle] = useState("");
@@ -115,7 +117,7 @@ export default function SettingsProfileClient() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setError(json.error === "taken" ? "Questo nome è stato preso. Prova un altro." : "Errore nel salvataggio.");
+        setError(json.error === "taken" ? t("settings_profile.err_taken") : t("settings_profile.err_save_failed"));
         return;
       }
       setCurrentHandle(handle);
@@ -123,7 +125,7 @@ export default function SettingsProfileClient() {
       window.dispatchEvent(new CustomEvent("begift:username-set", { detail: { username: handle } }));
     } catch (e) {
       console.error("[settings/profile] save failed", e);
-      setError("Errore di rete. Riprova.");
+      setError(t("settings_profile.err_net"));
     } finally {
       setSaving(false);
     }
@@ -132,19 +134,28 @@ export default function SettingsProfileClient() {
   if (loading) {
     return (
       <main style={{ minHeight: "100vh", background: LIGHT, padding: 24, textAlign: "center", color: MUTED, fontFamily: "system-ui, sans-serif" }}>
-        Caricamento…
+        {t("settings_profile.loading")}
       </main>
     );
   }
 
   const hint = (() => {
     if (handle === currentHandle) return { color: MUTED, text: "" };
-    if (check.state === "checking") return { color: MUTED, text: "Controllo disponibilità…" };
-    if (check.state === "available") return { color: OK_GREEN, text: `✓ @${handle} è libero!` };
+    if (check.state === "checking") return { color: MUTED, text: t("username_onboarding.hint_checking") };
+    if (check.state === "available") return { color: OK_GREEN, text: t("username_onboarding.hint_available", { handle }) };
     if (check.state === "unavailable") {
-      if (check.reason === "taken") return { color: ERR_RED, text: `✗ @${handle} è già preso` };
-      if (check.reason === "reserved") return { color: ERR_RED, text: "Questo nome è riservato" };
-      return { color: ERR_RED, text: validationMessageIt(validateUsername(handle)) };
+      if (check.reason === "taken") return { color: ERR_RED, text: t("username_onboarding.hint_taken", { handle }) };
+      if (check.reason === "reserved") return { color: ERR_RED, text: t("username_onboarding.hint_reserved") };
+      const v = validateUsername(handle);
+      if (v.ok) return { color: ERR_RED, text: "" };
+      const keyMap: Record<string, string> = {
+        empty: "username_onboarding.val_empty",
+        too_short: "username_onboarding.val_too_short",
+        too_long: "username_onboarding.val_too_long",
+        invalid_chars: "username_onboarding.val_invalid_chars",
+        reserved: "username_onboarding.val_reserved",
+      };
+      return { color: ERR_RED, text: t(keyMap[v.reason]) };
     }
     return { color: MUTED, text: "" };
   })();
@@ -153,16 +164,16 @@ export default function SettingsProfileClient() {
     <main style={{ minHeight: "100vh", background: LIGHT, fontFamily: "system-ui, sans-serif" }}>
       <div style={{ maxWidth: 540, margin: "0 auto", padding: "32px 24px" }}>
         <a href="/dashboard" style={{ color: MUTED, fontSize: 13, textDecoration: "none", display: "inline-block", marginBottom: 16 }}>
-          ← Dashboard
+          {t("settings_profile.back_dashboard")}
         </a>
-        <h1 style={{ fontSize: 26, fontWeight: 800, color: DEEP, margin: "0 0 8px" }}>Il tuo profilo</h1>
+        <h1 style={{ fontSize: 26, fontWeight: 800, color: DEEP, margin: "0 0 8px" }}>{t("settings_profile.title")}</h1>
         <p style={{ fontSize: 14, color: MUTED, margin: "0 0 24px", lineHeight: 1.5 }}>
-          Il tuo nome utente è come gli altri ti identificano in BeGift. Solo lettere minuscole, numeri e <code style={{ background: "#fff", padding: "1px 5px", borderRadius: 4, border: "1px solid #e0dbd5" }}>_</code>.
+          {t("settings_profile.desc_before_code")} <code style={{ background: "#fff", padding: "1px 5px", borderRadius: 4, border: "1px solid #e0dbd5" }}>_</code>.
         </p>
 
         <div style={{ background: "#fff", borderRadius: 16, padding: 20, boxShadow: "0 2px 12px rgba(0,0,0,.04)" }}>
           <label style={{ fontSize: 12, color: MUTED, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em", display: "block", marginBottom: 8 }}>
-            Nome utente
+            {t("settings_profile.username_label")}
           </label>
 
           <div
@@ -212,7 +223,7 @@ export default function SettingsProfileClient() {
           )}
           {saved && (
             <div style={{ fontSize: 13, color: OK_GREEN, marginTop: 6, fontWeight: 600 }}>
-              ✓ Salvato
+              {t("settings_profile.saved")}
             </div>
           )}
 
@@ -233,12 +244,12 @@ export default function SettingsProfileClient() {
               fontFamily: "inherit",
             }}
           >
-            {saving ? "Salvataggio…" : handle === currentHandle ? "Nessuna modifica" : "Salva modifiche"}
+            {saving ? t("settings_profile.saving") : handle === currentHandle ? t("settings_profile.no_changes") : t("settings_profile.save")}
           </button>
 
           {currentHandle && handle !== currentHandle && (
             <p style={{ fontSize: 11, color: MUTED, textAlign: "center", margin: "12px 0 0", lineHeight: 1.5 }}>
-              ⚠️ Cambiando nome utente, chi ti conosceva come <strong>@{currentHandle}</strong> non ti troverà più con quel nome.
+              {t("settings_profile.change_warning_before")} <strong>@{currentHandle}</strong> {t("settings_profile.change_warning_after")}
             </p>
           )}
         </div>

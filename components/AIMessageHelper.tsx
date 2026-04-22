@@ -49,7 +49,7 @@ export interface AIMessageHelperProps {
 }
 
 export function AIMessageHelper({ recipientName, senderName, onPick, buttonLabel }: AIMessageHelperProps) {
-  const { t, locale } = useI18n() as unknown as { t: (k: string) => string; locale: "it" | "en" | "ja" | "zh" };
+  const { t, locale } = useI18n() as unknown as { t: (k: string, params?: Record<string, string>) => string; locale: "it" | "en" | "ja" | "zh" };
   const [open, setOpen] = useState(false);
 
   const canOpen = recipientName.trim().length > 0;
@@ -60,7 +60,7 @@ export function AIMessageHelper({ recipientName, senderName, onPick, buttonLabel
         type="button"
         onClick={() => canOpen && setOpen(true)}
         disabled={!canOpen}
-        title={canOpen ? undefined : "Inserisci prima il nome del destinatario"}
+        title={canOpen ? undefined : t("ai_helper.need_recipient")}
         style={{
           background: "transparent",
           border: `1.5px solid ${canOpen ? ACCENT : BORDER}`,
@@ -78,7 +78,7 @@ export function AIMessageHelper({ recipientName, senderName, onPick, buttonLabel
         }}
       >
         <span>✨</span>
-        <span>{buttonLabel ?? "Aiutami a scrivere"}</span>
+        <span>{buttonLabel ?? t("ai_helper.open_button")}</span>
       </button>
 
       {open && (
@@ -108,6 +108,7 @@ interface ModalProps {
 }
 
 function AIMessageModal({ recipientName, senderName, locale, onClose, onPick }: ModalProps) {
+  const { t } = useI18n() as unknown as { t: (k: string, p?: Record<string, string>) => string };
   const [tone, setTone] = useState<Tone>("affettuoso");
   const [occasion, setOccasion] = useState("");
   const [contentHint, setContentHint] = useState("");
@@ -164,13 +165,13 @@ function AIMessageModal({ recipientName, senderName, locale, onClose, onPick }: 
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        setError(errorLabel(data.error ?? String(res.status)));
+        setError(errorLabel(data.error ?? String(res.status), t));
         return;
       }
       const data = await res.json();
       setSuggestions(Array.isArray(data.suggestions) ? data.suggestions : []);
     } catch {
-      setError("Errore di rete, riprova.");
+      setError(t("ai_helper.net_error"));
     } finally {
       setLoading(false);
     }
@@ -208,34 +209,34 @@ function AIMessageModal({ recipientName, senderName, locale, onClose, onPick }: 
 
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
           <h3 style={{ fontSize: 18, fontWeight: 800, margin: 0, color: DEEP }}>
-            ✨ Aiutami a scrivere
+            {t("ai_helper.modal_title")}
           </h3>
           <button
             onClick={onClose}
             style={{ background: "transparent", border: "none", fontSize: 26, color: MUTED, cursor: "pointer", lineHeight: 1, padding: 4 }}
-            aria-label="Chiudi"
+            aria-label={t("ai_helper.close")}
           >
             ×
           </button>
         </div>
         <p style={{ fontSize: 12, color: MUTED, margin: "0 0 18px", lineHeight: 1.5 }}>
           {suggestions
-            ? `3 proposte generate per ${recipientName}. Tocca quella che preferisci — potrai modificarla dopo.`
-            : `Ti generiamo 3 proposte di messaggio per ${recipientName}. Scegli il tono e — facoltativo — dai un contesto.`}
+            ? t("ai_helper.done_intro", { name: recipientName })
+            : t("ai_helper.intro", { name: recipientName })}
         </p>
 
         {/* Tone picker */}
         {!suggestions && (
           <>
             <div style={{ fontSize: 11, color: MUTED, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>
-              Tono
+              {t("ai_helper.tone_label")}
             </div>
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 14 }}>
               {([
-                { v: "affettuoso", label: "💗 Affettuoso" },
-                { v: "formale",    label: "🎩 Formale" },
-                { v: "scherzoso",  label: "😄 Scherzoso" },
-                { v: "poetico",    label: "🌙 Poetico" },
+                { v: "affettuoso", labelKey: "ai_helper.tone_affectionate" },
+                { v: "formale",    labelKey: "ai_helper.tone_formal" },
+                { v: "scherzoso",  labelKey: "ai_helper.tone_playful" },
+                { v: "poetico",    labelKey: "ai_helper.tone_poetic" },
               ] as const).map((opt) => {
                 const active = tone === opt.v;
                 return (
@@ -255,7 +256,7 @@ function AIMessageModal({ recipientName, senderName, locale, onClose, onPick }: 
                       fontFamily: "inherit",
                     }}
                   >
-                    {opt.label}
+                    {t(opt.labelKey)}
                   </button>
                 );
               })}
@@ -264,13 +265,13 @@ function AIMessageModal({ recipientName, senderName, locale, onClose, onPick }: 
             {/* Occasione */}
             <label style={{ display: "block", marginBottom: 10 }}>
               <div style={{ fontSize: 11, color: MUTED, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>
-                Occasione <span style={{ fontWeight: 400, textTransform: "none", opacity: 0.8 }}>(opzionale)</span>
+                {t("ai_helper.occasion_label")} <span style={{ fontWeight: 400, textTransform: "none", opacity: 0.8 }}>{t("ai_helper.optional")}</span>
               </div>
               <input
                 type="text"
                 value={occasion}
                 onChange={(e) => setOccasion(e.target.value)}
-                placeholder="Es. compleanno, laurea, San Valentino"
+                placeholder={t("ai_helper.occasion_placeholder")}
                 style={{
                   width: "100%", boxSizing: "border-box",
                   border: `1.5px solid ${BORDER}`, borderRadius: 10,
@@ -283,12 +284,12 @@ function AIMessageModal({ recipientName, senderName, locale, onClose, onPick }: 
             {/* Contesto */}
             <label style={{ display: "block", marginBottom: 18 }}>
               <div style={{ fontSize: 11, color: MUTED, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>
-                Contesto o cosa contiene il regalo <span style={{ fontWeight: 400, textTransform: "none", opacity: 0.8 }}>(opzionale)</span>
+                {t("ai_helper.context_label")} <span style={{ fontWeight: 400, textTransform: "none", opacity: 0.8 }}>{t("ai_helper.optional")}</span>
               </div>
               <textarea
                 value={contentHint}
                 onChange={(e) => setContentHint(e.target.value)}
-                placeholder="Es. foto delle vacanze, canzone che ci ricorda il primo appuntamento, ecc."
+                placeholder={t("ai_helper.context_placeholder")}
                 rows={2}
                 style={{
                   width: "100%", boxSizing: "border-box",
@@ -313,7 +314,7 @@ function AIMessageModal({ recipientName, senderName, locale, onClose, onPick }: 
                 opacity: loading ? 0.7 : 1,
               }}
             >
-              {loading ? "Sto pensando…" : "✨ Genera 3 proposte"}
+              {loading ? t("ai_helper.thinking") : t("ai_helper.generate")}
             </button>
           </>
         )}
@@ -385,13 +386,13 @@ function AIMessageModal({ recipientName, senderName, locale, onClose, onPick }: 
   );
 }
 
-function errorLabel(code: string): string {
+function errorLabel(code: string, t: (k: string, p?: Record<string, string>) => string): string {
   switch (code) {
-    case "not_authenticated": return "Accedi per usare l'assistente AI.";
-    case "rate_limited":      return "Troppe richieste — riprova tra qualche minuto.";
-    case "ai_unavailable":    return "L'assistente AI è temporaneamente offline. Riprova tra poco.";
-    case "missing_recipient": return "Nome del destinatario mancante.";
-    case "parse_failed":      return "Le proposte non sono arrivate in formato corretto, riprova.";
-    default:                  return `Errore (${code}). Riprova.`;
+    case "not_authenticated": return t("ai_helper.err_not_authenticated");
+    case "rate_limited":      return t("ai_helper.err_rate_limited");
+    case "ai_unavailable":    return t("ai_helper.err_ai_unavailable");
+    case "missing_recipient": return t("ai_helper.err_missing_recipient");
+    case "parse_failed":      return t("ai_helper.err_parse_failed");
+    default:                  return `Error (${code})`;
   }
 }
