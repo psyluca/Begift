@@ -13,16 +13,45 @@ export default function TopBar() {
   const { t } = useI18n();
   const loggedIn = !!user;
   const email = user?.email ?? null;
-  // Username derivato dall'email: "psyluca@gmail.com" → "psyluca".
-  // Troncato a 14 char per non crescere troppo su mobile stretto.
-  // Quando introdurremo il campo `username` univoco su profiles,
-  // userà quello in preferenza all'email split.
-  const username = email
+
+  // Handle univoco dal profilo. Se non ancora settato (= modal
+  // onboarding dovrebbe apparire), fallback a email.split. Il
+  // listener 'begift:username-set' aggiorna immediatamente la
+  // TopBar dopo il submit del modal senza bisogno di reload.
+  const [handle, setHandle] = useState<string | null>(null);
+  useEffect(() => {
+    if (!loggedIn) {
+      setHandle(null);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/profile/me");
+        if (!res.ok) return;
+        const p = await res.json();
+        if (!cancelled && p?.username) setHandle(p.username);
+      } catch { /* ignore */ }
+    })();
+    const onSet = (e: Event) => {
+      const u = (e as CustomEvent<{ username: string }>).detail?.username;
+      if (u) setHandle(u);
+    };
+    window.addEventListener("begift:username-set", onSet);
+    return () => { cancelled = true; window.removeEventListener("begift:username-set", onSet); };
+  }, [loggedIn]);
+
+  // Stringa da mostrare: preferisci @handle se impostato, altrimenti
+  // fallback troncato dell'email (caso transitorio pre-onboarding).
+  const displayName = handle
+    ? `@${handle.length > 14 ? handle.slice(0, 14) + "…" : handle}`
+    : email
     ? (() => {
         const u = email.split("@")[0];
         return u.length > 14 ? u.slice(0, 14) + "…" : u;
       })()
     : null;
+  const avatarLetter = (handle?.[0] ?? email?.[0] ?? "?").toUpperCase();
 
   // Nascondi sulla pagina regalo (esperienza immersiva)
   if (pathname.startsWith("/gift/")) return null;
@@ -66,34 +95,42 @@ export default function TopBar() {
                 su mobile) così l'utente ha conferma visiva di essere
                 loggato. Il title attribute mostra l'email completa
                 al long-press / hover, utile per chi ha più account. */}
-            <div
+            {/* Avatar + handle cliccabili → /settings/profile per
+                modificare lo username. */}
+            <a
+              href="/settings/profile"
               title={email ?? undefined}
-              aria-label={email ? `Loggato come ${email}` : "Loggato"}
+              aria-label={email ? `Loggato come ${handle ? "@" + handle : email}` : "Loggato"}
               style={{
-                width: 30, height: 30, borderRadius: "50%",
-                background: ACCENT, color: "#fff",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 13, fontWeight: 700,
-                flexShrink: 0,
-                textTransform: "uppercase",
-                letterSpacing: 0,
-                lineHeight: 1,
+                display: "flex", alignItems: "center", gap: 6,
+                textDecoration: "none",
+                color: "inherit",
               }}
             >
-              {email?.[0] || "?"}
-            </div>
-            {/* Username compatto (parte prima di @): visibile SEMPRE,
-                anche su mobile, così si capisce sempre con quale
-                account si è loggati. Troncato a 14 caratteri. */}
-            {username && (
-              <span style={{
-                fontSize: 13, color: DEEP, fontWeight: 600,
-                overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                maxWidth: 120,
-              }}>
-                {username}
-              </span>
-            )}
+              <div
+                style={{
+                  width: 30, height: 30, borderRadius: "50%",
+                  background: ACCENT, color: "#fff",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 13, fontWeight: 700,
+                  flexShrink: 0,
+                  textTransform: "uppercase",
+                  letterSpacing: 0,
+                  lineHeight: 1,
+                }}
+              >
+                {avatarLetter}
+              </div>
+              {displayName && (
+                <span style={{
+                  fontSize: 13, color: DEEP, fontWeight: 600,
+                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                  maxWidth: 140,
+                }}>
+                  {displayName}
+                </span>
+              )}
+            </a>
             <button
               onClick={signOut}
               style={{
