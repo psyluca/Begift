@@ -234,7 +234,9 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch("/api/profile/me");
+        // Dynamic import per evitare dipendenze a livello di modulo
+        const { fetchAuthed } = await import("@/lib/clientAuth");
+        const res = await fetchAuthed("/api/profile/me");
         if (!res.ok) return;
         const p = await res.json();
         if (cancelled) return;

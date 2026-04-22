@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { createSupabaseClient } from "@/lib/supabase/client";
+import { fetchAuthed } from "@/lib/clientAuth";
 import { normalizeHandle, validateUsername, validationMessageIt } from "@/lib/username";
 
 const ACCENT = "#D4537E";
@@ -32,12 +32,7 @@ export default function SettingsProfileClient() {
   useEffect(() => {
     (async () => {
       try {
-        const sb = createSupabaseClient();
-        const { data } = await sb.auth.getSession();
-        const token = data.session?.access_token;
-        const res = await fetch("/api/profile/me", {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
+        const res = await fetchAuthed("/api/profile/me");
         if (res.ok) {
           const p = await res.json();
           if (p?.username) {
@@ -113,15 +108,9 @@ export default function SettingsProfileClient() {
     setError(null);
     setSaved(false);
     try {
-      const sb = createSupabaseClient();
-      const { data } = await sb.auth.getSession();
-      const token = data.session?.access_token;
-      const res = await fetch("/api/profile/username", {
+      const res = await fetchAuthed("/api/profile/username", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ handle }),
       });
       const json = await res.json();

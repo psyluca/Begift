@@ -27,7 +27,8 @@
  */
 
 import { useEffect, useRef, useState } from "react";
-import { createSupabaseClient, getSessionUser } from "@/lib/supabase/client";
+import { getSessionUser } from "@/lib/supabase/client";
+import { fetchAuthed } from "@/lib/clientAuth";
 import { normalizeHandle, validateUsername, validationMessageIt } from "@/lib/username";
 
 const ACCENT = "#D4537E";
@@ -58,12 +59,7 @@ export function UsernameOnboarding() {
       const u = await getSessionUser();
       if (!u) return; // non loggato, niente modal
       try {
-        const sb = createSupabaseClient();
-        const { data } = await sb.auth.getSession();
-        const token = data.session?.access_token;
-        const res = await fetch("/api/profile/me", {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
+        const res = await fetchAuthed("/api/profile/me");
         if (!res.ok) return;
         const profile = await res.json();
         if (cancelled) return;
@@ -140,15 +136,9 @@ export function UsernameOnboarding() {
     setSubmitting(true);
     setSubmitError(null);
     try {
-      const sb = createSupabaseClient();
-      const { data } = await sb.auth.getSession();
-      const token = data.session?.access_token;
-      const res = await fetch("/api/profile/username", {
+      const res = await fetchAuthed("/api/profile/username", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ handle }),
       });
       const json = await res.json();

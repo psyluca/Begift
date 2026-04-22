@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useI18n } from "@/lib/i18n";
 import LangSwitcher from "@/components/LangSwitcher";
+import { fetchAuthed } from "@/lib/clientAuth";
 
 const ACCENT = "#D4537E", DEEP = "#1a1a1a", MUTED = "#888";
 
@@ -33,7 +34,7 @@ export default function TopBar() {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch("/api/profile/me");
+        const res = await fetchAuthed("/api/profile/me");
         if (!res.ok) return;
         const p = await res.json();
         if (cancelled) return;
