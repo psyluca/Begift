@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { fetchAuthed } from "@/lib/clientAuth";
 
 const ACCENT = "#D4537E";
 const DEEP = "#1a1a1a";
@@ -31,28 +32,40 @@ interface StatsData {
 
 export default function AdminStatsClient() {
   const [data, setData] = useState<StatsData | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [state, setState] = useState<"loading" | "forbidden" | "error">("loading");
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("/api/admin/stats");
+        const res = await fetchAuthed("/api/admin/stats");
+        if (res.status === 403) {
+          setState("forbidden");
+          return;
+        }
         if (!res.ok) {
-          setError(res.status === 403 ? "Accesso non autorizzato" : "Errore nel caricamento");
+          setState("error");
+          setErrorMsg(`Errore ${res.status} nel caricamento`);
           return;
         }
         setData(await res.json());
+        setState("loading"); // sta per passare a dashboard via data
       } catch (e) {
         console.error("[admin/stats] fetch failed", e);
-        setError("Errore di rete");
+        setState("error");
+        setErrorMsg("Errore di rete");
       }
     })();
   }, []);
 
-  if (error) {
+  // Forbidden → diagnostica (non sei admin o non sei loggato)
+  if (state === "forbidden") {
+    return <ForbiddenDiagnostic />;
+  }
+  if (state === "error") {
     return (
       <main style={{ padding: 40, textAlign: "center", fontFamily: "system-ui, sans-serif", color: MUTED }}>
-        {error}
+        {errorMsg ?? "Errore"}
       </main>
     );
   }
@@ -298,5 +311,107 @@ function Legend({ color, label }: { color: string; label: string }) {
       <span style={{ width: 10, height: 10, background: color, borderRadius: 2, display: "inline-block" }}/>
       {label}
     </span>
+  );
+}
+
+/**
+ * Mostrata al client quando /api/admin/stats ritorna 403.
+ * Recupera l'email dal profile/me per dare feedback diagnostico
+ * utile (simile al vecchio server-side gate, ma client-side così
+ * funziona anche quando il cookie SSR auth fallisce).
+ */
+function ForbiddenDiagnostic() {
+  const [email, setEmail] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetchAuthed("/api/profile/me");
+        if (res.ok) {
+          const p = await res.json();
+          setEmail(p?.email ?? null);
+        }
+      } catch { /* ignore */ }
+      finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  return (
+    <main style={{
+      minHeight: "100vh",
+      background: LIGHT,
+      fontFamily: "system-ui, sans-serif",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 24,
+    }}>
+      <div style={{
+        background: "#fff",
+        borderRadius: 16,
+        padding: "28px 28px",
+        maxWidth: 480,
+        width: "100%",
+        boxShadow: "0 4px 16px rgba(0,0,0,.05)",
+        textAlign: "center",
+      }}>
+        <div style={{ fontSize: 44, marginBottom: 12 }}>🔒</div>
+        <h1 style={{ fontSize: 22, fontWeight: 800, color: DEEP, margin: "0 0 8px" }}>
+          Area riservata
+        </h1>
+        <p style={{ color: MUTED, fontSize: 14, lineHeight: 1.5, margin: "0 0 20px" }}>
+          Questa pagina è visibile solo agli admin di BeGift.
+        </p>
+
+        <div style={{
+          background: "#fafaf7",
+          border: "1px solid #e8e4de",
+          borderRadius: 10,
+          padding: "12px 14px",
+          fontSize: 12,
+          color: "#555",
+          textAlign: "left",
+          fontFamily: "ui-monospace, monospace",
+          marginBottom: 16,
+          wordBreak: "break-all",
+        }}>
+          {loading ? (
+            <div>Verifica in corso…</div>
+          ) : (
+            <>
+              <div>email client: <strong>{email ?? "(non loggato)"}</strong></div>
+              <div>risultato check: <strong>non admin</strong></div>
+            </>
+          )}
+        </div>
+
+        {!loading && !email && (
+          <p style={{ fontSize: 12, color: MUTED, margin: "0 0 16px" }}>
+            Fai login prima.
+          </p>
+        )}
+        {!loading && email && (
+          <p style={{ fontSize: 12, color: "#B71C1C", margin: "0 0 16px", lineHeight: 1.5 }}>
+            La tua email (<code>{email}</code>) non è nella lista ADMIN_EMAILS sul server. Aggiungila su Vercel e redeploy.
+          </p>
+        )}
+
+        <a href="/dashboard" style={{
+          display: "inline-block",
+          background: ACCENT,
+          color: "#fff",
+          borderRadius: 40,
+          padding: "10px 24px",
+          fontSize: 13,
+          fontWeight: 700,
+          textDecoration: "none",
+        }}>
+          Torna alla dashboard
+        </a>
+      </div>
+    </main>
   );
 }

@@ -22,13 +22,26 @@
 
 import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
 import { isAdminEmail } from "@/lib/admin";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET() {
-  // Auth + admin check
-  const supabase = createSupabaseServer();
-  const { data } = await supabase.auth.getUser();
-  const email = data.user?.email;
+export async function GET(req: NextRequest) {
+  // Auth: Bearer token prima (robusto), cookie come fallback.
+  // Il cookie-based auth di createSupabaseServer può essere flaky
+  // su refresh/rotazione token; Bearer dal localStorage client è
+  // più affidabile per queste API protette.
+  let email: string | null = null;
+  const authHeader = req.headers.get("authorization");
+  if (authHeader?.startsWith("Bearer ")) {
+    const token = authHeader.slice(7);
+    const admin = createSupabaseAdmin();
+    const { data, error } = await admin.auth.getUser(token);
+    if (!error && data.user) email = data.user.email ?? null;
+  }
+  if (!email) {
+    const supabase = createSupabaseServer();
+    const { data } = await supabase.auth.getUser();
+    email = data.user?.email ?? null;
+  }
   if (!isAdminEmail(email)) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
