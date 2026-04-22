@@ -765,19 +765,44 @@ export default function GiftOpeningClient({ gift }: { gift: Gift }) {
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
-    sb.auth.getUser().then(({ data }) => {
-      const user = data.user;
-      setLoggedIn(!!user);
-      if (user && gift.creator_id === user.id) setIsCreator(true);
-      if (user?.email) setSenderName(user.email.split("@")[0]);
-    });
+
+    // Auth "sticky" (stessa filosofia di useAuth): leggi prima da
+    // localStorage e setta loggedIn se c'è user valido. Così non
+    // lampeggia mai il prompt "Crea account" ad utenti loggati solo
+    // perché sb.auth.getUser() è lento o flakey su iOS PWA.
+    let storedUser: { id?: string; email?: string } | null = null;
     try {
       const stored = localStorage.getItem("sb-acoettfsxcfpvhjzreoy-auth-token");
       if (stored) {
         const p = JSON.parse(stored);
-        if (p.user?.email) setSenderName(p.user.email.split("@")[0]);
+        if (p.user) storedUser = p.user;
       }
     } catch(_) {}
+
+    if (storedUser) {
+      setLoggedIn(true);
+      if (storedUser.id && gift.creator_id === storedUser.id) setIsCreator(true);
+      if (storedUser.email) setSenderName(storedUser.email.split("@")[0]);
+    }
+
+    // Conferma async via getUser — se conferma, perfect; se fallisce
+    // ma abbiamo già storedUser, rimaniamo loggati (non butta fuori)
+    sb.auth.getUser().then(({ data }) => {
+      const user = data.user;
+      if (user) {
+        setLoggedIn(true);
+        if (gift.creator_id === user.id) setIsCreator(true);
+        if (user.email) setSenderName(user.email.split("@")[0]);
+      } else if (!storedUser) {
+        // Solo se NON c'era niente in storage, confermiamo non-loggato
+        setLoggedIn(false);
+      }
+      // Se getUser ritorna null ma avevamo storedUser, lasciamo stare
+      // (session può essere legittima col refresh token ancora buono)
+    }).catch(() => {
+      // Errore di rete: se avevamo storedUser, teniamolo
+      if (!storedUser) setLoggedIn(false);
+    });
     // Preferisci l'@handle come identità per le reazioni inviate:
     // è l'ID univoco dell'utente nell'app, quindi il mittente della
     // reazione vedrà una label riconoscibile e unica ("@luca ha
