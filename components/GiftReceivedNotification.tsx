@@ -26,6 +26,7 @@
  */
 
 import { useEffect, useState } from "react";
+import { useI18n } from "@/lib/i18n";
 import { createSupabaseClient, getSessionUser } from "@/lib/supabase/client";
 
 interface ToastEntry {
@@ -38,6 +39,7 @@ interface ToastEntry {
 const ACCENT = "#D4537E";
 
 export function GiftReceivedNotification() {
+  const { t } = useI18n();
   const [toasts, setToasts] = useState<ToastEntry[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
 
@@ -121,9 +123,9 @@ export function GiftReceivedNotification() {
   // Auto-dismiss dopo 8 secondi
   useEffect(() => {
     if (toasts.length === 0) return;
-    const timers = toasts.map((t) =>
+    const timers = toasts.map((toast) =>
       setTimeout(() => {
-        setToasts((prev) => prev.filter((x) => x.id !== t.id));
+        setToasts((prev) => prev.filter((x) => x.id !== toast.id));
       }, 8000)
     );
     return () => { timers.forEach(clearTimeout); };
@@ -154,9 +156,9 @@ export function GiftReceivedNotification() {
           to   { opacity: 1; transform: translateY(0) scale(1); }
         }
       `}</style>
-      {toasts.map((t) => (
+      {toasts.map((toast) => (
         <div
-          key={t.id}
+          key={toast.id}
           style={{
             pointerEvents: "auto",
             background: "#fff",
@@ -179,14 +181,14 @@ export function GiftReceivedNotification() {
           <span style={{ fontSize: 28, flexShrink: 0 }}>🎁</span>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 12, color: "#888", fontWeight: 500, marginBottom: 2 }}>
-              Nuovo regalo
+              {t("notif_toast.new_gift")}
             </div>
             <div style={{ fontSize: 14, color: "#1a1a1a", fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-              {t.senderName} ti ha mandato un regalo
+              {t("notif_toast.sent_you_gift", { name: toast.senderName })}
             </div>
           </div>
           <a
-            href={`/gift/${t.giftId}`}
+            href={`/gift/${toast.giftId}`}
             style={{
               background: ACCENT,
               color: "#fff",
@@ -201,11 +203,11 @@ export function GiftReceivedNotification() {
               fontFamily: "inherit",
             }}
           >
-            Apri →
+            {t("notif_toast.open_cta")}
           </a>
           <button
-            onClick={() => setToasts((prev) => prev.filter((x) => x.id !== t.id))}
-            aria-label="Chiudi"
+            onClick={() => setToasts((prev) => prev.filter((x) => x.id !== toast.id))}
+            aria-label={t("notif_toast.close")}
             style={{
               background: "transparent", border: "none", fontSize: 20,
               color: "#bbb", cursor: "pointer", padding: 0, lineHeight: 1,

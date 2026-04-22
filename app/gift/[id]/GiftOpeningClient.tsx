@@ -402,6 +402,7 @@ function PolaroidPhoto({ src, caption }: { src: string; caption: string | null }
  * accent color, ombra profonda.
  */
 function VideoFrame({ url }: { url: string }) {
+  const { t } = useI18n();
   const youtubeId = extractYoutubeId(url);
   const vimeoId = extractVimeoId(url);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -503,7 +504,7 @@ function VideoFrame({ url }: { url: string }) {
               animation: "pulseAudio 2s ease-in-out infinite",
             }}
           >
-            🔊 Tocca per audio
+            {t("video.tap_for_audio")}
           </button>
         ) : null}
       </div>

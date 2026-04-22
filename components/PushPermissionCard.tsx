@@ -24,6 +24,7 @@
  */
 
 import { useEffect, useState } from "react";
+import { useI18n } from "@/lib/i18n";
 import { createSupabaseClient, getSessionUser } from "@/lib/supabase/client";
 
 const ACCENT = "#D4537E";
@@ -33,6 +34,7 @@ const DISMISS_KEY = "begift_push_dismissed_at";
 const DISMISS_COOLDOWN_MS = 1000 * 60 * 60 * 24 * 14; // 14 giorni
 
 export function PushPermissionCard() {
+  const { t } = useI18n();
   // "default" = mostra card di attivazione
   // "granted" = mostra mini-riga "notifiche attive + invia test"
   // "denied"  = nascosto
@@ -126,7 +128,7 @@ export function PushPermissionCard() {
       const perm = await Notification.requestPermission();
       if (perm !== "granted") {
         if (perm === "denied") {
-          setError("Permesso negato. Puoi abilitarlo nelle impostazioni del browser.");
+          setError(t("push_card.err_denied"));
         }
         setLoading(false);
         return;
@@ -135,7 +137,7 @@ export function PushPermissionCard() {
       // 3. Sottoscrivi al push service
       const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
       if (!vapidKey) {
-        setError("Configurazione push non completata.");
+        setError(t("push_card.err_not_configured"));
         setLoading(false);
         return;
       }
@@ -161,7 +163,7 @@ export function PushPermissionCard() {
         body: JSON.stringify(sub.toJSON()),
       });
       if (!res.ok) {
-        setError("Salvataggio fallito. Riprova più tardi.");
+        setError(t("push_card.err_save_failed"));
         setLoading(false);
         return;
       }
@@ -170,7 +172,7 @@ export function PushPermissionCard() {
       setMode("granted");
     } catch (e) {
       console.error("[PushPermissionCard] enable failed", e);
-      setError("Si è verificato un errore. Riprova.");
+      setError(t("push_card.err_generic"));
     } finally {
       setLoading(false);
     }
@@ -200,10 +202,10 @@ export function PushPermissionCard() {
       <div style={{ fontSize: 28, flexShrink: 0, lineHeight: 1 }}>🔔</div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <h4 style={{ fontSize: 15, fontWeight: 800, color: DEEP, margin: "0 0 4px" }}>
-          Attiva le notifiche
+          {t("push_card.title")}
         </h4>
         <p style={{ fontSize: 13, color: MUTED, lineHeight: 1.45, margin: "0 0 12px" }}>
-          Ricevi un avviso quando qualcuno ti manda un regalo, anche ad app chiusa — come su WhatsApp.
+          {t("push_card.desc")}
         </p>
         {error && (
           <p style={{ fontSize: 12, color: "#B71C1C", margin: "0 0 10px", lineHeight: 1.4 }}>
@@ -227,7 +229,7 @@ export function PushPermissionCard() {
               fontFamily: "inherit",
             }}
           >
-            {loading ? "Attendi…" : "Attiva"}
+            {loading ? t("push_card.enabling") : t("push_card.enable")}
           </button>
           <button
             onClick={dismiss}
@@ -242,7 +244,7 @@ export function PushPermissionCard() {
               fontFamily: "inherit",
             }}
           >
-            Non ora
+            {t("push_card.not_now")}
           </button>
         </div>
       </div>
