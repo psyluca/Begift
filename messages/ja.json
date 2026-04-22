@@ -3,7 +3,8 @@
     "home": "ホーム",
     "create": "作成",
     "gifts": "ギフト",
-    "reactions": "リアクション"
+    "reactions": "リアクション",
+    "settings": "設定"
   },
   "auth": {
     "title": "アカウントにサインイン",

@@ -10,7 +10,7 @@ const ACCENT = "#D4537E", DEEP = "#1a1a1a", MUTED = "#888";
 
 export default function TopBar() {
   const pathname = usePathname();
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const { t } = useI18n();
   const loggedIn = !!user;
   const email = user?.email ?? null;
@@ -101,8 +101,11 @@ export default function TopBar() {
       )}
 
       <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-        {/* Il selezionatore di lingua è sempre visibile, anche ai visitatori anonimi */}
-        <LangSwitcher/>
+        {/* LangSwitcher mostrato SOLO agli utenti non loggati (landing,
+            login, gift page anonima). Per gli utenti loggati è
+            accessibile da /settings → sezione Lingua — libera spazio
+            TopBar su mobile che è già stretto. */}
+        {!loggedIn && <LangSwitcher/>}
 
         {loggedIn ? (
           <>
@@ -128,16 +131,13 @@ export default function TopBar() {
                 📊
               </a>
             )}
-            {/* Avatar circolare con iniziale — sempre visibile (anche
-                su mobile) così l'utente ha conferma visiva di essere
-                loggato. Il title attribute mostra l'email completa
-                al long-press / hover, utile per chi ha più account. */}
-            {/* Avatar + handle cliccabili → /settings/profile per
-                modificare lo username. */}
+            {/* Avatar circolare + @handle cliccabili → /settings (hub).
+                Il bottone Esci è stato spostato dentro il hub per
+                alleggerire la TopBar su mobile. */}
             <a
-              href="/settings/profile"
+              href="/settings"
               title={email ?? undefined}
-              aria-label={email ? `Loggato come ${handle ? "@" + handle : email}` : "Loggato"}
+              aria-label={email ? `Impostazioni — ${handle ? "@" + handle : email}` : "Impostazioni"}
               style={{
                 display: "flex", alignItems: "center", gap: 6,
                 textDecoration: "none",
@@ -168,17 +168,6 @@ export default function TopBar() {
                 </span>
               )}
             </a>
-            <button
-              onClick={signOut}
-              style={{
-                background: "none", border: "1.5px solid #e0dbd5",
-                borderRadius: 20, padding: "5px 12px",
-                fontSize: 12, cursor: "pointer", color: MUTED,
-                whiteSpace: "nowrap", flexShrink: 0,
-              }}
-            >
-              {t("common.sign_out")}
-            </button>
           </>
         ) : (
           !isCreate && (

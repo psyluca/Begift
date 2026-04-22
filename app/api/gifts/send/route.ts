@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
       url: `/gift/${giftId}`,
       giftId,
       tag: `begift-gift-${giftId}`,
-    }).catch((e) => console.error("[gifts/send] push failed", e));
+    }, "gift_received").catch((e) => console.error("[gifts/send] push failed", e));
   } catch (e) {
     // Failure del push non deve bloccare la creazione notifica
     console.error("[gifts/send] push setup failed", e);

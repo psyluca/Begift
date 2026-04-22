@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
   const admin = createSupabaseAdmin();
   const { data, error } = await admin
     .from("profiles")
-    .select("id, email, username, display_name, avatar_url")
+    .select("id, email, username, display_name, avatar_url, notify_gift_received, notify_gift_opened, notify_reaction")
     .eq("id", userId)
     .single();
 

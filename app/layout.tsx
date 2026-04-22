@@ -5,7 +5,9 @@ import TopBarWrapper from "@/components/TopBarWrapper";
 import CookieBanner from "@/components/CookieBanner";
 import { I18nProvider } from "@/lib/i18n";
 import { GiftReceivedNotification } from "@/components/GiftReceivedNotification";
-import { IOSInstallBanner } from "@/components/IOSInstallBanner";
+// IOSInstallBanner rimosso dal layout: info di installazione
+// spostata in /settings → sezione Installazione. Il componente
+// è ancora in components/ per eventuale riuso futuro.
 import { UsernameOnboarding } from "@/components/UsernameOnboarding";
 
 export const viewport: Viewport = {
@@ -43,7 +45,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <BottomNavWrapper/>
           <CookieBanner/>
           <GiftReceivedNotification/>
-          <IOSInstallBanner/>
+          {/* IOSInstallBanner disabilitato a livello globale: l'info
+              "installa BeGift" è ora disponibile in /settings → sezione
+              Installazione. Banner sticky fisso è invasivo sui primi
+              visitatori; chi cerca info le trova nelle impostazioni. */}
           <UsernameOnboarding/>
         </I18nProvider>
       </body>

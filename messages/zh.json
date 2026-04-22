@@ -3,7 +3,8 @@
     "home": "首页",
     "create": "创建",
     "gifts": "礼物",
-    "reactions": "回应"
+    "reactions": "回应",
+    "settings": "设置"
   },
   "auth": {
     "title": "登录您的账户",
