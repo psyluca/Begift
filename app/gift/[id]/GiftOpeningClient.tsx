@@ -770,38 +770,56 @@ export default function GiftOpeningClient({ gift }: { gift: Gift }) {
     // localStorage e setta loggedIn se c'è user valido. Così non
     // lampeggia mai il prompt "Crea account" ad utenti loggati solo
     // perché sb.auth.getUser() è lento o flakey su iOS PWA.
+    // Scansiona TUTTE le chiavi sb-*-auth-token (project ref può
+    // variare) come fallback robusto.
     let storedUser: { id?: string; email?: string } | null = null;
+    let hasAnyToken = false;
     try {
       const stored = localStorage.getItem("sb-acoettfsxcfpvhjzreoy-auth-token");
       if (stored) {
         const p = JSON.parse(stored);
         if (p.user) storedUser = p.user;
+        if (p.access_token) hasAnyToken = true;
+      }
+      // Fallback: scansiona tutte le chiavi supabase
+      if (!storedUser) {
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith("sb-") && key.endsWith("-auth-token")) {
+            try {
+              const raw = localStorage.getItem(key);
+              if (!raw) continue;
+              const p = JSON.parse(raw);
+              if (p?.user) { storedUser = p.user; }
+              if (p?.access_token) hasAnyToken = true;
+              if (storedUser) break;
+            } catch { /* ignore */ }
+          }
+        }
       }
     } catch(_) {}
 
-    if (storedUser) {
+    if (storedUser || hasAnyToken) {
       setLoggedIn(true);
-      if (storedUser.id && gift.creator_id === storedUser.id) setIsCreator(true);
-      if (storedUser.email) setSenderName(storedUser.email.split("@")[0]);
+      if (storedUser?.id && gift.creator_id === storedUser.id) setIsCreator(true);
+      if (storedUser?.email) setSenderName(storedUser.email.split("@")[0]);
     }
 
-    // Conferma async via getUser — se conferma, perfect; se fallisce
-    // ma abbiamo già storedUser, rimaniamo loggati (non butta fuori)
+    // Conferma async via getUser — solo per aggiornare isCreator /
+    // senderName in caso storedUser fosse parziale. NON invalidiamo
+    // mai loggedIn=true se avevamo già un token in storage.
     sb.auth.getUser().then(({ data }) => {
       const user = data.user;
       if (user) {
         setLoggedIn(true);
         if (gift.creator_id === user.id) setIsCreator(true);
         if (user.email) setSenderName(user.email.split("@")[0]);
-      } else if (!storedUser) {
-        // Solo se NON c'era niente in storage, confermiamo non-loggato
+      } else if (!storedUser && !hasAnyToken) {
+        // Solo se NON c'era NIENTE in storage, confermiamo non-loggato
         setLoggedIn(false);
       }
-      // Se getUser ritorna null ma avevamo storedUser, lasciamo stare
-      // (session può essere legittima col refresh token ancora buono)
     }).catch(() => {
-      // Errore di rete: se avevamo storedUser, teniamolo
-      if (!storedUser) setLoggedIn(false);
+      if (!storedUser && !hasAnyToken) setLoggedIn(false);
     });
     // Preferisci l'@handle come identità per le reazioni inviate:
     // è l'ID univoco dell'utente nell'app, quindi il mittente della
@@ -1041,11 +1059,19 @@ export default function GiftOpeningClient({ gift }: { gift: Gift }) {
           </div>
         )}
 
-        {/* Back to received gifts */}
-        {opened && !isCreator && loggedIn && (
+        {/* Back navigation — SEMPRE visibile post-apertura, anche
+            per non loggati. Evita che l'utente resti bloccato nella
+            PWA (dove non c'è browser bar) se per qualche motivo
+            lo stato loggedIn è flakey. Per loggati non-creator
+            porta ai regali ricevuti; per tutti gli altri porta
+            alla home. */}
+        {opened && (
           <div style={{ textAlign:"center", marginTop:16 }}>
-            <a href="/dashboard?tab=received" style={{ display:"inline-block", background:"#fff", border:"1.5px solid #e0dbd5", color:MUTED, borderRadius:40, padding:"9px 20px", fontSize:13, fontWeight:600, textDecoration:"none" }}>
-              {t("gift.back_to_received")}
+            <a
+              href={loggedIn && !isCreator ? "/dashboard?tab=received" : "/"}
+              style={{ display:"inline-block", background:"#fff", border:"1.5px solid #e0dbd5", color:MUTED, borderRadius:40, padding:"9px 20px", fontSize:13, fontWeight:600, textDecoration:"none" }}
+            >
+              {loggedIn && !isCreator ? t("gift.back_to_received") : "← Torna alla home"}
             </a>
           </div>
         )}
