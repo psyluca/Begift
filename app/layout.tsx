@@ -5,6 +5,7 @@ import TopBarWrapper from "@/components/TopBarWrapper";
 import CookieBanner from "@/components/CookieBanner";
 import { I18nProvider } from "@/lib/i18n";
 import { GiftReceivedNotification } from "@/components/GiftReceivedNotification";
+import { IOSInstallBanner } from "@/components/IOSInstallBanner";
 
 export const viewport: Viewport = {
   themeColor: "#D4537E",
@@ -41,6 +42,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <BottomNavWrapper/>
           <CookieBanner/>
           <GiftReceivedNotification/>
+          <IOSInstallBanner/>
         </I18nProvider>
       </body>
     </html>
