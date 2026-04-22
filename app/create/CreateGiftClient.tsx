@@ -222,6 +222,21 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
         setName(rec);
         setThankingName(rec);
       }
+      // Deep link ?occasion=birthday dalla landing: pre-seleziona
+      // direttamente il template. L'utente salta lo step di scelta
+      // e parte già col packaging + messaggio starter dell'occasione.
+      const occ = params.get("occasion");
+      if (occ) {
+        const tpl = OCCASIONS.find((o) => o.id === occ);
+        if (tpl) {
+          // Inline per evitare dipendenza dalla dichiarazione di
+          // applyOccasion (che sta sotto nel flusso del componente)
+          setOccasion(tpl.id);
+          if (tpl.pkg) setPkg(tpl.pkg);
+          // Il messaggio non lo pre-compiliamo qui, lo farà l'user
+          // quando arriva allo step 3/4 — più pulito
+        }
+      }
     } catch { /* ignore */ }
   }, []);
 
