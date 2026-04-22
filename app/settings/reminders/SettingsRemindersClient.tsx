@@ -45,6 +45,7 @@ export default function SettingsRemindersClient() {
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [needsLogin, setNeedsLogin] = useState(false);
 
   // Form state
   const [name, setName] = useState("");
@@ -56,8 +57,13 @@ export default function SettingsRemindersClient() {
   const load = async () => {
     setLoading(true);
     setError(null);
+    setNeedsLogin(false);
     try {
       const res = await fetchAuthed("/api/reminders");
+      if (res.status === 401) {
+        setNeedsLogin(true);
+        return;
+      }
       if (!res.ok) {
         setError("Errore nel caricamento");
         return;
@@ -95,6 +101,10 @@ export default function SettingsRemindersClient() {
           notify_days_before: daysBefore,
         }),
       });
+      if (res.status === 401) {
+        setNeedsLogin(true);
+        return;
+      }
       if (!res.ok) {
         setError("Errore nel salvataggio");
         return;
@@ -140,6 +150,21 @@ export default function SettingsRemindersClient() {
     color: DEEP,
     fontFamily: "inherit",
   };
+
+  if (needsLogin) {
+    return (
+      <main style={{ minHeight: "100vh", background: LIGHT, fontFamily: "system-ui, sans-serif", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24, textAlign: "center" }}>
+        <div style={{ fontSize: 44, marginBottom: 12 }}>🔔</div>
+        <h1 style={{ fontSize: 22, fontWeight: 800, color: DEEP, margin: "0 0 10px" }}>Accedi per gestire le tue ricorrenze</h1>
+        <p style={{ fontSize: 14, color: MUTED, marginBottom: 24, lineHeight: 1.55, maxWidth: 340 }}>
+          Ti avviseremo con una notifica quando sta arrivando un compleanno importante.
+        </p>
+        <a href="/auth/login?next=/settings/reminders" style={{ background: ACCENT, color: "#fff", borderRadius: 40, padding: "13px 28px", fontSize: 14, fontWeight: 700, textDecoration: "none" }}>
+          Accedi
+        </a>
+      </main>
+    );
+  }
 
   return (
     <main style={{ minHeight: "100vh", background: LIGHT, fontFamily: "system-ui, sans-serif" }}>
