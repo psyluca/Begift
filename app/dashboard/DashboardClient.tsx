@@ -7,6 +7,7 @@ import { createSupabaseClient, getSessionUser } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import type { Gift, Reaction } from "@/types";
 import { WhatsAppShareButton } from "@/components/WhatsAppShareButton";
+import { PushPermissionCard } from "@/components/PushPermissionCard";
 
 const ACCENT = "#D4537E", DEEP = "#1a1a1a", MUTED = "#888", LIGHT = "#f7f5f2";
 
@@ -446,6 +447,13 @@ export default function DashboardClient({ user: initialUser, initialSentGifts, i
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Push permission card — appare solo se il browser supporta
+          Web Push, utente loggato, permesso ancora default (non
+          dismissato). Dopo "Attiva" si auto-nasconde. */}
+      <div style={{maxWidth:640,margin:"0 auto",padding:"0 20px"}}>
+        <PushPermissionCard/>
       </div>
 
       {/* Multi-select toolbar */}
