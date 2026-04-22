@@ -33,8 +33,14 @@ const DISMISS_KEY = "begift_push_dismissed_at";
 const DISMISS_COOLDOWN_MS = 1000 * 60 * 60 * 24 * 14; // 14 giorni
 
 export function PushPermissionCard() {
-  const [visible, setVisible] = useState(false);
+  // "default" = mostra card di attivazione
+  // "granted" = mostra mini-riga "notifiche attive + invia test"
+  // "denied"  = nascosto
+  // "hidden"  = dismissata, cooldown attivo
+  const [mode, setMode] = useState<"default" | "granted" | "hidden">("hidden");
   const [loading, setLoading] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [testResult, setTestResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
 
@@ -46,25 +52,29 @@ export function PushPermissionCard() {
       if (!("serviceWorker" in navigator)) return;
       if (!("PushManager" in window)) return;
 
-      // Dismiss cooldown
+      // Utente loggato (senza login niente sottoscrizione)
+      const u = await getSessionUser();
+      if (!u) return;
+      setUserId(u.id);
+
+      // Permesso denied → nascondi completamente
+      if (Notification.permission === "denied") return;
+
+      // Permesso granted → mini-riga con "invia test"
+      if (Notification.permission === "granted") {
+        setMode("granted");
+        return;
+      }
+
+      // Permesso default: rispetta cooldown dismiss
       try {
         const raw = localStorage.getItem(DISMISS_KEY);
         if (raw) {
           const ts = parseInt(raw, 10);
           if (!isNaN(ts) && Date.now() - ts < DISMISS_COOLDOWN_MS) return;
         }
-      } catch {
-        /* ignore */
-      }
-
-      // Permesso già granted o denied → non mostrare
-      if (Notification.permission !== "default") return;
-
-      // Utente loggato (senza login la sottoscrizione non ha senso)
-      const u = await getSessionUser();
-      if (!u) return;
-      setUserId(u.id);
-      setVisible(true);
+      } catch { /* ignore */ }
+      setMode("default");
     })();
   }, []);
 
@@ -72,7 +82,36 @@ export function PushPermissionCard() {
     try {
       localStorage.setItem(DISMISS_KEY, String(Date.now()));
     } catch { /* ignore */ }
-    setVisible(false);
+    setMode("hidden");
+  };
+
+  const sendTest = async () => {
+    setTesting(true);
+    setTestResult(null);
+    try {
+      const sb = createSupabaseClient();
+      const { data } = await sb.auth.getSession();
+      const token = data.session?.access_token;
+      const res = await fetch("/api/push/test", {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      const json = await res.json();
+      if (res.ok && json.sent > 0) {
+        setTestResult(`✓ Push inviata a ${json.sent} device — controlla le notifiche`);
+      } else if (res.ok && json.sent === 0) {
+        setTestResult("Nessun device trovato. Ricarica la pagina e riprova.");
+      } else {
+        setTestResult("Errore nell'invio. Riprova.");
+      }
+    } catch (e) {
+      console.error("[PushPermissionCard] test push failed", e);
+      setTestResult("Errore di rete. Riprova.");
+    } finally {
+      setTesting(false);
+      // Auto-reset del messaggio dopo 5s
+      setTimeout(() => setTestResult(null), 5000);
+    }
   };
 
   const enable = async () => {
@@ -127,8 +166,8 @@ export function PushPermissionCard() {
         return;
       }
 
-      // Successo: nascondi card
-      setVisible(false);
+      // Successo: passa al mode granted (mostra mini-riga con test)
+      setMode("granted");
     } catch (e) {
       console.error("[PushPermissionCard] enable failed", e);
       setError("Si è verificato un errore. Riprova.");
@@ -137,7 +176,58 @@ export function PushPermissionCard() {
     }
   };
 
-  if (!visible) return null;
+  if (mode === "hidden") return null;
+
+  // Mode granted: mini-riga compatta con "Notifiche attive + Invia test"
+  if (mode === "granted") {
+    return (
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 10,
+          background: "#fff",
+          border: "1px solid #e0dbd5",
+          borderRadius: 14,
+          padding: "9px 14px",
+          margin: "0 0 12px",
+          fontSize: 12,
+          color: MUTED,
+          flexWrap: "wrap",
+        }}
+      >
+        <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <span style={{ fontSize: 14 }}>🔔</span>
+          <span style={{ color: "#3B8C5A", fontWeight: 600 }}>Notifiche attive</span>
+          {testResult && (
+            <span style={{ color: testResult.startsWith("✓") ? "#3B8C5A" : "#B71C1C", fontSize: 11, marginLeft: 6 }}>
+              — {testResult}
+            </span>
+          )}
+        </span>
+        <button
+          onClick={sendTest}
+          disabled={testing}
+          style={{
+            background: "transparent",
+            color: ACCENT,
+            border: `1px solid ${ACCENT}`,
+            borderRadius: 20,
+            padding: "4px 12px",
+            fontSize: 11,
+            fontWeight: 700,
+            cursor: testing ? "wait" : "pointer",
+            opacity: testing ? 0.6 : 1,
+            fontFamily: "inherit",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {testing ? "…" : "Invia test"}
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div
