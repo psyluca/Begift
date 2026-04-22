@@ -4,6 +4,7 @@ import { useI18n } from "@/lib/i18n";
 import GiftSVG from "@/components/GiftSVG";
 import { createBrowserClient } from "@supabase/ssr";
 import { createSupabaseClient, getSessionUser } from "@/lib/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import type { User } from "@supabase/supabase-js";
 import type { Gift, Reaction } from "@/types";
 import { WhatsAppShareButton } from "@/components/WhatsAppShareButton";
@@ -44,6 +45,16 @@ export default function DashboardClient({ user: initialUser, initialSentGifts, i
   initialReceivedGifts: GiftWithReactions[];
 }) {
   const [user,     setUser]     = useState(initialUser);
+  // useAuth come fonte secondaria: se il loadUser locale non trova
+  // nulla (cookies/storage flaky), useAuth potrebbe avere una
+  // session valida dal refresh proattivo. Sync automatico sotto.
+  const { user: authUser, loading: authLoading } = useAuth();
+  useEffect(() => {
+    if (!user && authUser) {
+      setUser(authUser as unknown as User);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authUser]);
   const { t } = useI18n();
   const [refreshing, setRefreshing] = useState(false);
   const touchStartY = useRef<number>(0);
@@ -205,6 +216,10 @@ export default function DashboardClient({ user: initialUser, initialSentGifts, i
   };
 
   useEffect(() => {
+    // NOTA: la logica auth principale ora è useAuth() (in alto nel
+    // component). Questo useEffect si limita a caricare i gifts
+    // quando l'auth è pronto — vedi hook sotto. Lasciamo anche un
+    // fallback basato su localStorage per retro-compat.
     const loadUser = async () => {
       let user = null;
       try {
@@ -223,11 +238,17 @@ export default function DashboardClient({ user: initialUser, initialSentGifts, i
       }
       if (!user) return;
       setUser(user as any);
-      const data = { user };
       loadGifts(user.id);
     };
 
     loadUser();
+
+    // Sync secondario: se useAuth trova lo user (via refresh) ma il
+    // loadUser locale non l'ha trovato, adottiamo quello di useAuth.
+    // Risolve il caso iOS PWA in cui localStorage è leggibile in
+    // modi incoerenti tra componenti.
+    // (gestito da un effect separato sotto, che reagisce ai change
+    //  di authUser)
 
     // Ricarica dati quando si torna sulla pagina
     const handleVisibility = () => {
@@ -308,12 +329,26 @@ export default function DashboardClient({ user: initialUser, initialSentGifts, i
     }
   };
 
-  if (!user) return (
+  // Mostriamo il gate "accedi" solo quando SIAMO SICURI che l'utente
+  // non è loggato: user locale null E useAuth ha finito di caricare
+  // senza trovare authUser. Altrimenti durante il caricamento/refresh
+  // mostreremmo un flash "accedi" fastidioso.
+  if (!user && !authLoading && !authUser) return (
     <div style={{minHeight:"100vh",background:"#f7f5f2",fontFamily:"system-ui,sans-serif",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:24,textAlign:"center"}}>
       <div style={{fontSize:52,marginBottom:16}}>🔐</div>
       <h2 style={{fontSize:22,fontWeight:800,color:DEEP,margin:"0 0 10px"}}>{t("dashboard.login_title")}</h2>
       <p style={{fontSize:14,color:MUTED,marginBottom:24,lineHeight:1.6}}>{t("dashboard.free_account")}</p>
       <a href="/auth/login" style={{background:ACCENT,color:"#fff",borderRadius:40,padding:"14px 32px",fontSize:15,fontWeight:700,textDecoration:"none"}}>{t("auth.sign_in_magic")}</a>
+    </div>
+  );
+
+  // Finché siamo in dubbio (loading o user non ancora settato ma
+  // authUser in arrivo), mostriamo la UI vuota invece del gate —
+  // meglio una dashboard che lampeggia "vuota" per 200ms rispetto
+  // a un "accedi" falso.
+  if (!user) return (
+    <div style={{minHeight:"100vh",background:"#f7f5f2",padding:24,textAlign:"center",color:MUTED,fontFamily:"system-ui,sans-serif"}}>
+      {t("dashboard.loading") || "Caricamento…"}
     </div>
   );
 
