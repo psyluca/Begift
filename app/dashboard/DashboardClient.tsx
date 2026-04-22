@@ -456,6 +456,29 @@ export default function DashboardClient({ user: initialUser, initialSentGifts, i
         <PushPermissionCard/>
       </div>
 
+      {/* Shortcut verso /settings/reminders — card piccola, discreta,
+          linkata anche al valore principale (mai dimenticare un
+          compleanno). Sempre visibile; potremmo nasconderla se
+          l'utente ha già >=1 ricorrenza, ma per ora la lasciamo per
+          favorire discovery. */}
+      <div style={{maxWidth:640,margin:"0 auto",padding:"0 20px 12px"}}>
+        <a href="/settings/reminders" style={{
+          display: "flex", alignItems: "center", gap: 12,
+          background: "#fff", border: `1px solid #e8e4de`,
+          borderRadius: 14, padding: "10px 14px",
+          textDecoration: "none", color: "inherit",
+          fontSize: 13,
+        }}>
+          <span style={{ fontSize: 18 }}>🔔</span>
+          <span style={{ flex: 1, color: DEEP, fontWeight: 600 }}>
+            Non dimenticare un compleanno
+          </span>
+          <span style={{ color: ACCENT, fontWeight: 700, fontSize: 12 }}>
+            Aggiungi ricorrenze →
+          </span>
+        </a>
+      </div>
+
       {/* Multi-select toolbar */}
       {(
         <div style={{maxWidth:640,margin:"0 auto",padding:"10px 20px 0",display:"flex",gap:8,alignItems:"center",justifyContent:"flex-end"}}>
