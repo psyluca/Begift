@@ -13,7 +13,7 @@ const LANGS = [
 export default function LangSwitcher({ style }: { style?: React.CSSProperties }) {
   const { locale, setLocale } = useI18n();
   return (
-    <div style={{ display: "flex", ...style }}>
+    <div className="topbar-lang" style={{ display: "flex", ...style }}>
       {LANGS.map((l, i) => (
         <button
           key={l.code}
@@ -36,8 +36,8 @@ export default function LangSwitcher({ style }: { style?: React.CSSProperties })
           }}
         >
           <span style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1, lineHeight: 1 }}>
-            <span style={{ fontSize: 13 }}>{l.flag}</span>
-            <span style={{ fontSize: 9 }}>{l.label}</span>
+            <span className="topbar-lang-flag" style={{ fontSize: 13 }}>{l.flag}</span>
+            <span className="topbar-lang-label" style={{ fontSize: 9 }}>{l.label}</span>
           </span>
         </button>
       ))}

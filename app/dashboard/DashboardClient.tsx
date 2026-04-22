@@ -327,7 +327,7 @@ export default function DashboardClient({ user: initialUser, initialSentGifts, i
         onClick={() => selecting && toggleSelect(gift.id)}
         style={{background: isSelected ? "#fff5f8" : "#fff", borderRadius:16, boxShadow:"0 2px 10px #0000000a", overflow:"hidden", border: `1.5px solid ${isSelected ? ACCENT : "transparent"}`, cursor: selecting ? "pointer" : "default", transition: "all .15s"}}
       >
-        <div style={{padding:"14px 16px",display:"flex",alignItems:"center",gap:12}}>
+        <div className="gift-card-row" style={{padding:"14px 16px",display:"flex",alignItems:"center",gap:12}}>
           {/* Checkbox */}
           {selecting && (
             <div style={{ width:22, height:22, borderRadius:"50%", border:`2px solid ${isSelected ? ACCENT : "#ddd"}`, background: isSelected ? ACCENT : "#fff", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
@@ -375,7 +375,7 @@ export default function DashboardClient({ user: initialUser, initialSentGifts, i
             )}
           </div>
           {!selecting && (
-            <div style={{display:"flex",gap:6,flexShrink:0,alignItems:"center"}}>
+            <div className="gift-card-actions" style={{display:"flex",gap:6,flexShrink:0,alignItems:"center"}}>
               {isSent && typeof window !== "undefined" && (
                 <WhatsAppShareButton
                   giftUrl={`${window.location.origin}/gift/${gift.id}`}
