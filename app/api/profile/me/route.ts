@@ -12,6 +12,7 @@
  */
 
 import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
+import { isAdminEmail } from "@/lib/admin";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
@@ -44,5 +45,13 @@ export async function GET(req: NextRequest) {
     console.error("[profile/me] error", error);
     return NextResponse.json({ error: "server" }, { status: 500 });
   }
-  return NextResponse.json(data);
+
+  // is_admin: flag calcolato server-side comparando l'email con
+  // ADMIN_EMAILS env var. Lo restituiamo nel response così il client
+  // (TopBar) può mostrare/nascondere pulsanti admin senza dover
+  // fetchare endpoint dedicati. La lista completa resta server-only.
+  return NextResponse.json({
+    ...data,
+    is_admin: isAdminEmail(data?.email),
+  });
 }

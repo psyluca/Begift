@@ -19,9 +19,15 @@ export default function TopBar() {
   // listener 'begift:username-set' aggiorna immediatamente la
   // TopBar dopo il submit del modal senza bisogno di reload.
   const [handle, setHandle] = useState<string | null>(null);
+  // Flag admin (email in ADMIN_EMAILS env). Solo se true
+  // mostriamo il bottoncino 📊 verso /admin/stats. Server-computed
+  // via /api/profile/me, quindi il client non vede la lista degli
+  // admin (niente leak nel bundle).
+  const [isAdmin, setIsAdmin] = useState(false);
   useEffect(() => {
     if (!loggedIn) {
       setHandle(null);
+      setIsAdmin(false);
       return;
     }
     let cancelled = false;
@@ -30,7 +36,9 @@ export default function TopBar() {
         const res = await fetch("/api/profile/me");
         if (!res.ok) return;
         const p = await res.json();
-        if (!cancelled && p?.username) setHandle(p.username);
+        if (cancelled) return;
+        if (p?.username) setHandle(p.username);
+        if (p?.is_admin) setIsAdmin(true);
       } catch { /* ignore */ }
     })();
     const onSet = (e: Event) => {
@@ -91,6 +99,28 @@ export default function TopBar() {
 
         {loggedIn ? (
           <>
+            {/* Bottone 📊 admin-only (email in ADMIN_EMAILS env):
+                shortcut verso /admin/stats, visibile solo a chi
+                è admin. Server-computed via /api/profile/me. */}
+            {isAdmin && (
+              <a
+                href="/admin/stats"
+                title="Admin stats"
+                aria-label="Admin stats"
+                style={{
+                  background: "transparent",
+                  border: "1.5px solid #e0dbd5",
+                  borderRadius: 20,
+                  width: 32, height: 32,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 14, textDecoration: "none",
+                  flexShrink: 0,
+                  lineHeight: 1,
+                }}
+              >
+                📊
+              </a>
+            )}
             {/* Avatar circolare con iniziale — sempre visibile (anche
                 su mobile) così l'utente ha conferma visiva di essere
                 loggato. Il title attribute mostra l'email completa
