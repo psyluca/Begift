@@ -178,56 +178,11 @@ export function PushPermissionCard() {
 
   if (mode === "hidden") return null;
 
-  // Mode granted: mini-riga compatta con "Notifiche attive + Invia test"
-  if (mode === "granted") {
-    return (
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 10,
-          background: "#fff",
-          border: "1px solid #e0dbd5",
-          borderRadius: 14,
-          padding: "9px 14px",
-          margin: "0 0 12px",
-          fontSize: 12,
-          color: MUTED,
-          flexWrap: "wrap",
-        }}
-      >
-        <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span style={{ fontSize: 14 }}>🔔</span>
-          <span style={{ color: "#3B8C5A", fontWeight: 600 }}>Notifiche attive</span>
-          {testResult && (
-            <span style={{ color: testResult.startsWith("✓") ? "#3B8C5A" : "#B71C1C", fontSize: 11, marginLeft: 6 }}>
-              — {testResult}
-            </span>
-          )}
-        </span>
-        <button
-          onClick={sendTest}
-          disabled={testing}
-          style={{
-            background: "transparent",
-            color: ACCENT,
-            border: `1px solid ${ACCENT}`,
-            borderRadius: 20,
-            padding: "4px 12px",
-            fontSize: 11,
-            fontWeight: 700,
-            cursor: testing ? "wait" : "pointer",
-            opacity: testing ? 0.6 : 1,
-            fontFamily: "inherit",
-            whiteSpace: "nowrap",
-          }}
-        >
-          {testing ? "…" : "Invia test"}
-        </button>
-      </div>
-    );
-  }
+  // Mode granted → nascosto (niente mini-riga + bottone test).
+  // Le push sono attive, non serve feedback permanente in UI.
+  // L'endpoint /api/push/test resta disponibile per uso manuale
+  // se un giorno servirà debug.
+  if (mode === "granted") return null;
 
   return (
     <div
