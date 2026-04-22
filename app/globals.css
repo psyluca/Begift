@@ -11,3 +11,40 @@ body { margin: 0; font-family: system-ui, -apple-system, sans-serif; -webkit-fon
 button { font-family: inherit; }
 input, textarea, select { font-family: inherit; }
 a { color: inherit; }
+
+/* ─── Responsive helpers ──────────────────────────────────────────
+   Utility class usate da TopBar e dalla griglia card regali nella
+   dashboard per collassare elementi su viewport stretti (iPhone
+   standard = 375-430px). Puri media-query perché gli style inline
+   React non supportano @media direttamente. */
+
+/* Nascondi l'email utente in TopBar su mobile (sotto 520px) —
+   prende troppo spazio e va quasi sopra il logo. Il "Esci" resta. */
+@media (max-width: 520px) {
+  .topbar-email { display: none !important; }
+}
+
+/* Compatta il LangSwitcher su mobile: bandierine più piccole,
+   meno padding, niente label sotto (solo bandiera). */
+@media (max-width: 520px) {
+  .topbar-lang button { padding: 4px 7px !important; }
+  .topbar-lang-label { display: none !important; }
+  .topbar-lang-flag { font-size: 14px !important; }
+}
+
+/* Card regalo: su mobile i 4 bottoni (WhatsApp/Copia/Apri/Cestino)
+   non ci stanno in una riga col testo, finiscono sopra alla
+   scritta 'Inviato il…'. Split in 2 righe: flex-direction column,
+   header sopra (GiftMini + testo) e bottoni in una riga sotto
+   allineati a destra e wrap se serve. */
+@media (max-width: 520px) {
+  .gift-card-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+  .gift-card-actions {
+    justify-content: flex-end !important;
+    flex-wrap: wrap !important;
+  }
+}

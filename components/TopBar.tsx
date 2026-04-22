@@ -26,29 +26,36 @@ export default function TopBar() {
       background: "rgba(255,255,255,0.96)",
       backdropFilter: "blur(14px)",
       borderBottom: isCreate ? "none" : "0.5px solid #e8e4de",
-      padding: isCreate ? "10px 24px" : "14px 24px",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: isCreate ? "flex-end" : "space-between",
     }}>
+      {/* Inner wrapper con maxWidth coerente col body (640px) così
+          logo/lingua/esci sono allineati al riquadro centrale sotto
+          invece di attaccarsi ai bordi del viewport su desktop. */}
+      <div style={{
+        maxWidth: 640, margin: "0 auto",
+        padding: isCreate ? "10px 16px" : "12px 16px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: isCreate ? "flex-end" : "space-between",
+        gap: 8,
+      }}>
       {!isCreate && (
-        <a href="/" style={{ textDecoration: "none" }}>
-          <span style={{ fontSize: 21, fontWeight: 800, color: DEEP }}>
+        <a href="/" style={{ textDecoration: "none", flexShrink: 0 }}>
+          <span style={{ fontSize: 20, fontWeight: 800, color: DEEP }}>
             Be<span style={{ color: ACCENT }}>Gift</span>
           </span>
         </a>
       )}
 
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
         {/* Il selezionatore di lingua è sempre visibile, anche ai visitatori anonimi */}
         <LangSwitcher/>
 
         {loggedIn ? (
           <>
-            <span style={{
+            <span className="topbar-email" style={{
               fontSize: 13, color: MUTED,
               overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-              maxWidth: 180,
+              maxWidth: 160,
             }}>
               {email}
             </span>
@@ -58,7 +65,7 @@ export default function TopBar() {
                 background: "none", border: "1.5px solid #e0dbd5",
                 borderRadius: 20, padding: "5px 12px",
                 fontSize: 12, cursor: "pointer", color: MUTED,
-                whiteSpace: "nowrap",
+                whiteSpace: "nowrap", flexShrink: 0,
               }}
             >
               {t("common.sign_out")}
@@ -78,6 +85,7 @@ export default function TopBar() {
             </a>
           )
         )}
+      </div>
       </div>
     </div>
   );
