@@ -184,6 +184,139 @@ const OCCASIONS: OccasionTemplate[] = [
 
 const INP: React.CSSProperties = { width:"100%",padding:"13px 15px",fontSize:15,border:"1.5px solid #e0dbd5",borderRadius:11,outline:"none",boxSizing:"border-box",background:"#fff",color:DEEP,fontFamily:"inherit" };
 
+/**
+ * Stili tile "preview card" per step 2 /create. Bordo solido pulito
+ * (non più dashed), padding uniforme, preview visuale in cima + label
+ * + hint sotto. Il valore è comunicare "cosa otterrai" già prima di
+ * selezionare.
+ */
+const TILE_STYLE: React.CSSProperties = {
+  display: "block",
+  background: "#fff",
+  border: "1.5px solid #e8e4de",
+  borderRadius: 16,
+  padding: "20px 14px 16px",
+  textAlign: "center",
+  cursor: "pointer",
+  transition: "border-color .14s, transform .14s",
+  fontFamily: "inherit",
+};
+const TILE_STYLE_COMPACT: React.CSSProperties = {
+  ...TILE_STYLE,
+  padding: "18px 10px 14px",
+};
+const TILE_LABEL: React.CSSProperties = {
+  fontSize: 14,
+  fontWeight: 700,
+  color: DEEP,
+  marginBottom: 3,
+};
+const TILE_HINT: React.CSSProperties = {
+  fontSize: 11,
+  color: MUTED,
+  lineHeight: 1.35,
+};
+const PREVIEW_WRAP: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  height: 58,
+  marginBottom: 10,
+};
+const PREVIEW_WRAP_SMALL: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  height: 46,
+  marginBottom: 8,
+};
+
+/** Polaroid rosa ruotata con icona camera — preview per Foto */
+function PhotoPreview() {
+  return (
+    <div style={{
+      width: 48, height: 52, background: "#F5C4B3", borderRadius: 6,
+      transform: "rotate(-5deg)", display: "flex", alignItems: "center",
+      justifyContent: "center", fontSize: 22, boxShadow: "0 3px 8px rgba(0,0,0,.12)",
+      padding: "4px 4px 10px",
+      position: "relative",
+    }}>
+      <div style={{
+        width: "100%", height: "100%", background: "#D85A30",
+        borderRadius: 3, display: "flex", alignItems: "center",
+        justifyContent: "center", color: "#fff", fontSize: 16,
+      }}>📷</div>
+    </div>
+  );
+}
+
+/** Card nera con play triangolo — preview per Video */
+function VideoPreview() {
+  return (
+    <div style={{
+      width: 62, height: 42, background: "#1a1a1a", borderRadius: 6,
+      display: "flex", alignItems: "center", justifyContent: "center",
+      boxShadow: "0 3px 8px rgba(0,0,0,.18)",
+    }}>
+      <div style={{
+        width: 0, height: 0,
+        borderLeft: "12px solid #fff",
+        borderTop: "8px solid transparent",
+        borderBottom: "8px solid transparent",
+        marginLeft: 3,
+      }}/>
+    </div>
+  );
+}
+
+/** Documento rosso con label PDF — preview per PDF */
+function PdfPreview() {
+  return (
+    <div style={{
+      width: 32, height: 40, background: "#F7C1C1", borderRadius: 3,
+      position: "relative", boxShadow: "0 2px 6px rgba(0,0,0,.12)",
+      display: "flex", alignItems: "flex-end", justifyContent: "center",
+      paddingBottom: 5,
+    }}>
+      <div style={{
+        position: "absolute", top: 0, right: 0, width: 10, height: 10,
+        background: "#E24B4A", clipPath: "polygon(0 0, 100% 100%, 100% 0)",
+      }}/>
+      <span style={{ fontSize: 9, fontWeight: 700, color: "#501313", letterSpacing: ".04em" }}>PDF</span>
+    </div>
+  );
+}
+
+/** Card blu con emoji link — preview per Link */
+function LinkPreview() {
+  return (
+    <div style={{
+      width: 54, height: 36, background: "#B5D4F4", borderRadius: 6,
+      display: "flex", alignItems: "center", justifyContent: "center",
+      fontSize: 18, boxShadow: "0 2px 6px rgba(0,0,0,.08)",
+    }}>
+      🔗
+    </div>
+  );
+}
+
+/** Snippet di lettera rosa corsivo — preview per Messaggio */
+function MessagePreview() {
+  return (
+    <div style={{
+      width: 56, background: "#FBEAF0", borderRadius: 5,
+      padding: "6px 7px", fontSize: 8, fontStyle: "italic",
+      color: "#72243E", lineHeight: 1.25, textAlign: "left",
+      boxShadow: "0 2px 6px rgba(0,0,0,.06)",
+      border: "0.5px solid #F4C0D1",
+    }}>
+      <div>Cara Marta,</div>
+      <div style={{ opacity: 0.5, marginTop: 1 }}>______</div>
+      <div style={{ opacity: 0.5 }}>___</div>
+    </div>
+  );
+}
+
 export default function CreateGiftClient({ userId }: { userId: string }) {
   const { t, locale } = useI18n();
   const [step,    setStep]    = useState(1);
@@ -545,39 +678,44 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
           <button onClick={next} disabled={!name.trim()} style={{display:"block",width:"100%",background:name.trim()?ACCENT:"#e0dbd5",color:"#fff",border:"none",borderRadius:40,padding:"15px",fontSize:15,fontWeight:700,cursor:name.trim()?"pointer":"not-allowed",marginTop:14}}>{t("create.continue")}</button>
         </>}
 
-        {/* S2 — content */}
+        {/* S2 — content type (direzione B "preview cards") */}
         {step===2&&<>
           <h2 style={{fontSize:24,fontWeight:800,color:DEEP,margin:"0 0 20px"}}>{t("create.content_title")}</h2>
           {uploading&&<div style={{textAlign:"center",padding:32,color:MUTED}}><div style={{fontSize:28,marginBottom:8}}>⏳</div>{t("create.uploading_file")}</div>}
           {!uploading&&<>
+            {/* Prima riga 2: Foto + Video (upload file grandi) */}
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:11,marginBottom:11}}>
-              {[{type:"image",icon:"🖼️",labelKey:"create.photo",accept:"image/*"},{type:"video",icon:"🎬",labelKey:"create.video",accept:"video/*"}].map(({type,icon,labelKey,accept})=>(
-                <label key={type} className="tile" style={{display:"block",background:"#fff",border:"1.5px dashed #d5cfc8",borderRadius:14,padding:"24px 12px",textAlign:"center",cursor:"pointer",transition:"all .14s"}}>
-                  <div style={{fontSize:28,marginBottom:7}}>{icon}</div>
-                  <div style={{fontSize:13,fontWeight:700,color:DEEP}}>{t(labelKey)}</div>
-                  <input type="file" accept={accept} style={{display:"none"}} onChange={e=>onFile(e,type)}/>
-                </label>
-              ))}
+              <label className="tile" style={TILE_STYLE}>
+                <div style={PREVIEW_WRAP}><PhotoPreview/></div>
+                <div style={TILE_LABEL}>{t("create.photo")}</div>
+                <div style={TILE_HINT}>{t("create.hint_photo")}</div>
+                <input type="file" accept="image/*" style={{display:"none"}} onChange={e=>onFile(e,"image")}/>
+              </label>
+              <label className="tile" style={TILE_STYLE}>
+                <div style={PREVIEW_WRAP}><VideoPreview/></div>
+                <div style={TILE_LABEL}>{t("create.video")}</div>
+                <div style={TILE_HINT}>{t("create.hint_video")}</div>
+                <input type="file" accept="video/*" style={{display:"none"}} onChange={e=>onFile(e,"video")}/>
+              </label>
             </div>
+            {/* Seconda riga 3: PDF + Link + Messaggio */}
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:11}}>
-              <label className="tile" style={{display:"block",background:"#fff",border:"1.5px dashed #d5cfc8",borderRadius:14,padding:"24px 10px",textAlign:"center",cursor:"pointer",transition:"all .14s"}}>
-                <div style={{fontSize:28,marginBottom:7}}>📄</div>
-                <div style={{fontSize:13,fontWeight:700,color:DEEP}}>PDF</div>
+              <label className="tile" style={TILE_STYLE_COMPACT}>
+                <div style={PREVIEW_WRAP_SMALL}><PdfPreview/></div>
+                <div style={TILE_LABEL}>PDF</div>
+                <div style={TILE_HINT}>{t("create.hint_pdf")}</div>
                 <input type="file" accept="application/pdf" style={{display:"none"}} onChange={e=>onFile(e,"pdf")}/>
               </label>
-              {[{type:"link",icon:"🔗",labelKey:"create.link"},{type:"message",icon:"💌",labelKey:"create.message"}].map(({type,icon,labelKey})=>(
-                <button key={type} className="tile" onClick={()=>{
-                  setCType(type);
-                  // Per "message": il messaggio stesso È il contenuto del regalo,
-                  // non serve uno step dedicato al content prima della dedica.
-                  // Salta direttamente allo step 4 dove l'utente scrive il testo.
-                  if (type === "message") { setStep(4); }
-                  else { next(); }
-                }} style={{background:"#fff",border:"1.5px dashed #d5cfc8",borderRadius:14,padding:"24px 10px",textAlign:"center",cursor:"pointer",transition:"all .14s"}}>
-                  <div style={{fontSize:28,marginBottom:7}}>{icon}</div>
-                  <div style={{fontSize:13,fontWeight:700,color:DEEP}}>{t(labelKey)}</div>
-                </button>
-              ))}
+              <button className="tile" onClick={()=>{setCType("link");next();}} style={TILE_STYLE_COMPACT}>
+                <div style={PREVIEW_WRAP_SMALL}><LinkPreview/></div>
+                <div style={TILE_LABEL}>{t("create.link")}</div>
+                <div style={TILE_HINT}>{t("create.hint_link")}</div>
+              </button>
+              <button className="tile" onClick={()=>{setCType("message");setStep(4);}} style={TILE_STYLE_COMPACT}>
+                <div style={PREVIEW_WRAP_SMALL}><MessagePreview/></div>
+                <div style={TILE_LABEL}>{t("create.message")}</div>
+                <div style={TILE_HINT}>{t("create.hint_message")}</div>
+              </button>
             </div>
           </>}
         </>}
