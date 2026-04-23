@@ -723,7 +723,43 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
         {/* S3 — content input or message */}
         {step===3&&!isFile&&<>
           <h2 style={{fontSize:24,fontWeight:800,color:DEEP,margin:"0 0 20px"}}>{cType==="link"?t("create.paste_link"):t("create.write_message")}</h2>
-          {cType==="link" ? <input style={INP} placeholder="https://…" value={cUrl} onChange={e=>setCUrl(e.target.value)}/> : (
+          {cType==="link" ? (
+            <div style={{display:"flex",gap:8,alignItems:"stretch"}}>
+              <input style={{...INP,flex:1}} placeholder="https://…" value={cUrl} onChange={e=>setCUrl(e.target.value)} autoFocus/>
+              <button
+                type="button"
+                onClick={async () => {
+                  // Clipboard API moderno (tutti i browser recenti).
+                  // Se non disponibile (iOS Safari <13.4) o permesso negato,
+                  // fallback silenzioso — l'utente incolla a mano.
+                  try {
+                    if (navigator.clipboard?.readText) {
+                      const text = await navigator.clipboard.readText();
+                      if (text && text.trim()) setCUrl(text.trim());
+                    }
+                  } catch {
+                    // permission denied / unsupported — no-op
+                  }
+                }}
+                aria-label={t("create.paste_clipboard")}
+                title={t("create.paste_clipboard")}
+                style={{
+                  background:"#fff5f8",
+                  color:ACCENT,
+                  border:`1.5px solid #f9c8d9`,
+                  borderRadius:11,
+                  padding:"0 14px",
+                  fontSize:14,
+                  fontWeight:700,
+                  cursor:"pointer",
+                  fontFamily:"inherit",
+                  whiteSpace:"nowrap",
+                }}
+              >
+                📋
+              </button>
+            </div>
+          ) : (
             <div style={{position:"relative"}}>
               <textarea style={{...INP,minHeight:130,resize:"vertical"}} placeholder={t("create.special_placeholder")} value={cText} onChange={e=>setCText(e.target.value)}/>
               <button type="button" onClick={()=>setShowEmoji(p=>!p)} aria-label={t("chat.emoji_picker")} style={{position:"absolute",bottom:6,right:6,background:"none",border:"none",fontSize:20,cursor:"pointer",lineHeight:1,width:36,height:36,display:"flex",alignItems:"center",justifyContent:"center",padding:0,borderRadius:8}}>😊</button>

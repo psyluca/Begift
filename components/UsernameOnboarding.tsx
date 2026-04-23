@@ -161,6 +161,22 @@ export function UsernameOnboarding() {
       // prossimo mount del modal perché anche il gate è combinato
       // con l'username check).
       fetchAuthed("/api/profile/age", { method: "POST" }).catch(() => {});
+      // Referral attribution: se c'è un handle referrer salvato in
+      // localStorage (da ?ref=... della landing), attribuisci ora.
+      // Fire-and-forget: eventuali errori sono OK.
+      try {
+        const ref = localStorage.getItem("begift_ref");
+        if (ref && /^[a-z0-9_]{3,20}$/.test(ref)) {
+          fetchAuthed("/api/profile/referral", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ referred_by_username: ref }),
+          }).then(() => {
+            // Cleanup dopo attribuzione (riuscita o no, non ritentiamo)
+            try { localStorage.removeItem("begift_ref"); } catch { /* ignore */ }
+          }).catch(() => {});
+        }
+      } catch { /* ignore */ }
       // Successo: emetti evento + chiudi modal
       window.dispatchEvent(new CustomEvent("begift:username-set", { detail: { username: handle } }));
       setShow(false);

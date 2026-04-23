@@ -9,6 +9,7 @@ import type { User } from "@supabase/supabase-js";
 import type { Gift, Reaction } from "@/types";
 import { WhatsAppShareButton } from "@/components/WhatsAppShareButton";
 import { PushPermissionCard } from "@/components/PushPermissionCard";
+import { InviteFriendWidget } from "@/components/InviteFriendWidget";
 
 const ACCENT = "#D4537E", DEEP = "#1a1a1a", MUTED = "#888", LIGHT = "#f7f5f2";
 
@@ -518,6 +519,16 @@ export default function DashboardClient({ user: initialUser, initialSentGifts, i
       {gifts.length > 0 && (
         <div style={{maxWidth:640,margin:"0 auto",padding:"0 20px"}}>
           <PushPermissionCard/>
+        </div>
+      )}
+
+      {/* Invite friend widget — mostra il referral link personale
+          dell'utente solo dopo che ha mandato almeno 1 regalo. Stesso
+          principio del push card: non chiedere engagement prima che
+          l'utente abbia sperimentato il prodotto. */}
+      {gifts.length > 0 && (
+        <div style={{maxWidth:640,margin:"0 auto",padding:"0 20px"}}>
+          <InviteFriendWidget/>
         </div>
       )}
 

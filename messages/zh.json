@@ -55,6 +55,14 @@
     "accept": "接受",
     "learn_more": "了解更多"
   },
+  "invite": {
+    "title": "邀请朋友加入BeGift",
+    "subtitle": "分享你的专属链接：通过你的邀请打开礼物的人将与你保持联系。",
+    "copy": "复制链接",
+    "copied": "已复制!",
+    "whatsapp": "WhatsApp",
+    "wa_message": "你好!我在BeGift上给你送一份数字礼物 🎁 你会喜欢的。{link}"
+  },
   "dashboard": {
     "sent": "已发送",
     "received": "已收到",
@@ -113,6 +121,7 @@
     "link_label": "链接",
     "message_label": "留言",
     "paste_link": "粘贴链接 🔗",
+    "paste_clipboard": "从剪贴板粘贴",
     "write_message": "写一段话 💌",
     "special_placeholder": "写点特别的…",
     "message_title": "添加留言 💬",
