@@ -177,6 +177,19 @@ const OCCASIONS: OccasionTemplate[] = [
     messageZh: "衷心感谢 🙏 感谢你所做的一切。",
   },
   {
+    // "everyday": pensiero quotidiano, non legato a un'occasione
+    // formale. Allineato al claim della home (2026-04-23).
+    // Carta crema + fiocco rosa brand per evocare calore senza
+    // festivita' specifica. Messaggio starter usa "ti penso, ora"
+    // per coerenza con il sub-titolo della home.
+    id: "everyday", emoji: "💌", labelKey: "create.occasion_everyday",
+    pkg: { paperColor:"#F5E8D5", ribbonColor:"#D4537E", bowColor:"#D4537E", bowType:"classic", openAnimation:"unfold", sound:"chime" },
+    messageIt: "Ti penso, ora 💌 Un pensiero per dirti che ci sei.",
+    messageEn: "Thinking of you, right now 💌 Just to say I'm here.",
+    messageJa: "今、あなたを想って 💌 伝えたかっただけ。",
+    messageZh: "此刻，我在想你 💌 只是想让你知道。",
+  },
+  {
     id: "none", emoji: "✨", labelKey: "create.occasion_none",
     messageIt: "", messageEn: "",
   },

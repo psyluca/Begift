@@ -106,6 +106,21 @@ export default function HomePage() {
           {t("home.hero_title")}<br/>
           <span style={{ color: ACCENT }}>{t("home.hero_title_accent")}</span>
         </h1>
+        {/* Tagline sotto l'H1: la frase "ti penso, ora" estratta dal
+            sub e promossa a payoff visivo dedicato. Italic + colore
+            grigio caldo per valorizzarla senza competere col rosa
+            dell'H1 accent (avere due rose a cascata era troppo). */}
+        <p style={{
+          fontSize: "clamp(18px,3.6vw,22px)",
+          fontWeight: 500,
+          fontStyle: "italic",
+          color: "#555",
+          margin: "0 0 18px",
+          letterSpacing: "-0.2px",
+          lineHeight: 1.3,
+        }}>
+          {t("home.hero_tagline")}
+        </p>
         <p style={{
           fontSize: 17, color: MUTED, maxWidth: 400,
           margin: "0 auto 32px", lineHeight: 1.65,
@@ -185,6 +200,10 @@ export default function HomePage() {
             { occ: "anniversary", emoji: "💍", paper: "#E8A0A0", ribbon: "#E8C84A" },
             { occ: "birth",       emoji: "👶", paper: "#F5C6C6", ribbon: "#F8F5ED" },
             { occ: "graduation",  emoji: "🎓", paper: "#1A3A6B", ribbon: "#E8C84A" },
+            // "everyday" = template per un pensiero quotidiano, non
+            // legato a un'occasione formale. Allineato al nuovo claim
+            // della home ("Un regalo ogni volta che pensi a qualcuno").
+            { occ: "everyday",    emoji: "💌", paper: "#F5E8D5", ribbon: "#D4537E" },
           ].map((ex) => (
             <Link
               key={ex.occ}
