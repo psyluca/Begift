@@ -325,6 +325,14 @@ export default function SettingsHubClient() {
             label={<Link href="/privacy" style={{ color: DEEP, textDecoration: "none" }}>Privacy Policy</Link>}
             value={<span style={{ color: MUTED }}>›</span>}
           />
+          <Row
+            label={<Link href="/security" style={{ color: DEEP, textDecoration: "none" }}>Sicurezza / Vulnerability disclosure</Link>}
+            value={<span style={{ color: MUTED }}>›</span>}
+          />
+          <Row
+            label={<ExportDataButton />}
+            value={null}
+          />
         </Section>
 
         {/* ── ELIMINAZIONE ACCOUNT ───────────────────────── */}
@@ -544,6 +552,66 @@ function DeleteAccountButton() {
       }}
     >
       {deleting ? "Elaborazione…" : "Elimina definitivamente il mio account"}
+    </button>
+  );
+}
+
+/**
+ * ExportDataButton — attiva il download del bundle GDPR art. 20
+ * (portabilita'). Chiama GET /api/profile/export che risponde con
+ * Content-Disposition: attachment, quindi il browser scarica il JSON
+ * senza bisogno di gestire blob manualmente.
+ *
+ * Nota: il bundle contiene i dati dell'utente in formato JSON leggibile
+ * da macchina. Gli URL ai media sono pubblici ma non indicizzati.
+ */
+function ExportDataButton() {
+  const [busy, setBusy] = useState(false);
+
+  const start = async () => {
+    setBusy(true);
+    try {
+      // Usiamo un link temporaneo con token via Authorization header,
+      // il che richiede fetch + blob + download programmatico.
+      const res = await fetchAuthed("/api/profile/export");
+      if (!res.ok) {
+        alert("Errore nell'export. Riprova o contatta privacy@begift.app.");
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `begift-export-${Date.now()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (e) {
+      console.error("[export] failed", e);
+      alert("Errore di rete.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <button
+      onClick={start}
+      disabled={busy}
+      style={{
+        width: "100%",
+        textAlign: "left",
+        background: "transparent",
+        border: "none",
+        padding: 0,
+        color: DEEP,
+        fontSize: 14,
+        fontFamily: "inherit",
+        cursor: busy ? "wait" : "pointer",
+      }}
+    >
+      {busy ? "Preparazione export…" : "Esporta i miei dati (GDPR art. 20)"}
     </button>
   );
 }
