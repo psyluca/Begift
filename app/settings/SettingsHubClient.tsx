@@ -298,7 +298,11 @@ export default function SettingsHubClient() {
         {/* ── LEGALE ───────────────────────────────────── */}
         <Section title="📄 Legale" id="legal">
           <Row
-            label={<Link href="/privacy" style={{ color: DEEP, textDecoration: "none" }}>Privacy</Link>}
+            label={<Link href="/terms" style={{ color: DEEP, textDecoration: "none" }}>Condizioni d&apos;uso</Link>}
+            value={<span style={{ color: MUTED }}>›</span>}
+          />
+          <Row
+            label={<Link href="/privacy" style={{ color: DEEP, textDecoration: "none" }}>Privacy Policy</Link>}
             value={<span style={{ color: MUTED }}>›</span>}
           />
         </Section>

@@ -4,6 +4,7 @@ import { useI18n } from "@/lib/i18n";
 import { createBrowserClient } from "@supabase/ssr";
 import SharedGiftSVG from "@/components/GiftSVG";
 import GiftChat from "@/components/GiftChat";
+import { ReportGiftButton } from "@/components/ReportGiftButton";
 import type { Gift, Reaction, ReactionType } from "@/types";
 
 const ACCENT = "#D4537E";
@@ -1152,6 +1153,13 @@ export default function GiftOpeningClient({ gift }: { gift: Gift }) {
         </div>
       )}
       <div style={{ marginTop: 24, padding: "14px 24px 80px", textAlign: "center" }}>
+        {/* Report mechanism DSA-compliant: sempre visibile, anche ad
+            anonimi. Bottone discreto per non disturbare esperienza
+            regalo legittima, ma immediato per segnalare contenuti
+            inappropriati. */}
+        <div style={{ marginBottom: 12 }}>
+          <ReportGiftButton giftId={gift.id} />
+        </div>
         <p style={{ margin: "3px 0 0", fontSize: 11, color: "#bbb" }}>Made with ❤️ by BeGift</p>
       </div>
       {/* GiftChat nascosto in preview mode: il mittente sta solo guardando
