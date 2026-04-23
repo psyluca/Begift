@@ -11,7 +11,15 @@ Conserva le conferme di firma (email o screenshot) in una cartella `/docs/compli
 
 ---
 
-## 1. Supabase Inc.
+## 1. Supabase Inc. ✅ GIA' FIRMATA
+
+**Status:** la DPA Supabase e' a livello di **organization**, non di singolo progetto. Luca l'ha gia' firmata in passato per un'altra app sulla stessa organization Supabase — copre automaticamente anche BeGift (stesso Titolare, stessa org).
+
+**Azione residua:** archiviare una copia/screenshot della DPA firmata in `/docs/compliance/dpa/supabase-dpa-org-YYYYMMDD.pdf` da mostrare all'avvocato.
+
+---
+
+### (Istruzioni originali, conservate per riferimento)
 
 **Ruolo:** Responsabile del trattamento per database Postgres, Auth, Storage.
 
@@ -33,7 +41,21 @@ Conserva le conferme di firma (email o screenshot) in una cartella `/docs/compli
 
 ---
 
-## 2. Vercel Inc.
+## 2. Vercel Inc. ⏳ DA FIRMARE AL PASSAGGIO A PRO
+
+**Status attuale (23 aprile 2026):** BeGift e' su piano **Hobby** (free tier). Su Hobby Vercel non permette di firmare una DPA custom: il trattamento e' regolato dai Terms of Service accettati all'iscrizione, che a loro volta rimandano alla DPA standard di Vercel (https://vercel.com/legal/dpa) e alle Standard Contractual Clauses UE.
+
+**Pianificazione:** upgrade a piano **Pro** (20 USD/mese) 1-2 settimane prima del lancio commerciale, contestualmente alla firma formale della DPA. L'upgrade porta anche:
+- DPA firmabile self-service
+- Log retention 120 gg (vs 30)
+- Priority support
+- Spending limits configurabili
+
+Per la fase beta pre-lancio (utenti &lt; 10, nessun ricavo), la DPA implicita via ToS e' considerata sufficiente. Confermare con l'avvocato.
+
+---
+
+### (Istruzioni originali per quando si fara' l'upgrade)
 
 **Ruolo:** Responsabile del trattamento per hosting, edge network, log HTTP, functions serverless.
 
@@ -55,7 +77,22 @@ Conserva le conferme di firma (email o screenshot) in una cartella `/docs/compli
 
 ---
 
-## 3. Anthropic PBC
+## 3. Anthropic PBC ✉️ RICHIESTA INVIATA VIA EMAIL
+
+**Status attuale (23 aprile 2026):** BeGift usa Anthropic API server-side (endpoint `app/api/ai/suggest-message`, modello `claude-3-5-haiku-latest`). Piano: **Build (pay-as-you-go)**, account `psyluca@gmail.com`.
+
+**Policy Anthropic di default su piano Build:**
+- No training su API data
+- Retention prompt 30 giorni per trust & safety, poi cancellazione
+- SCC per trasferimento EU→US inclusa nei ToS
+
+**Azione intrapresa:** email inviata a `privacy@anthropic.com` per richiesta DPA controfirmata + conferma scritta della retention policy. Attesa risposta (2-7 gg lavorativi).
+
+**Azione residua:** al ricevimento della risposta, firmare il PDF DPA e archiviare copia + conferma retention in `/docs/compliance/dpa/anthropic-dpa-YYYYMMDD.pdf`.
+
+---
+
+### (Istruzioni originali, conservate per riferimento)
 
 **Ruolo:** Responsabile del trattamento per elaborazione testo tramite API Claude (suggerimenti messaggio).
 
@@ -79,7 +116,21 @@ Conserva le conferme di firma (email o screenshot) in una cartella `/docs/compli
 
 ---
 
-## 4. Google LLC (Google OAuth)
+## 4. Google LLC (Google OAuth) ✅ VERIFICATO E PUBBLICATO
+
+**Status attuale (23 aprile 2026):**
+- Publishing status: **In production** (pubblicato il 23 aprile 2026)
+- User Type: **External**
+- App name: `BeGift` con logo, homepage `https://begift.app`, privacy `/privacy`, terms `/terms`
+- Scope espliciti configurati: **zero** (si usano solo default: `email`, `profile`, `openid`) → minimizzazione perfetta
+- Nessuna review manuale di Google richiesta (solo scope non-sensitive)
+- DPA: coperta dai Google Cloud Terms accettati all'iscrizione della Cloud Console + certificazione Data Privacy Framework
+
+**Azione residua:** nessuna. Confermare con l'avvocato che per servizi OAuth consumer la DPA Google Cloud Terms + DPF sono sufficienti.
+
+---
+
+### (Istruzioni originali, conservate per riferimento)
 
 **Ruolo:** Autenticazione OAuth. Non trasmettiamo dati utente a Google oltre a quanto necessario per il login (Google riceve comunque il fatto che un utente BeGift stia accedendo).
 
