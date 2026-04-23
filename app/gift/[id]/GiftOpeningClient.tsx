@@ -890,7 +890,15 @@ export default function GiftOpeningClient({ gift }: { gift: Gift }) {
           setPhase("revealed"); setOpened(true);
           // Save to localStorage — SKIP in preview mode (mittente che
           // sta vedendo l'anteprima, non deve apparire in 'ricevuti')
-          if (!previewMode) {
+          // Skip salvataggio apertura per:
+          //  - previewMode (?preview=1): anteprima mittente esplicita
+          //  - fromCreate (?from=create): appena creato, clic "Apri regalo"
+          //  - isCreator: il creator ha aperto il proprio regalo per
+          //    qualsiasi motivo (controllo ridondante ma difensivo)
+          // Evita di contare come apertura reale e quindi di mandare
+          // al creator la push "il tuo regalo è stato aperto" per
+          // un'auto-preview.
+          if (!previewMode && !fromCreate && !isCreator) {
             try {
               const stored = JSON.parse(localStorage.getItem("begift_received") || "[]");
               if (!stored.find((g: any) => g.id === gift.id)) {
