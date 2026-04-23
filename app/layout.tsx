@@ -5,6 +5,7 @@ import TopBarWrapper from "@/components/TopBarWrapper";
 import CookieBanner from "@/components/CookieBanner";
 import { I18nProvider } from "@/lib/i18n";
 import { GiftReceivedNotification } from "@/components/GiftReceivedNotification";
+import Footer from "@/components/Footer";
 // IOSInstallBanner rimosso dal layout: info di installazione
 // spostata in /settings → sezione Installazione. Il componente
 // è ancora in components/ per eventuale riuso futuro.
@@ -42,6 +43,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <I18nProvider>
           <TopBarWrapper/>
           {children}
+          <Footer/>
           <BottomNavWrapper/>
           <CookieBanner/>
           <GiftReceivedNotification/>

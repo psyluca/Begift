@@ -182,8 +182,12 @@ export default function SettingsHubClient() {
             </div>
           ) : pushPermission === "default" ? (
             <div style={{ padding: "6px 0" }}>
-              <p style={{ fontSize: 13, color: MUTED, margin: "0 0 10px", lineHeight: 1.5 }}>
+              <p style={{ fontSize: 13, color: MUTED, margin: "0 0 8px", lineHeight: 1.5 }}>
                 Non hai ancora dato il permesso alle notifiche push. Attivale per ricevere un avviso quando arriva qualcosa di importante.
+              </p>
+              <p style={{ fontSize: 11, color: MUTED, margin: "0 0 12px", lineHeight: 1.5, opacity: 0.85 }}>
+                Usiamo le notifiche solo per avvisarti di regali ricevuti, aperture dei tuoi regali e reazioni. Puoi revocare il consenso in qualsiasi momento dalle impostazioni del browser o da questa pagina. Dettagli nella{" "}
+                <a href="/privacy" style={{ color: ACCENT, textDecoration: "none" }}>Privacy Policy</a>.
               </p>
               <EnablePushButton onEnabled={() => setPushPermission("granted")} />
             </div>
