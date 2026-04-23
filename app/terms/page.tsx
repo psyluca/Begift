@@ -81,6 +81,12 @@ export default function TermsPage() {
           <p>Per segnalazioni particolarmente gravi (es. materiale pedopornografico), invitiamo inoltre a contattare direttamente la Polizia Postale italiana all&apos;indirizzo <a href="https://www.commissariatodips.it/" target="_blank" rel="noopener noreferrer" style={{color:ACCENT}}>commissariatodips.it</a>.</p>
         </Section>
 
+        <Section title="6bis. Contenuti generati da intelligenza artificiale">
+          <p>Il Servizio integra uno strumento di generazione assistita di messaggi basato su intelligenza artificiale (&quot;AI Message Helper&quot;, alimentato dal modello Claude di Anthropic). I suggerimenti prodotti dall&apos;IA sono chiaramente segnalati come tali nell&apos;interfaccia.</p>
+          <p>L&apos;Utente è libero di utilizzare, modificare o ignorare tali suggerimenti; resta comunque l&apos;unico responsabile del contenuto finale del regalo inviato. Il Fornitore non garantisce la correttezza, l&apos;appropriatezza o l&apos;originalità dei suggerimenti generati dall&apos;IA e non assume responsabilità per eventuali errori, inesattezze o contenuti sensibili presenti negli output.</p>
+          <p>Non viene effettuato alcun processo decisionale interamente automatizzato che produca effetti giuridici sull&apos;Utente (art. 22 GDPR).</p>
+        </Section>
+
         <Section title="7. Proprietà intellettuale">
           <p>L&apos;Autore mantiene la piena proprietà intellettuale dei Contenuti caricati. Caricandoli su BeGift, concede al Fornitore una licenza gratuita, non esclusiva, limitata allo scopo di fornire il Servizio: archiviazione, trasmissione al destinatario, visualizzazione tramite il link univoco.</p>
           <p>Il marchio &quot;BeGift&quot;, il logo, i design, i template e i codici sono di proprietà del Fornitore e non possono essere utilizzati senza autorizzazione scritta.</p>
@@ -111,6 +117,7 @@ export default function TermsPage() {
 
         <Section title="13. Contatti">
           <p>Per domande, segnalazioni o richieste legali: <a href="mailto:legal@begift.app" style={{color:ACCENT}}>legal@begift.app</a>.</p>
+          <p>Per segnalazione di contenuti inappropriati (risposta entro 48h): <a href="mailto:abuse@begift.app" style={{color:ACCENT}}>abuse@begift.app</a>.</p>
           <p>Per richieste relative alla privacy: <a href="mailto:privacy@begift.app" style={{color:ACCENT}}>privacy@begift.app</a>.</p>
         </Section>
       </div>

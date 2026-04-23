@@ -379,6 +379,14 @@ function AIMessageModal({ recipientName, senderName, locale, onClose, onPick }: 
             >
               ← Genera altre proposte
             </button>
+            {/* AI disclosure — obbligatoria ex art. 50 EU AI Act per
+                contenuti generati da IA. Chiaro, non decorativo. */}
+            <p style={{
+              fontSize: 11, color: MUTED, margin: "10px 0 0",
+              lineHeight: 1.5, textAlign: "center", fontStyle: "italic",
+            }}>
+              ✨ Suggerimenti generati da intelligenza artificiale (Claude di Anthropic). Rivedili e personalizzali prima di inviare.
+            </p>
           </div>
         )}
       </div>
