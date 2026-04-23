@@ -298,8 +298,8 @@
     "tagline": "魔法のようなデジタルギフト"
   },
   "home": {
-    "hero_title": "贈り物を、",
-    "hero_subtitle": "メッセージ、曲、コンサートのチケット二枚 — 魔法のように開くデジタルラッピングで贈ろう。特別な日にも、ただ「今日あなたを想っている」と伝えるためにも。",
+    "hero_title": "贈り物を、誰かを",
+    "hero_subtitle": "メッセージ、曲、コンサートのチケット二枚 — 魔法のように開くデジタルラッピングで贈ろう。特別な日にも、ただ「今、あなたを想っている」と伝えるためにも。",
     "cta_create": "無料でギフトを作成",
     "cta_login": "サインイン",
     "install_banner_title": "BeGiftをインストール",
@@ -313,7 +313,7 @@
     "feature3_desc": "受取人はアプリ不要。",
     "feature4_title": "何でも入る",
     "feature4_desc": "動画、写真、PDF、リンク、メッセージ。",
-    "hero_title_accent": "誰かを想うたびに",
+    "hero_title_accent": "想うたびに",
     "how_it_works_title": "仕組み",
     "how_it_works_subtitle": "60秒で完了。面倒なし。",
     "step1_num": "1",

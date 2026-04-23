@@ -298,8 +298,8 @@
     "tagline": "如魔法般的数字礼物"
   },
   "home": {
-    "hero_title": "一份礼物，",
-    "hero_subtitle": "一条消息、一首歌、两张音乐会门票——装进能以魔法般打开的数字礼盒里送出。为特别的时刻，也为想对他说一句「今天我在想你」。",
+    "hero_title": "一份礼物，每次",
+    "hero_subtitle": "一条消息、一首歌、两张音乐会门票——装进能以魔法般打开的数字礼盒里送出。为特别的时刻，也为想说一句「此刻，我在想你」。",
     "cta_create": "免费创建礼物",
     "cta_login": "登录",
     "install_banner_title": "安装BeGift",
@@ -313,7 +313,7 @@
     "feature3_desc": "收件人无需安装任何应用。",
     "feature4_title": "任何内容",
     "feature4_desc": "视频、照片、PDF、链接、留言。",
-    "hero_title_accent": "每次想起某人",
+    "hero_title_accent": "想起某人",
     "how_it_works_title": "如何使用",
     "how_it_works_subtitle": "60秒完成，轻松无忧。",
     "step1_num": "1",
