@@ -248,10 +248,13 @@ export function ReportGiftButton({ giftId }: { giftId: string }) {
                 </button>
 
                 <p style={{ fontSize: 10, color: "#bbb", margin: "12px 0 0", lineHeight: 1.4, textAlign: "center" }}>
+                  Puoi anche scriverci direttamente a{" "}
+                  <a href="mailto:abuse@begift.app" style={{ color: ACCENT }}>abuse@begift.app</a>.
+                  <br/>
                   Per contenuti illegali gravi (es. materiale pedopornografico), contatta anche la Polizia Postale a{" "}
                   <a href="https://www.commissariatodips.it/" target="_blank" rel="noopener noreferrer" style={{ color: ACCENT }}>
                     commissariatodips.it
-                  </a>
+                  </a>.
                 </p>
               </>
             )}
