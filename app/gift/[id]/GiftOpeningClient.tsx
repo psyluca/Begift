@@ -1082,6 +1082,17 @@ export default function GiftOpeningClient({ gift }: { gift: Gift }) {
             >
               {loggedIn && !isCreator ? t("gift.back_to_received") : "← Torna alla home"}
             </a>
+            {/* Meccanismo di segnalazione + blocco (DSA art. 16 +
+                UGC protection). Sempre visibili DOPO l'apertura
+                per utenti non-creator. Link testuali discreti. */}
+            {!isCreator && (
+              <div style={{ marginTop: 12, display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+                <ReportButton giftId={gift.id} />
+                {loggedIn && gift.creator_id && (
+                  <BlockSenderButton blockedId={gift.creator_id} />
+                )}
+              </div>
+            )}
           </div>
         )}
 
@@ -1336,5 +1347,118 @@ function ThankWithGiftCTA({ senderName, originalGiftId }: { senderName: string; 
         {t("gift.thank_with_gift_cta")}
       </a>
     </div>
+  );
+}
+
+/**
+ * ReportButton — link testuale "Segnala" che apre un prompt
+ * nativo minimale per categoria e descrizione, poi invia POST
+ * a /api/reports. Accessibile anche agli anonimi (DSA art. 16).
+ */
+function ReportButton({ giftId }: { giftId: string }) {
+  const [sending, setSending] = useState(false);
+  const [done, setDone] = useState(false);
+
+  const send = async () => {
+    const category = prompt(
+      "Che tipo di contenuto stai segnalando?\n\n" +
+      "illegal · disturbing · spam · copyright · privacy · other\n\n" +
+      "Scrivi una di queste categorie:"
+    );
+    if (!category) return;
+    const validCategories = ["illegal", "disturbing", "spam", "copyright", "privacy", "other"];
+    if (!validCategories.includes(category.trim().toLowerCase())) {
+      alert("Categoria non valida. Usa una delle 6 opzioni indicate.");
+      return;
+    }
+    const description = prompt("Descrivi brevemente il problema (opzionale):") || "";
+    if (!confirm("Inviare la segnalazione?")) return;
+
+    setSending(true);
+    try {
+      const { fetchAuthed } = await import("@/lib/clientAuth");
+      const res = await fetchAuthed("/api/reports", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ giftId, category: category.trim().toLowerCase(), description }),
+      });
+      if (res.ok) {
+        setDone(true);
+        alert("Segnalazione inviata. Grazie.");
+      } else {
+        const json = await res.json().catch(() => ({}));
+        alert(json.message || "Errore nell'invio della segnalazione.");
+      }
+    } catch (e) {
+      console.error("[report] failed", e);
+      alert("Errore di rete.");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  if (done) return <span style={{ fontSize: 12, color: "#888" }}>✓ Segnalazione inviata</span>;
+
+  return (
+    <button
+      onClick={send}
+      disabled={sending}
+      style={{
+        background: "transparent", border: "none", padding: 4,
+        fontSize: 12, color: "#888", cursor: sending ? "wait" : "pointer",
+        textDecoration: "underline", fontFamily: "inherit",
+      }}
+    >
+      {sending ? "Invio…" : "⚠ Segnala contenuto"}
+    </button>
+  );
+}
+
+/**
+ * BlockSenderButton — blocca il creator del gift. Solo per
+ * utenti loggati non-creator. Conferma prima di inviare.
+ */
+function BlockSenderButton({ blockedId }: { blockedId: string }) {
+  const [sending, setSending] = useState(false);
+  const [done, setDone] = useState(false);
+
+  const send = async () => {
+    if (!confirm("Bloccare questo utente? Non riceverai più notifiche dai suoi regali e non apparirà nei tuoi ricevuti.")) return;
+    setSending(true);
+    try {
+      const { fetchAuthed } = await import("@/lib/clientAuth");
+      const res = await fetchAuthed("/api/blocks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ blocked_id: blockedId }),
+      });
+      if (res.ok) {
+        setDone(true);
+        alert("Utente bloccato.");
+      } else {
+        alert("Errore nel blocco. Riprova.");
+      }
+    } catch (e) {
+      console.error("[block] failed", e);
+      alert("Errore di rete.");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  if (done) return <span style={{ fontSize: 12, color: "#888" }}>✓ Utente bloccato</span>;
+
+  return (
+    <button
+      onClick={send}
+      disabled={sending}
+      style={{
+        background: "transparent", border: "none", padding: 4,
+        fontSize: 12, color: "#888", cursor: sending ? "wait" : "pointer",
+        textDecoration: "underline", fontFamily: "inherit",
+      }}
+    >
+      {sending ? "Blocco…" : "🚫 Blocca mittente"}
+    </button>
   );
 }

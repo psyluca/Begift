@@ -47,6 +47,9 @@ type CheckState =
 export function UsernameOnboarding() {
   const { t } = useI18n();
   const [show, setShow] = useState(false);
+  // GDPR art. 8: conferma età >= 16 anni. Il modal non si chiude
+  // finché l'utente non spunta il checkbox.
+  const [ageConfirmed, setAgeConfirmed] = useState(false);
   const [handle, setHandle] = useState("");
   const [check, setCheck] = useState<CheckState>({ state: "idle" });
   const [submitting, setSubmitting] = useState(false);
@@ -134,7 +137,7 @@ export function UsernameOnboarding() {
   };
 
   const submit = async () => {
-    if (check.state !== "available") return;
+    if (check.state !== "available" || !ageConfirmed) return;
     setSubmitting(true);
     setSubmitError(null);
     try {
@@ -153,6 +156,11 @@ export function UsernameOnboarding() {
         }
         return;
       }
+      // Conferma età via API separata (fire-and-forget; se fallisce
+      // l'utente comunque ha spuntato il checkbox e andra ok al
+      // prossimo mount del modal perché anche il gate è combinato
+      // con l'username check).
+      fetchAuthed("/api/profile/age", { method: "POST" }).catch(() => {});
       // Successo: emetti evento + chiudi modal
       window.dispatchEvent(new CustomEvent("begift:username-set", { detail: { username: handle } }));
       setShow(false);
@@ -276,6 +284,32 @@ export function UsernameOnboarding() {
           {hint.text}
         </div>
 
+        {/* Checkbox età GDPR art. 8 (minimo 16 anni UE).
+            Obbligatoria per submit. */}
+        <label style={{
+          display: "flex", alignItems: "flex-start", gap: 10,
+          padding: "10px 12px", background: "#fafaf7",
+          border: "1px solid #e8e4de", borderRadius: 10,
+          marginBottom: 14, cursor: "pointer", fontSize: 12,
+          color: DEEP, lineHeight: 1.5,
+        }}>
+          <input
+            type="checkbox"
+            checked={ageConfirmed}
+            onChange={(e) => setAgeConfirmed(e.target.checked)}
+            style={{
+              marginTop: 2, flexShrink: 0, accentColor: ACCENT,
+              width: 16, height: 16, cursor: "pointer",
+            }}
+          />
+          <span>
+            Dichiaro di avere <strong>almeno 16 anni</strong> e accetto la{" "}
+            <a href="/privacy" target="_blank" rel="noopener" style={{ color: ACCENT, textDecoration: "underline" }}>Privacy Policy</a>
+            {" "}e i{" "}
+            <a href="/terms" target="_blank" rel="noopener" style={{ color: ACCENT, textDecoration: "underline" }}>Termini di servizio</a>.
+          </span>
+        </label>
+
         {submitError && (
           <div style={{ fontSize: 12, color: ERR_RED, marginBottom: 12, lineHeight: 1.4 }}>
             {submitError}
@@ -284,17 +318,17 @@ export function UsernameOnboarding() {
 
         <button
           onClick={submit}
-          disabled={check.state !== "available" || submitting}
+          disabled={check.state !== "available" || submitting || !ageConfirmed}
           style={{
             width: "100%",
-            background: check.state === "available" && !submitting ? ACCENT : "#e0dbd5",
+            background: check.state === "available" && !submitting && ageConfirmed ? ACCENT : "#e0dbd5",
             color: "#fff",
             border: "none",
             borderRadius: 40,
             padding: "14px",
             fontSize: 15,
             fontWeight: 800,
-            cursor: check.state === "available" && !submitting ? "pointer" : "not-allowed",
+            cursor: check.state === "available" && !submitting && ageConfirmed ? "pointer" : "not-allowed",
             fontFamily: "inherit",
             transition: "background .15s",
           }}
