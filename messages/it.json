@@ -55,6 +55,14 @@
     "accept": "Accetta",
     "learn_more": "Scopri di più"
   },
+  "invite": {
+    "title": "Invita un amico su BeGift",
+    "subtitle": "Condividi il tuo link personale: chi apre un regalo tramite il tuo invito rimane collegato a te.",
+    "copy": "Copia link",
+    "copied": "Copiato!",
+    "whatsapp": "WhatsApp",
+    "wa_message": "Ciao! Ti regalo un regalo digitale su BeGift 🎁 Ti piacerà. {link}"
+  },
   "dashboard": {
     "sent": "Inviati",
     "received": "Ricevuti",
@@ -113,6 +121,7 @@
     "link_label": "Link",
     "message_label": "Messaggio",
     "paste_link": "Incolla il link 🔗",
+    "paste_clipboard": "Incolla dagli appunti",
     "write_message": "Scrivi il messaggio 💌",
     "special_placeholder": "Scrivi qualcosa di speciale…",
     "message_title": "Aggiungi un messaggio 💬",

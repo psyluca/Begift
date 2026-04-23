@@ -48,6 +48,21 @@ export default function HomePage() {
         if (!error) window.location.href = "/dashboard";
       });
     }
+
+    // Referral tracking: se l'URL contiene ?ref=@handle, salvalo
+    // in localStorage + cookie per 30 giorni. Il UsernameOnboarding
+    // al primo login (nuovo utente) lo legge e attribuisce via
+    // POST /api/profile/referral. Cookie dura 30 gg → finestra di
+    // attribuzione ragionevole (Instagram/Facebook usano 28 gg).
+    const ref = params.get("ref");
+    if (ref && /^@?[a-z0-9_]{3,20}$/i.test(ref)) {
+      const normalized = ref.replace(/^@/, "").toLowerCase();
+      try {
+        localStorage.setItem("begift_ref", normalized);
+        const exp = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toUTCString();
+        document.cookie = `begift_ref=${normalized}; path=/; expires=${exp}; SameSite=Lax`;
+      } catch { /* ignore */ }
+    }
   }, []);
 
   return (

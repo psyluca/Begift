@@ -55,6 +55,14 @@
     "accept": "同意する",
     "learn_more": "詳しく"
   },
+  "invite": {
+    "title": "友達をBeGiftに招待",
+    "subtitle": "あなた専用のリンクを共有しましょう：招待から贈り物を開いた人はあなたと繋がります。",
+    "copy": "リンクをコピー",
+    "copied": "コピーしました!",
+    "whatsapp": "WhatsApp",
+    "wa_message": "こんにちは!BeGiftでデジタルギフトを送ります 🎁 気に入ってもらえるはず。{link}"
+  },
   "dashboard": {
     "sent": "送信済み",
     "received": "受信済み",
@@ -113,6 +121,7 @@
     "link_label": "リンク",
     "message_label": "メッセージ",
     "paste_link": "リンクを貼り付け 🔗",
+    "paste_clipboard": "クリップボードから貼り付け",
     "write_message": "メッセージを書く 💌",
     "special_placeholder": "特別なメッセージを書いてください…",
     "message_title": "メッセージを追加 💬",
