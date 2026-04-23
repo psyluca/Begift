@@ -45,6 +45,30 @@ export async function POST(req: NextRequest) {
     const userId = await getUserId(req);
     const supabase = createSupabaseAdmin();
 
+    // Rate limit anti-spam: max 20 gift/giorno per user loggato.
+    // Users non loggati attualmente non possono creare gift (check
+    // di userId sotto), quindi IP-based rate limit non serve.
+    // Limite pensato per uso normale: 20 regali al giorno è già
+    // tanto per un privato. Se emergono power-user legit (es. event
+    // planner) si puo aumentare con tier Pro.
+    if (userId) {
+      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const { count } = await supabase
+        .from("gifts")
+        .select("id", { count: "exact", head: true })
+        .eq("creator_id", userId)
+        .gte("created_at", oneDayAgo);
+      if ((count ?? 0) >= 20) {
+        return NextResponse.json(
+          {
+            error: "rate_limited",
+            message: "Hai raggiunto il limite di 20 regali al giorno. Riprova domani.",
+          },
+          { status: 429 }
+        );
+      }
+    }
+
     // scheduled_at: accetta ISO string, verifica che sia nel futuro
     // (altrimenti ignora — non ha senso programmare nel passato).
     // 30s di margine per evitare programmazioni quasi-immediate.

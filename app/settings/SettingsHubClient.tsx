@@ -327,6 +327,14 @@ export default function SettingsHubClient() {
           />
         </Section>
 
+        {/* ── ELIMINAZIONE ACCOUNT ───────────────────────── */}
+        <Section title="🗑️ Elimina account" id="delete-account">
+          <p style={{ fontSize: 13, color: MUTED, margin: "0 0 12px", lineHeight: 1.5 }}>
+            Puoi eliminare il tuo account in qualsiasi momento (diritto all&apos;oblio, GDPR art. 17). Verranno cancellati tutti i tuoi regali, ricorrenze, preferenze e dati personali. <strong>L&apos;operazione è irreversibile.</strong>
+          </p>
+          <DeleteAccountButton />
+        </Section>
+
         {/* ── LOGOUT ───────────────────────────────────── */}
         <div style={{ marginTop: 20, textAlign: "center" }}>
           <button
@@ -471,6 +479,72 @@ function EnablePushButton({ onEnabled }: { onEnabled: () => void }) {
       </button>
       {error && <p style={{ fontSize: 12, color: ERR_RED, margin: "8px 0 0" }}>{error}</p>}
     </div>
+  );
+}
+
+/**
+ * DeleteAccountButton — avvia la cancellazione permanente dell'account
+ * con doppia conferma (tipica pattern di sicurezza):
+ *   1. Conferma modale "Eliminare?"
+ *   2. Input "scrivi ELIMINA per confermare"
+ *   3. POST /api/profile/delete con { confirm: true }
+ *   4. Redirect a "/" dopo successo
+ * Tutto il backend cascade cancella automaticamente via FK ON DELETE.
+ */
+function DeleteAccountButton() {
+  const [deleting, setDeleting] = useState(false);
+
+  const confirm2 = async () => {
+    if (!confirm("Vuoi davvero eliminare il tuo account? Questa operazione è irreversibile e cancella tutti i tuoi dati.")) return;
+    const typed = prompt("Per conferma, scrivi ELIMINA (tutto maiuscolo):");
+    if (typed !== "ELIMINA") {
+      alert("Eliminazione annullata (testo non corrispondente).");
+      return;
+    }
+    setDeleting(true);
+    try {
+      const res = await fetchAuthed("/api/profile/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confirm: true }),
+      });
+      if (res.ok) {
+        alert("Account eliminato. Sarai reindirizzato alla home.");
+        try {
+          localStorage.clear();
+        } catch { /* ignore */ }
+        window.location.href = "/";
+      } else {
+        alert("Errore nell'eliminazione. Riprova o contatta privacy@begift.app.");
+      }
+    } catch (e) {
+      console.error("[delete account] failed", e);
+      alert("Errore di rete. Riprova.");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  return (
+    <button
+      onClick={confirm2}
+      disabled={deleting}
+      style={{
+        width: "100%",
+        background: "transparent",
+        color: ERR_RED,
+        border: `1.5px solid ${ERR_RED}`,
+        borderRadius: 40,
+        padding: "12px",
+        fontSize: 13,
+        fontWeight: 700,
+        cursor: deleting ? "wait" : "pointer",
+        opacity: deleting ? 0.6 : 1,
+        fontFamily: "inherit",
+      }}
+    >
+      {deleting ? "Elaborazione…" : "Elimina definitivamente il mio account"}
+    </button>
   );
 }
 
