@@ -392,9 +392,22 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
       <div style={{maxWidth:480,width:"100%",marginBottom:20}}>
         <InAppSend giftId={result.id}/>
       </div>
-      <div style={{display:"flex",gap:10,flexWrap:"wrap",justifyContent:"center"}}>
-        <a href={result.url + "?from=create"} target="_blank" style={{background:DEEP,color:"#fff",borderRadius:40,padding:"13px 24px",fontSize:14,fontWeight:600,textDecoration:"none"}}>{t("create.open_gift")}</a>
-        <a href="/dashboard" style={{background:"#fff",color:DEEP,border:"1.5px solid #e0dbd5",borderRadius:40,padding:"13px 24px",fontSize:14,fontWeight:600,textDecoration:"none"}}>{t("create.go_dashboard")}</a>
+      {/* CTA anteprima centrale — usa lo stesso background soft della
+          card social-proof landing (rosa pastello), non più pieno nero.
+          "Dashboard" rimosso: è già nella BottomNav. */}
+      <div style={{display:"flex",justifyContent:"center"}}>
+        <a href={result.url + "?from=create"} target="_blank" style={{
+          background:"#fff5f8",
+          color:ACCENT,
+          border:`1.5px solid #f9c8d9`,
+          borderRadius:40,
+          padding:"13px 28px",
+          fontSize:14,
+          fontWeight:700,
+          textDecoration:"none",
+        }}>
+          {t("create.preview_gift")}
+        </a>
       </div>
       <div style={{display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap",marginTop:16}}>
         <button onClick={()=>{setStep(isFile?4:5);setIsEditing(true);}} style={{background:"#f0f4ff",color:"#3B5BDB",border:"2px solid #3B5BDB",borderRadius:40,padding:"12px 24px",fontSize:14,fontWeight:700,cursor:"pointer"}}>
