@@ -126,7 +126,9 @@ Per la fase beta pre-lancio (utenti &lt; 10, nessun ricavo), la DPA implicita vi
 - Nessuna review manuale di Google richiesta (solo scope non-sensitive)
 - DPA: coperta dai Google Cloud Terms accettati all'iscrizione della Cloud Console + certificazione Data Privacy Framework
 
-**Azione residua:** nessuna. Confermare con l'avvocato che per servizi OAuth consumer la DPA Google Cloud Terms + DPF sono sufficienti.
+**Azione residua pre-launch commerciale:** valutare se completare la **Brand Verification** (opzionale). Senza verification gli utenti nuovi vedono un warning "Google hasn't verified this app" che puo' ridurre i signup del 10-30%. La verification richiede 2-3 gg lavorativi + video demo di 30-60 sec + giustificazione logo. Non bloccante per il lancio ma raccomandata per conversion.
+
+Confermare con l'avvocato che per servizi OAuth consumer la DPA Google Cloud Terms + DPF sono sufficienti.
 
 ---
 
