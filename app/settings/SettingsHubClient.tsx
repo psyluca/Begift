@@ -295,6 +295,22 @@ export default function SettingsHubClient() {
           )}
         </Section>
 
+        {/* ── CONTATTI ─────────────────────────────────── */}
+        <Section title="✉️ Contatti" id="contacts">
+          <Row
+            label="Supporto"
+            value={<a href="mailto:support@begift.app" style={{ color: ACCENT, textDecoration: "none", fontSize: 12 }}>support@begift.app</a>}
+          />
+          <Row
+            label="Info generali"
+            value={<a href="mailto:info@begift.app" style={{ color: ACCENT, textDecoration: "none", fontSize: 12 }}>info@begift.app</a>}
+          />
+          <Row
+            label="Segnalazioni abusi"
+            value={<a href="mailto:abuse@begift.app" style={{ color: ACCENT, textDecoration: "none", fontSize: 12 }}>abuse@begift.app</a>}
+          />
+        </Section>
+
         {/* ── LEGALE ───────────────────────────────────── */}
         <Section title="📄 Legale" id="legal">
           <Row
