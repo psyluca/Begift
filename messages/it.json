@@ -300,8 +300,8 @@
   },
   "home": {
     "hero_title": "Un regalo ogni volta che",
-    "hero_tagline": "“ti penso, ora”",
-    "hero_subtitle": "Un messaggio, una canzone, due biglietti per un concerto — regalali in un pacco digitale che si apre con magia. Per un'occasione, o anche solo per oggi.",
+    "hero_subtitle": "Un messaggio, una canzone, due biglietti per un concerto — regalali in un pacco digitale che si apre con magia. Per un'occasione o per dire {q}.",
+    "hero_subtitle_quote": "“ti penso, ora”",
     "cta_create": "Crea il tuo regalo — è gratis",
     "cta_login": "Accedi",
     "install_banner_title": "Installa BeGift",

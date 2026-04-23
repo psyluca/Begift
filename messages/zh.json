@@ -300,8 +300,8 @@
   },
   "home": {
     "hero_title": "一份礼物，每次",
-    "hero_tagline": "「此刻，我在想你」",
-    "hero_subtitle": "一条消息、一首歌、两张音乐会门票——装进能以魔法般打开的数字礼盒里送出。为特别的时刻，也为平凡的今天。",
+    "hero_subtitle": "一条消息、一首歌、两张音乐会门票——装进能以魔法般打开的数字礼盒里送出。为特别的时刻，也为想说一句{q}。",
+    "hero_subtitle_quote": "「此刻，我在想你」",
     "cta_create": "免费创建礼物",
     "cta_login": "登录",
     "install_banner_title": "安装BeGift",

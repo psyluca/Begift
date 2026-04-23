@@ -106,27 +106,33 @@ export default function HomePage() {
           {t("home.hero_title")}<br/>
           <span style={{ color: ACCENT }}>{t("home.hero_title_accent")}</span>
         </h1>
-        {/* Tagline sotto l'H1: la frase "ti penso, ora" estratta dal
-            sub e promossa a payoff visivo dedicato. Italic + colore
-            grigio caldo per valorizzarla senza competere col rosa
-            dell'H1 accent (avere due rose a cascata era troppo). */}
-        <p style={{
-          fontSize: "clamp(18px,3.6vw,22px)",
-          fontWeight: 500,
-          fontStyle: "italic",
-          color: "#555",
-          margin: "0 0 18px",
-          letterSpacing: "-0.2px",
-          lineHeight: 1.3,
-        }}>
-          {t("home.hero_tagline")}
-        </p>
-        <p style={{
-          fontSize: 17, color: MUTED, maxWidth: 400,
-          margin: "0 auto 32px", lineHeight: 1.65,
-        }}>
-          {t("home.hero_subtitle")}
-        </p>
+        {/* Sub con citazione inline valorizzata.
+            Il sub i18n contiene {q} come placeholder: splittiamo su
+            quello e rendiamo la citazione con italic + colore pieno
+            (DEEP contro MUTED del resto) per farla emergere senza
+            esagerare. Solo weight 500, niente rosa (il rosa e' gia'
+            sull'accent dell'H1). Pattern i18n-friendly: il placeholder
+            puo' stare ovunque nella frase, adattandosi alle strutture
+            diverse di JA e ZH. */}
+        {(() => {
+          const parts = t("home.hero_subtitle").split("{q}");
+          return (
+            <p style={{
+              fontSize: 17, color: MUTED, maxWidth: 400,
+              margin: "0 auto 32px", lineHeight: 1.65,
+            }}>
+              {parts[0]}
+              <span style={{
+                fontStyle: "italic",
+                fontWeight: 500,
+                color: DEEP,
+              }}>
+                {t("home.hero_subtitle_quote")}
+              </span>
+              {parts[1] ?? ""}
+            </p>
+          );
+        })()}
         <Link href="/create" style={{
           background: ACCENT, color: "#fff", borderRadius: 50,
           padding: "16px 42px", fontSize: 16, fontWeight: 700,
