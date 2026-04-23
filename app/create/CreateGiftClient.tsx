@@ -371,7 +371,17 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
 
   // RESULT — gift created
   if (result && step !== 4 && step !== 5) return (
-    <main style={{minHeight:"100vh",background:LIGHT,fontFamily:"system-ui,sans-serif",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:24,textAlign:"center"}}>
+    <main style={{minHeight:"100vh",background:LIGHT,fontFamily:"system-ui,sans-serif",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:24,textAlign:"center",position:"relative"}}>
+      {/* Escape hatch — link piccolo in alto a sx per tornare alla
+          dashboard anche se BottomNav è nascosta (es. su web desktop
+          in certi browser). */}
+      <a href="/dashboard" style={{
+        position:"absolute", top:16, left:16,
+        color:MUTED, fontSize:13, textDecoration:"none",
+        fontFamily:"inherit",
+      }}>
+        ← Dashboard
+      </a>
       <div style={{fontSize:64,marginBottom:16}}>🎉</div>
       <h2 style={{fontSize:26,fontWeight:800,color:DEEP,margin:"0 0 8px"}}>Regalo creato!</h2>
       <p style={{color:MUTED,marginBottom:16}}>Condividi il link con <strong style={{color:DEEP}}>{name}</strong></p>
