@@ -1,0 +1,16 @@
+# BeGift — Security contact (RFC 9116)
+# If you have discovered a security vulnerability, please contact us
+# privately at the address below. Do not disclose publicly until we
+# have confirmed a fix.
+
+Contact: mailto:security@begift.app
+Contact: https://begift.app/security
+Expires: 2027-04-23T23:59:59.000Z
+Preferred-Languages: it, en
+Canonical: https://begift.app/.well-known/security.txt
+Policy: https://begift.app/security
+Acknowledgments: https://begift.app/security#hall-of-fame
+
+# Report received go through a triage within 72h. We commit to an
+# initial response within 72h and a remediation plan within 14 days
+# for critical/high severity issues.
