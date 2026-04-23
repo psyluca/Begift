@@ -54,13 +54,43 @@ function FinalizeInner() {
         const sb = createSupabaseOAuthClient();
 
         // Helper che finalizza dopo una session valida
-        const finalize = async (session: { access_token: string; refresh_token: string }) => {
+        const finalize = async (session: { access_token: string; refresh_token: string; expires_at?: number; user?: unknown }) => {
           if (cancelled) return;
           try {
             const exp = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toUTCString();
             document.cookie = `sb-access-token=${session.access_token}; path=/; expires=${exp}; SameSite=Lax`;
             document.cookie = `sb-refresh-token=${session.refresh_token}; path=/; expires=${exp}; SameSite=Lax`;
           } catch { /* ignore */ }
+
+          // Persistenza esplicita in localStorage nel formato canonico
+          // {user, access_token, refresh_token, expires_at} atteso dal
+          // resto dell'app (getStoredUser, useAuth, loadUser, ecc).
+          //
+          // Root cause del bug "OAuth Google → dashboard dice Accedi":
+          // supabase-js con flowType=implicit scriveva la session in un
+          // formato che non sempre includeva `.user` al top-level (può
+          // essere nested come session.user o come tuple array). I
+          // consumer locali che fanno `parsed.user` direttamente
+          // ritornavano undefined e la dashboard rendeva il gate.
+          //
+          // L'accesso via OTP funzionava perché quel flow scrive
+          // direttamente nel formato standard.
+          try {
+            if (session.user && session.access_token && session.refresh_token) {
+              const STORAGE_KEY = "sb-acoettfsxcfpvhjzreoy-auth-token";
+              // Recupera session via SDK per avere expires_at corretto
+              const { data: fresh } = await sb.auth.getSession();
+              const canonical = {
+                user: session.user,
+                access_token: session.access_token,
+                refresh_token: session.refresh_token,
+                expires_at: session.expires_at ?? fresh.session?.expires_at ?? Math.floor(Date.now() / 1000) + 3600,
+                token_type: "bearer",
+              };
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(canonical));
+            }
+          } catch { /* ignore — best effort */ }
+
           try {
             window.history.replaceState(null, "", `/auth/finalize?next=${encodeURIComponent(next)}`);
           } catch { /* ignore */ }
