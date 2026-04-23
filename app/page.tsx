@@ -267,28 +267,10 @@ export default function HomePage() {
         }}>{t("home.final_cta_button")}</Link>
       </section>
 
-      {/* ── FOOTER ──────────────────────────────────────────── */}
-      <footer style={{
-        borderTop: "0.5px solid #e8e4de",
-        padding: "28px 24px 100px",
-        fontSize: 12,
-        color: MUTED,
-      }}>
-        <div style={{ maxWidth: 820, margin: "0 auto", textAlign: "center" }}>
-          <div style={{ fontSize: 15, fontWeight: 800, color: DEEP, marginBottom: 10 }}>
-            Be<span style={{ color: ACCENT }}>Gift</span>
-          </div>
-          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "8px 16px", marginBottom: 14 }}>
-            <Link href="/terms" style={{ color: MUTED, textDecoration: "none" }}>Condizioni d&apos;uso</Link>
-            <Link href="/privacy" style={{ color: MUTED, textDecoration: "none" }}>Privacy</Link>
-            <a href="mailto:info@begift.app" style={{ color: MUTED, textDecoration: "none" }}>info@begift.app</a>
-            <a href="mailto:support@begift.app" style={{ color: MUTED, textDecoration: "none" }}>Supporto</a>
-          </div>
-          <div style={{ fontSize: 11, color: "#bbb" }}>
-            © {new Date().getFullYear()} BeGift · Made with ❤️
-          </div>
-        </div>
-      </footer>
+      {/* Footer rimosso: e' presente il componente Footer globale
+          renderizzato dal layout root (components/Footer.tsx). Tenere
+          due footer sovrapposti causava duplicazione di link legali +
+          ridondanza visiva (vedi feedback Luca 2026-04-23). */}
     </main>
   );
 }
