@@ -1,9 +1,8 @@
 "use client";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { createSupabaseClient } from "@/lib/supabase/client";
+import { useState } from "react";
 import { useI18n } from "@/lib/i18n";
-import { getStoredUser } from "@/hooks/useAuth";
+import { useBadges } from "@/hooks/useBadges";
 
 const ACCENT = "#D4537E";
 const DEEP   = "#1a1a1a";
@@ -76,121 +75,41 @@ function Badge({ count }: { count: number }) {
 }
 
 export default function BottomNav() {
-  const pathname  = usePathname();
-  const router    = useRouter();
+  const pathname = usePathname();
+  const router = useRouter();
   const { t } = useI18n();
-  const [loggedIn,      setLoggedIn]      = useState(false);
-  const [checking,      setChecking]      = useState(true);
-  const [reactionBadge, setReactionBadge] = useState(0);
-  const [giftBadge,     setGiftBadge]     = useState(0);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
-  useEffect(() => {
-    const supabase = createSupabaseClient();
-
-    // Sticky auth: accetta loggedIn appena troviamo QUALSIASI
-    // sb-*-auth-token in localStorage. Stesso pattern di DashboardClient
-    // e GiftOpeningClient. Necessario perche' Google OAuth (flowType
-    // implicit) salva la session in un formato dove p.user al top
-    // level puo' mancare — getStoredUser() strict ritornerebbe null
-    // e l'utente vedrebbe il prompt login anche se loggato.
-    const stored = getStoredUser();
-    let hasAnyToken = false;
-    try {
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith("sb-") && key.endsWith("-auth-token")) {
-          const raw = localStorage.getItem(key);
-          if (raw && raw.length > 10) { hasAnyToken = true; break; }
-        }
-      }
-    } catch { /* ignore */ }
-
-    if (stored || hasAnyToken) {
-      setLoggedIn(true);
-      setChecking(false);
-    } else {
-      supabase.auth.getUser().then(({ data }) => {
-        setLoggedIn(!!data.user);
-        setChecking(false);
-      });
-    }
-
-    // Badge reazioni — carica dopo aver ottenuto l'utente
-    const loadBadges = async () => {
-      const authStored = localStorage.getItem("sb-acoettfsxcfpvhjzreoy-auth-token");
-      if (!authStored) return;
-      let token: string | null = null;
-      try { token = JSON.parse(authStored).access_token; } catch(_) {}
-      if (!token) return;
-      const reactionsSeen = localStorage.getItem("begift_reactions_seen_at") ?? "1970-01-01";
-      const res = await fetch(`/api/reactions/count?since=${encodeURIComponent(reactionsSeen)}`, {
-        headers: { "Authorization": `Bearer ${token}` }
-      });
-      const d = await res.json();
-      setReactionBadge(d.count ?? 0);
-
-      // Badge regali ricevuti
-      const giftsSeen = localStorage.getItem("begift_gifts_seen_at") ?? "1970-01-01";
-      const res2 = await fetch(`/api/gifts/received-count?since=${encodeURIComponent(giftsSeen)}`, {
-        headers: { "Authorization": `Bearer ${token}` }
-      });
-      const d2 = await res2.json();
-      setGiftBadge(d2.count ?? 0);
-    };
-    // Prova subito, poi riprova dopo 1 e 2 secondi se necessario
-    loadBadges();
-    setTimeout(loadBadges, 1000);
-    setTimeout(loadBadges, 2500);
-
-    // Realtime reazioni
-    // Salva userId per il filtro realtime
-    let currentUserId: string | null = null;
-    try {
-      const s = localStorage.getItem("sb-acoettfsxcfpvhjzreoy-auth-token");
-      if (s) currentUserId = JSON.parse(s).user?.id ?? null;
-    } catch(_) {}
-
-    const channel = supabase
-      .channel("nav-realtime")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "reactions" }, async (payload) => {
-        // Verifica che la reazione sia per un regalo dell'utente corrente
-        if (!currentUserId) return;
-        const giftId = (payload.new as any).gift_id;
-        const { data } = await supabase.from("gifts").select("creator_id").eq("id", giftId).single();
-        if (data?.creator_id === currentUserId) setReactionBadge(b => b + 1);
-      })
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications" }, (payload) => {
-        if (!currentUserId) return;
-        if ((payload.new as any).user_id === currentUserId) setGiftBadge(b => b + 1);
-      })
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
-  }, []);
-
-  const clearReactionBadge = () => {
-    localStorage.setItem("begift_reactions_seen_at", new Date().toISOString());
-    setReactionBadge(0);
-  };
-
-
-
-  const clearGiftBadge = () => {
-    localStorage.setItem("begift_gifts_seen_at", new Date().toISOString());
-    setGiftBadge(0);
-  };
+  // Tutto il sistema badge e' centralizzato in useBadges (hooks/useBadges.ts).
+  // Vedere quel file per dettagli su lifecycle, realtime, polling, e come
+  // i timestamp "seen_at" vengono salvati per-user (non globali).
+  const {
+    giftBadge,
+    reactionBadge,
+    ready,
+    loggedIn,
+    clearGiftBadge,
+    clearReactionBadge,
+  } = useBadges();
 
   const handleGiftClick = () => {
-    if (checking) return;
-    if (loggedIn) { clearGiftBadge(); router.push("/dashboard"); }
-    else setShowLoginPrompt(true);
+    if (!ready) return;
+    if (loggedIn) {
+      clearGiftBadge();
+      router.push("/dashboard");
+    } else {
+      setShowLoginPrompt(true);
+    }
   };
 
   const handleReactionsClick = () => {
-    if (checking) return;
-    if (loggedIn) { clearReactionBadge(); router.push("/reactions"); }
-    else setShowLoginPrompt(true);
+    if (!ready) return;
+    if (loggedIn) {
+      clearReactionBadge();
+      router.push("/reactions");
+    } else {
+      setShowLoginPrompt(true);
+    }
   };
 
   const items = [
