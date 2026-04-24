@@ -26,11 +26,16 @@ const CSP = [
   // Le chiamate di ingestione eventi vanno in connect-src (vedi sotto).
   "script-src 'self' 'unsafe-inline' https://plausible.io",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://*.supabase.co https://lh3.googleusercontent.com",
+  // img-src include i.ytimg.com per thumbnails YouTube nei link gift.
+  "img-src 'self' data: blob: https://*.supabase.co https://lh3.googleusercontent.com https://i.ytimg.com https://*.ytimg.com https://i.scdn.co",
   "media-src 'self' blob: https://*.supabase.co",
   "font-src 'self' data:",
   // connect-src include plausible.io per il POST /api/event degli eventi custom.
   "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://plausible.io",
+  // frame-src: domini consentiti per <iframe> embed dentro i regali.
+  // Senza questa direttiva, fallback a default-src 'self' bloccava
+  // gli embed YouTube/Spotify/Vimeo (bug riportato 2026-04-25).
+  "frame-src 'self' https://www.youtube.com https://youtube.com https://www.youtube-nocookie.com https://open.spotify.com https://player.vimeo.com https://player.twitch.tv https://w.soundcloud.com",
   "frame-ancestors 'none'",
   "form-action 'self'",
   "base-uri 'self'",

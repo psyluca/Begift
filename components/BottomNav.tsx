@@ -88,8 +88,25 @@ export default function BottomNav() {
   useEffect(() => {
     const supabase = createSupabaseClient();
 
+    // Sticky auth: accetta loggedIn appena troviamo QUALSIASI
+    // sb-*-auth-token in localStorage. Stesso pattern di DashboardClient
+    // e GiftOpeningClient. Necessario perche' Google OAuth (flowType
+    // implicit) salva la session in un formato dove p.user al top
+    // level puo' mancare — getStoredUser() strict ritornerebbe null
+    // e l'utente vedrebbe il prompt login anche se loggato.
     const stored = getStoredUser();
-    if (stored) {
+    let hasAnyToken = false;
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith("sb-") && key.endsWith("-auth-token")) {
+          const raw = localStorage.getItem(key);
+          if (raw && raw.length > 10) { hasAnyToken = true; break; }
+        }
+      }
+    } catch { /* ignore */ }
+
+    if (stored || hasAnyToken) {
       setLoggedIn(true);
       setChecking(false);
     } else {

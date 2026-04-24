@@ -10,7 +10,16 @@ export function getStoredUser() {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       const p = JSON.parse(stored);
+      // Caso canonico (OTP / @supabase/ssr): p.user e p.expires_at presenti.
       if (p.user && p.expires_at && p.expires_at * 1000 > Date.now()) return p.user;
+      // Fallback per Google OAuth (flowType implicit): a volte la
+      // session ha access_token ma manca p.user al top level. In quel
+      // caso restituiamo uno stub minimo cosi' i caller che usano
+      // questa funzione come bool ("c'e' un utente?") non danno falsi
+      // negativi. I caller che vogliono dati reali useranno getUser().
+      if (p.access_token && (!p.expires_at || p.expires_at * 1000 > Date.now())) {
+        return { id: p.user?.id ?? null, email: p.user?.email ?? null };
+      }
     }
   } catch(_) {}
   return null;
