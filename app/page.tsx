@@ -108,33 +108,31 @@ export default function HomePage() {
           {t("home.hero_title")}<br/>
           <span style={{ color: ACCENT }}>{t("home.hero_title_accent")}</span>
         </h1>
-        {/* Sub con citazione inline valorizzata.
-            Il sub i18n contiene {q} come placeholder: splittiamo su
-            quello e rendiamo la citazione con italic + colore pieno
-            (DEEP contro MUTED del resto) per farla emergere senza
-            esagerare. Solo weight 500, niente rosa (il rosa e' gia'
-            sull'accent dell'H1). Pattern i18n-friendly: il placeholder
-            puo' stare ovunque nella frase, adattandosi alle strutture
-            diverse di JA e ZH. */}
-        {(() => {
-          const parts = t("home.hero_subtitle").split("{q}");
-          return (
-            <p style={{
-              fontSize: 17, color: MUTED, maxWidth: 400,
-              margin: "0 auto 32px", lineHeight: 1.65,
-            }}>
-              {parts[0]}
-              <span style={{
-                fontStyle: "italic",
-                fontWeight: 500,
-                color: DEEP,
-              }}>
-                {t("home.hero_subtitle_quote")}
-              </span>
-              {parts[1] ?? ""}
-            </p>
-          );
-        })()}
+        {/* Sub principale (no quote inline).
+            Il quote "ti penso, ora" e' renderizzato sotto come blocco
+            autonomo su una sola riga: cosi' resta intero senza wrap a
+            meta' (es. "ti penso," / "ora" che spezza la cadenza). */}
+        <p style={{
+          fontSize: 17, color: MUTED, maxWidth: 420,
+          margin: "0 auto 12px", lineHeight: 1.65,
+        }}>
+          {t("home.hero_subtitle")}
+        </p>
+        {/* Tagline quote: italic, weight 500, color DEEP per emergere
+            sopra il MUTED del sub. white-space: nowrap garantisce che
+            la frase resti intera anche su mobile stretto; il font-size
+            in clamp riduce automaticamente se non sta in larghezza. */}
+        <p style={{
+          fontSize: "clamp(15px, 4.2vw, 19px)",
+          fontStyle: "italic",
+          fontWeight: 500,
+          color: DEEP,
+          margin: "0 auto 32px",
+          whiteSpace: "nowrap",
+          letterSpacing: "-0.2px",
+        }}>
+          {t("home.hero_subtitle_quote")}
+        </p>
         <Link href="/create" style={{
           background: ACCENT, color: "#fff", borderRadius: 50,
           padding: "16px 42px", fontSize: 16, fontWeight: 700,

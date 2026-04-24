@@ -659,7 +659,11 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
               <p style={{fontSize:14,fontWeight:700,color:DEEP,margin:"0 0 4px"}}>{t("create.occasion_title")}</p>
               <p style={{fontSize:12,color:MUTED,margin:"0 0 14px",lineHeight:1.4}}>{t("create.occasion_hint")}</p>
               <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8}}>
-                {OCCASIONS.map(o => (
+                {/* Filtriamo "none" dal selettore: il caso "nessuna
+                    occasione" e' gia' coperto dal template "Per tutti
+                    i giorni" (everyday), che propone un packaging
+                    e messaggio dedicati invece del salto-step neutro. */}
+                {OCCASIONS.filter(o => o.id !== "none").map(o => (
                   <button
                     key={o.id}
                     onClick={() => applyOccasion(o)}
