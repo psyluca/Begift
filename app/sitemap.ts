@@ -50,6 +50,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly",
       priority: 0.9,
     },
+    {
+      url: `${baseUrl}/onomastico`,
+      lastModified: now,
+      changeFrequency: "monthly",
+      priority: 0.85,
+    },
     // Pagine pilastro per AEO: use case long-form + FAQ + press
     {
       url: `${baseUrl}/per-chi`,

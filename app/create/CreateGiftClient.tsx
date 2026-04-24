@@ -155,6 +155,17 @@ const OCCASIONS: OccasionTemplate[] = [
     messageZh: "欢迎来到这个世界！👶 恭喜新手爸妈。",
   },
   {
+    // Onomastico: ricorrenza italiana del santo del proprio nome.
+    // Carta lavanda + nastro oro per evocare festa sobria/raffinata,
+    // distinta dal compleanno (giallo+rosso) che e' piu' chiassoso.
+    id: "name_day", emoji: "🎊", labelKey: "create.occasion_name_day",
+    pkg: { paperColor:"#C9B6E8", ribbonColor:"#E8C84A", bowColor:"#E8C84A", bowType:"classic", openAnimation:"lift", sound:"chime" },
+    messageIt: "Buon onomastico! 🎊 Un pensiero nel giorno del tuo nome.",
+    messageEn: "Happy name day! 🎊 A thought on the day of your name.",
+    messageJa: "聖名祝日おめでとう！🎊 名前の日にあなたを想って。",
+    messageZh: "命名日快乐！🎊 在属于你名字的这一天，想起你。",
+  },
+  {
     id: "valentine", emoji: "❤️", labelKey: "create.occasion_valentine",
     pkg: { paperColor:"#D85A5A", ribbonColor:"#E8A0BC", bowColor:"#E8A0BC", bowType:"rosette", openAnimation:"lift", sound:"chime" },
     messageIt: "Sei il mio tutto ❤️ Buon San Valentino.",

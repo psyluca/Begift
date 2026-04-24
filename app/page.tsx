@@ -208,6 +208,9 @@ export default function HomePage() {
             { occ: "anniversary", emoji: "💍", paper: "#E8A0A0", ribbon: "#E8C84A" },
             { occ: "birth",       emoji: "👶", paper: "#F5C6C6", ribbon: "#F8F5ED" },
             { occ: "graduation",  emoji: "🎓", paper: "#1A3A6B", ribbon: "#E8C84A" },
+            // Onomastico: ricorrenza italiana, carta lavanda + nastro
+            // oro per festa sobria distinta dal compleanno chiassoso.
+            { occ: "name_day",    emoji: "🎊", paper: "#C9B6E8", ribbon: "#E8C84A" },
             // "everyday" = template per un pensiero quotidiano, non
             // legato a un'occasione formale. Allineato al nuovo claim
             // della home ("Un regalo ogni volta che pensi a qualcuno").
