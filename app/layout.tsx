@@ -10,6 +10,7 @@ import Footer from "@/components/Footer";
 // spostata in /settings → sezione Installazione. Il componente
 // è ancora in components/ per eventuale riuso futuro.
 import { UsernameOnboarding } from "@/components/UsernameOnboarding";
+import { baseGraph } from "@/lib/structured-data";
 
 export const viewport: Viewport = {
   themeColor: "#D4537E",
@@ -18,15 +19,77 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "BeGift — Regali digitali emozionali",
-  description: "Crea un regalo digitale con un'esperienza di apertura indimenticabile.",
+  title: {
+    default: "BeGift — Regali digitali per ogni volta che pensi a qualcuno",
+    template: "%s · BeGift",
+  },
+  description:
+    "Web app gratuita per creare regali digitali personalizzati: messaggio, foto, video, PDF, link, esperienze, tutto in un pacco che si apre con animazione. Per le occasioni e anche per un pensiero quotidiano. Nessuna app da scaricare.",
+  keywords: [
+    "regalo digitale",
+    "regali online",
+    "idea regalo",
+    "regalo a distanza",
+    "regalo personalizzato",
+    "regalo compleanno",
+    "regalo anniversario",
+    "biglietto concerto regalo",
+    "video messaggio regalo",
+  ],
+  authors: [{ name: "Luca Galli", url: "https://begift.app" }],
+  creator: "Luca Galli",
+  publisher: "BeGift",
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://begift.app"),
+  alternates: {
+    canonical: "/",
+    languages: {
+      "it-IT": "/",
+      "en-US": "/",
+      "ja-JP": "/",
+      "zh-CN": "/",
+    },
+  },
+  openGraph: {
+    type: "website",
+    locale: "it_IT",
+    url: "/",
+    siteName: "BeGift",
+    title: "BeGift — Un regalo ogni volta che pensi a qualcuno",
+    description:
+      "Un messaggio, una canzone, due biglietti per un concerto — regalali in un pacco digitale che si apre con magia. Per un'occasione o per dire \"ti penso, ora\".",
+    images: [
+      {
+        url: "/icon-512.png",
+        width: 512,
+        height: 512,
+        alt: "Logo BeGift",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "BeGift — Un regalo ogni volta che pensi a qualcuno",
+    description:
+      "Crea un regalo digitale personalizzato in 60 secondi. Gratis, nessuna app da scaricare.",
+    images: ["/icon-512.png"],
+  },
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "BeGift",
   },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  category: "Lifestyle",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -39,6 +102,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-capable" content="yes"/>
         <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
         <meta name="apple-mobile-web-app-title" content="BeGift"/>
+        {/* JSON-LD grafo base (Organization + WebSite + SoftwareApplication).
+            Renderizzato in ogni pagina via layout root, e' la base
+            semantica letta da Google, Bing e crawler LLM. */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(baseGraph) }}
+        />
         {/* Plausible Analytics - caricato solo se env var e' settata.
             Cookie-less, GDPR-compliant. La variante 'manual' + 'pageview-props'
             ci permette di tracciare custom events con window.plausible()
