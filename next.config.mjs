@@ -22,12 +22,15 @@ const withNextIntl = createNextIntlPlugin();
  */
 const CSP = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline'",
+  // Plausible Analytics: script servito da plausible.io.
+  // Le chiamate di ingestione eventi vanno in connect-src (vedi sotto).
+  "script-src 'self' 'unsafe-inline' https://plausible.io",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://*.supabase.co https://lh3.googleusercontent.com",
   "media-src 'self' blob: https://*.supabase.co",
   "font-src 'self' data:",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+  // connect-src include plausible.io per il POST /api/event degli eventi custom.
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://plausible.io",
   "frame-ancestors 'none'",
   "form-action 'self'",
   "base-uri 'self'",
