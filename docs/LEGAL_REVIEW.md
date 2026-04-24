@@ -29,7 +29,7 @@ BeGift è una web app (PWA installabile su iOS/Android) che consente agli utenti
 - **AI:** Anthropic Claude Haiku (API server-side, zero-retention tier)
 - **Hosting:** Vercel (USA, edge)
 - **Database:** Supabase (US o EU region — VERIFICARE)
-- **Auth:** Supabase magic link + Google OAuth
+- **Auth:** Supabase OTP via email (codice 6 cifre) + Google OAuth
 - **Notifiche:** Web Push API (VAPID, service worker)
 - **Pagamenti:** Stripe (non ancora attivato)
 

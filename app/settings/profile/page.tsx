@@ -3,22 +3,25 @@
  *
  * Pagina per modificare lo username univoco dopo l'onboarding.
  * Stesso flusso di validazione real-time del modal di onboarding,
- * ma qui è opzionale (l'utente ha già un handle).
+ * ma qui e' opzionale (l'utente ha gia' un handle).
  *
- * Se l'utente non è loggato → redirect /auth/login
- * Se l'utente è loggato ma non ha ancora handle → il modal globale
- * di onboarding scatta comunque e prende il sopravvento.
+ * NON fa gate server-side sulla sessione: la sessione degli utenti
+ * che hanno fatto login via Google OAuth (flowType: implicit) vive
+ * solo in localStorage, non nei cookie SSR. Un server-side
+ * auth.getUser() su quegli utenti fallisce e un redirect a
+ * /auth/login li butta fuori anche se in realta' sono loggati.
+ * Il client SettingsProfileClient chiama /api/profile/me con
+ * fetchAuthed (che legge il token da localStorage) e gestisce
+ * autonomamente lo stato non-loggato.
+ *
+ * Bug fix: 2026-04-24 — gli utenti Google OAuth venivano sbattuti
+ * fuori cliccando "Cambia nome utente".
  */
 
 import SettingsProfileClient from "./SettingsProfileClient";
-import { createSupabaseServer } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
 
-export default async function SettingsProfilePage() {
-  const sb = createSupabaseServer();
-  const { data } = await sb.auth.getUser();
-  if (!data.user) {
-    redirect("/auth/login?next=/settings/profile");
-  }
+export const dynamic = "force-dynamic";
+
+export default function SettingsProfilePage() {
   return <SettingsProfileClient />;
 }

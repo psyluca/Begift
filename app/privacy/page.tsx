@@ -80,7 +80,7 @@ export default function PrivacyPage() {
                 <td style={{padding:"8px 10px", border:"1px solid #e0dbd5"}}>Esecuzione del contratto — art. 6(1)(b)</td>
               </tr>
               <tr>
-                <td style={{padding:"8px 10px", border:"1px solid #e0dbd5"}}>Autenticazione utenti (magic link, Google OAuth)</td>
+                <td style={{padding:"8px 10px", border:"1px solid #e0dbd5"}}>Autenticazione utenti (codice OTP via email, Google OAuth)</td>
                 <td style={{padding:"8px 10px", border:"1px solid #e0dbd5"}}>Esecuzione del contratto — art. 6(1)(b)</td>
               </tr>
               <tr>

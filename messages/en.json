@@ -18,7 +18,7 @@
     "wrong_code": "Invalid or expired code. Request a new one.",
     "use_another_email": "Use another email",
     "sign_in": "Sign in",
-    "sign_in_magic": "Sign in with magic link →",
+    "sign_in_magic": "Sign in with email code →",
     "no_password": "No password needed, just your email",
     "email_placeholder": "your@email.com",
     "signing_in": "Signing in…",

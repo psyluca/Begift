@@ -18,7 +18,7 @@
     "wrong_code": "Codice non valido o scaduto. Richiedi un nuovo codice.",
     "use_another_email": "Usa un'altra email",
     "sign_in": "Accedi",
-    "sign_in_magic": "Accedi con magic link →",
+    "sign_in_magic": "Accedi con codice email →",
     "no_password": "Nessuna password, solo la tua email",
     "email_placeholder": "la-tua@email.com",
     "signing_in": "Accesso in corso…",

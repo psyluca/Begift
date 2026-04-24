@@ -18,7 +18,7 @@
     "wrong_code": "验证码无效或已过期，请重新获取。",
     "use_another_email": "使用其他邮箱",
     "sign_in": "登录",
-    "sign_in_magic": "通过魔法链接登录 →",
+    "sign_in_magic": "使用邮箱验证码登录 →",
     "no_password": "无需密码，只需邮箱",
     "email_placeholder": "your@email.com",
     "signing_in": "登录中…",

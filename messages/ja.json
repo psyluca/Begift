@@ -18,7 +18,7 @@
     "wrong_code": "無効または期限切れのコードです。新しいコードをリクエストしてください。",
     "use_another_email": "別のメールを使用",
     "sign_in": "サインイン",
-    "sign_in_magic": "マジックリンクでサインイン →",
+    "sign_in_magic": "メールコードでサインイン →",
     "no_password": "パスワード不要、メールアドレスだけでOK",
     "email_placeholder": "your@email.com",
     "signing_in": "サインイン中…",
