@@ -282,6 +282,8 @@
     "description": "Accedi per gestire i tuoi regali, vedere chi li ha aperti e le reazioni ricevute."
   },
   "share": {
+    "button_label": "Condividi",
+    "share_title": "Un regalo per te su BeGift",
     "whatsapp_text": "Ho un regalo per te! 🎁\n{url}",
     "whatsapp_notify": "Ciao {name}! Ho un regalo per te su BeGift 🎁\nAprilo qui: {url}",
     "whatsapp_notify_btn": "📲 Avvisa {name} su WhatsApp",
@@ -326,7 +328,7 @@
     "step2_desc": "Colori, nastro, fiocco, animazione e suono di apertura. Un template se vai di fretta.",
     "step3_num": "3",
     "step3_title": "Condividi il link",
-    "step3_desc": "Invia via WhatsApp o iMessage. Il destinatario apre, si emoziona, ti risponde.",
+    "step3_desc": "Condividi con chi vuoi — WhatsApp, iMessage, Telegram, email. Il destinatario apre, si emoziona, ti risponde.",
     "examples_title": "Regali per ogni momento",
     "examples_subtitle": "Scegli un template e sei a metà strada.",
     "example_birthday": "Compleanno",

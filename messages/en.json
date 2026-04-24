@@ -282,6 +282,8 @@
     "description": "Sign in to manage your gifts, see who opened them and reactions received."
   },
   "share": {
+    "button_label": "Share",
+    "share_title": "A gift for you on BeGift",
     "whatsapp_text": "I have a gift for you! 🎁\n{url}",
     "whatsapp_notify": "Hey {name}! I have a gift for you on BeGift 🎁\nOpen it here: {url}",
     "whatsapp_notify_btn": "📲 Notify {name} on WhatsApp",
@@ -326,7 +328,7 @@
     "step2_desc": "Colors, ribbon, bow, opening animation and sound. Use a template if you're in a hurry.",
     "step3_num": "3",
     "step3_title": "Share the link",
-    "step3_desc": "Send via WhatsApp or iMessage. They open it, get emotional, reply.",
+    "step3_desc": "Share it however you like — WhatsApp, iMessage, Telegram, email. They open it, get emotional, reply.",
     "examples_title": "Gifts for every moment",
     "examples_subtitle": "Pick a template and you're halfway there.",
     "example_birthday": "Birthday",
