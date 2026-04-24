@@ -282,6 +282,8 @@
     "description": "登录后可管理礼物、查看谁打开了礼物以及收到的回应。"
   },
   "share": {
+    "button_label": "分享",
+    "share_title": "来自BeGift的一份礼物",
     "whatsapp_text": "我有一份礼物送给你！ 🎁\n{url}",
     "whatsapp_notify": "{name}，我在BeGift上给你准备了一份礼物 🎁\n在这里打开: {url}",
     "whatsapp_notify_btn": "📲 通过WhatsApp通知{name}",
@@ -326,7 +328,7 @@
     "step2_desc": "颜色、丝带、蝴蝶结、打开动画和声音。赶时间可以使用模板。",
     "step3_num": "3",
     "step3_title": "分享链接",
-    "step3_desc": "通过WhatsApp或iMessage发送。对方打开、感动、回复。",
+    "step3_desc": "用你喜欢的方式分享——WhatsApp、iMessage、Telegram、邮件。对方打开、感动、回复。",
     "examples_title": "每个时刻的礼物",
     "examples_subtitle": "选一个模板就完成了一半。",
     "example_birthday": "生日",

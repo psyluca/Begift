@@ -282,6 +282,8 @@
     "description": "サインインして、ギフトの管理、開封状況、受け取ったリアクションを確認しましょう。"
   },
   "share": {
+    "button_label": "共有",
+    "share_title": "BeGiftからあなたへの贈り物",
     "whatsapp_text": "プレゼントがあるよ！ 🎁\n{url}",
     "whatsapp_notify": "{name}さん、BeGiftでプレゼントを用意しました 🎁\nここから開いてね: {url}",
     "whatsapp_notify_btn": "📲 {name}さんにWhatsAppで知らせる",
@@ -326,7 +328,7 @@
     "step2_desc": "色、リボン、蝶結び、開封アニメーション、音。急いでいるならテンプレートを使用。",
     "step3_num": "3",
     "step3_title": "リンクを共有",
-    "step3_desc": "WhatsAppやiMessageで送信。相手が開いて感動し、返信します。",
+    "step3_desc": "好きな方法で共有 — WhatsApp、iMessage、Telegram、メール。相手が開いて感動し、返信します。",
     "examples_title": "どんな瞬間にもギフトを",
     "examples_subtitle": "テンプレートを選べば半分終わりです。",
     "example_birthday": "誕生日",

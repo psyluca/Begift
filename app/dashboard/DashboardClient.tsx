@@ -7,7 +7,7 @@ import { createSupabaseClient, getSessionUser } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import type { User } from "@supabase/supabase-js";
 import type { Gift, Reaction } from "@/types";
-import { WhatsAppShareButton } from "@/components/WhatsAppShareButton";
+import { ShareButton } from "@/components/ShareButton";
 import { PushPermissionCard } from "@/components/PushPermissionCard";
 import { InviteFriendWidget } from "@/components/InviteFriendWidget";
 
@@ -440,11 +440,10 @@ export default function DashboardClient({ user: initialUser, initialSentGifts, i
           {!selecting && (
             <div className="gift-card-actions" style={{display:"flex",gap:6,flexShrink:0,alignItems:"center"}}>
               {isSent && typeof window !== "undefined" && (
-                <WhatsAppShareButton
+                <ShareButton
                   giftUrl={`${window.location.origin}/gift/${gift.id}`}
                   recipientName={gift.recipient_name}
                   variant="compact"
-                  label="WhatsApp"
                 />
               )}
               {isSent && (

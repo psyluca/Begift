@@ -6,7 +6,7 @@ import type { Packaging } from "@/types";
 import GiftSVG from "@/components/GiftSVG";
 import InAppSend from "@/components/InAppSend";
 import { AIMessageHelper } from "@/components/AIMessageHelper";
-import { WhatsAppShareButton } from "@/components/WhatsAppShareButton";
+import { ShareButton } from "@/components/ShareButton";
 
 const ACCENT = "#D4537E", DEEP = "#1a1a1a", MUTED = "#888", LIGHT = "#f7f5f2";
 
@@ -538,11 +538,12 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
           <button onClick={copy} style={{background:copied?"#3CB371":ACCENT,color:"#fff",border:"none",borderRadius:9,padding:"10px 14px",fontSize:13,fontWeight:700,cursor:"pointer",transition:"background .2s",whiteSpace:"nowrap"}}>{copied?t("create.copied"):t("create.copy")}</button>
         </div>
       </div>
-      {/* WhatsApp primary CTA — pre-compilato col nome del destinatario
-          e URL, è il percorso di distribuzione principale nel mercato
-          italiano. Massimo 1-tap share. */}
+      {/* Share primary CTA — usa Web Share API nativa con fallback
+          wa.me. Su mobile apre lo share sheet dell'OS (iMessage,
+          WhatsApp, Telegram, Mail, ...). Su desktop fallback WhatsApp
+          Web. Rispetta la preferenza dell'utente, niente brand lock. */}
       <div style={{maxWidth:480,width:"100%",marginBottom:14}}>
-        <WhatsAppShareButton giftUrl={result.url} recipientName={name} />
+        <ShareButton giftUrl={result.url} recipientName={name} />
       </div>
 
       <div style={{maxWidth:480,width:"100%",marginBottom:20}}>
