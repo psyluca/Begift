@@ -93,7 +93,10 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const plausibleDomain = process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN;
+  // Plausible v2 loader: ogni sito ha uno script ID univoco
+  // (es. "pa-C41qcDQ_sOn1XdnmFbmrd"). Non serve piu' data-domain.
+  // Lo script ID e' fornito da Plausible nella dashboard del sito.
+  const plausibleScriptId = process.env.NEXT_PUBLIC_PLAUSIBLE_SCRIPT_ID;
   return (
     <html lang="it">
       <head>
@@ -109,20 +112,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(baseGraph) }}
         />
-        {/* Plausible Analytics - caricato solo se env var e' settata.
-            Cookie-less, GDPR-compliant. La variante 'manual' + 'pageview-props'
-            ci permette di tracciare custom events con window.plausible()
-            senza dover aggiungere lo snippet inline due volte. */}
-        {plausibleDomain && (
+        {/* Plausible Analytics v2 - caricato solo se env var e' settata.
+            Cookie-less, GDPR-compliant. Lo stub plausible() inline
+            crea una queue per gli eventi custom chiamati prima che lo
+            script async sia caricato — quando arriva, flush della queue
+            + pageview iniziale. */}
+        {plausibleScriptId && (
           <>
             <script
-              defer
-              data-domain={plausibleDomain}
-              src="https://plausible.io/js/script.manual.pageview-props.tagged-events.js"
+              async
+              src={`https://plausible.io/js/${plausibleScriptId}.js`}
             />
             <script
               dangerouslySetInnerHTML={{
-                __html: "window.plausible=window.plausible||function(){(window.plausible.q=window.plausible.q||[]).push(arguments)};window.plausible('pageview');",
+                __html:
+                  "window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};plausible.init();",
               }}
             />
           </>

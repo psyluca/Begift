@@ -1,8 +1,8 @@
 # BeGift — Setup Plausible Analytics
 
-**Stato:** scaffolding integrato nel codice (commit 2026-04-24).
-**Attivazione richiesta:** impostare `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` su Vercel.
-**Costo:** 9 EUR/mese (piano Growth, fino a 100k pageview).
+**Stato:** scaffolding integrato nel codice (commit 2026-04-24, loader v2).
+**Attivazione richiesta:** impostare `NEXT_PUBLIC_PLAUSIBLE_SCRIPT_ID` su Vercel.
+**Costo:** 9 EUR/mese (piano Growth, fino a 100k pageview) o trial 30gg gratis.
 
 ---
 
@@ -30,11 +30,15 @@ Alternative scartate: Umami (self-host richiesto), Fathom (USA), PostHog (overki
 
 ## Step 2 — Variabile d'ambiente Vercel
 
+Plausible dopo la registrazione ti mostra uno snippet con un'URL del tipo
+`https://plausible.io/js/pa-XXXXXXXXXXXXXXXXXXXX.js`. La parte `pa-XXXXXXXXXXXXXXXXXXXX`
+e' lo **Script ID** del tuo sito (univoco).
+
 Dashboard Vercel → Project `begift` → Settings → Environment Variables → Add:
 
 | Key | Value | Environments |
 |---|---|---|
-| `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` | `begift.app` | Production, Preview |
+| `NEXT_PUBLIC_PLAUSIBLE_SCRIPT_ID` | `pa-XXXXXXXXXXXXXXXXXXXX` (quello del tuo sito) | Production, Preview |
 
 Trigger un redeploy (Vercel → Deployments → "…" → Redeploy) per caricare l'env var.
 
