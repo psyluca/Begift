@@ -27,6 +27,7 @@
 
 import { useI18n } from "@/lib/i18n";
 import { useState } from "react";
+import { track } from "@/lib/analytics";
 
 const ACCENT = "#D4537E";
 
@@ -61,11 +62,13 @@ export function ShareButton({
     e.preventDefault();
     if (busy) return;
     setBusy(true);
+    const usedNative = typeof navigator !== "undefined" && typeof navigator.share === "function";
+    track("share_clicked", { method: usedNative ? "web_share_api" : "wa_fallback" });
     try {
       // 1. Preferenza: Web Share API nativa.
       // Su iOS Safari questo apre lo share sheet con iMessage in cima,
       // su Android lo share sheet di sistema.
-      if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
+      if (usedNative) {
         try {
           await navigator.share({
             title: t("share.share_title"),

@@ -30,6 +30,7 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const plausibleDomain = process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN;
   return (
     <html lang="it">
       <head>
@@ -38,6 +39,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-capable" content="yes"/>
         <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
         <meta name="apple-mobile-web-app-title" content="BeGift"/>
+        {/* Plausible Analytics - caricato solo se env var e' settata.
+            Cookie-less, GDPR-compliant. La variante 'manual' + 'pageview-props'
+            ci permette di tracciare custom events con window.plausible()
+            senza dover aggiungere lo snippet inline due volte. */}
+        {plausibleDomain && (
+          <>
+            <script
+              defer
+              data-domain={plausibleDomain}
+              src="https://plausible.io/js/script.manual.pageview-props.tagged-events.js"
+            />
+            <script
+              dangerouslySetInnerHTML={{
+                __html: "window.plausible=window.plausible||function(){(window.plausible.q=window.plausible.q||[]).push(arguments)};window.plausible('pageview');",
+              }}
+            />
+          </>
+        )}
       </head>
       <body style={{ margin: 0, padding: 0, paddingBottom: 64 }}>
         <I18nProvider>

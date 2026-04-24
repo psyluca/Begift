@@ -14,6 +14,7 @@
 
 import { useEffect, useState } from "react";
 import { fetchAuthed } from "@/lib/clientAuth";
+import { track } from "@/lib/analytics";
 
 const ACCENT = "#D4537E";
 const DEEP = "#1a1a1a";
@@ -109,6 +110,7 @@ export default function SettingsRemindersClient() {
         setError("Errore nel salvataggio");
         return;
       }
+      track("reminder_added", { occasion_type: type, source: "settings" });
       // Reset form + reload
       setName("");
       setDateStr("");

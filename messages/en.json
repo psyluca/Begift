@@ -55,6 +55,15 @@
     "accept": "Accept",
     "learn_more": "Learn more"
   },
+  "reminders_widget": {
+    "loading": "Loading reminders…",
+    "title": "Upcoming dates",
+    "see_all": "See all",
+    "create": "Send gift",
+    "empty_title": "Never miss a birthday again",
+    "empty_subtitle": "Save dates that matter to you. We'll remind you a few days before.",
+    "empty_cta": "Add your first"
+  },
   "invite": {
     "title": "Your invite link",
     "subtitle": "To show BeGift to whoever you like.",

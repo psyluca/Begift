@@ -55,6 +55,15 @@
     "accept": "Accetta",
     "learn_more": "Scopri di più"
   },
+  "reminders_widget": {
+    "loading": "Caricamento ricorrenze…",
+    "title": "Prossime ricorrenze",
+    "see_all": "Vedi tutte",
+    "create": "Regala",
+    "empty_title": "Non perdere più un compleanno",
+    "empty_subtitle": "Salva le ricorrenze di chi ti sta a cuore. Ti avviseremo qualche giorno prima.",
+    "empty_cta": "Aggiungi la prima"
+  },
   "invite": {
     "title": "Il tuo link invito",
     "subtitle": "Per far scoprire BeGift a chi vuoi.",

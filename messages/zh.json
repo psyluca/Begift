@@ -55,6 +55,15 @@
     "accept": "接受",
     "learn_more": "了解更多"
   },
+  "reminders_widget": {
+    "loading": "加载纪念日中…",
+    "title": "即将到来的纪念日",
+    "see_all": "查看全部",
+    "create": "送礼",
+    "empty_title": "不再错过任何生日",
+    "empty_subtitle": "保存你在乎的日子。我们会在几天前提醒你。",
+    "empty_cta": "添加第一个"
+  },
   "invite": {
     "title": "你的邀请链接",
     "subtitle": "向你想分享的人介绍BeGift。",

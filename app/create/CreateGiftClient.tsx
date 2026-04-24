@@ -7,6 +7,8 @@ import GiftSVG from "@/components/GiftSVG";
 import InAppSend from "@/components/InAppSend";
 import { AIMessageHelper } from "@/components/AIMessageHelper";
 import { ShareButton } from "@/components/ShareButton";
+import { SaveReminderPrompt } from "@/components/SaveReminderPrompt";
+import { track } from "@/lib/analytics";
 
 const ACCENT = "#D4537E", DEEP = "#1a1a1a", MUTED = "#888", LIGHT = "#f7f5f2";
 
@@ -498,7 +500,15 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
     });
     const data = await res.json();
     setLoading(false);
-    if (res.ok) { setResult(data); setStep(99); }
+    if (res.ok) {
+      setResult(data);
+      setStep(99);
+      track("gift_created", {
+        occasion: occasion ?? "none",
+        content_type: cType ?? "message",
+        scheduled: !!scheduledAtIso,
+      });
+    }
   };
 
   const copy = () => {
@@ -545,6 +555,17 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
       <div style={{maxWidth:480,width:"100%",marginBottom:14}}>
         <ShareButton giftUrl={result.url} recipientName={name} />
       </div>
+
+      {/* Prompt salva-ricorrenza: se il gift ha un'occasione con data
+          annuale (compleanno, anniversario, onomastico, laurea),
+          offriamo di salvarla in reminders. Trigger caldo: l'utente
+          ha appena investito energia su Maria, e' il momento perfetto
+          per catturare la ricorrenza per l'anno dopo. */}
+      {occasion && ["birthday","anniversary","name_day","graduation"].includes(occasion) && name && (
+        <div style={{maxWidth:480,width:"100%",marginBottom:14}}>
+          <SaveReminderPrompt recipientName={name} occasionType={occasion} />
+        </div>
+      )}
 
       <div style={{maxWidth:480,width:"100%",marginBottom:20}}>
         <InAppSend giftId={result.id}/>

@@ -31,6 +31,7 @@ import { useI18n } from "@/lib/i18n";
 import { getSessionUser } from "@/lib/supabase/client";
 import { fetchAuthed } from "@/lib/clientAuth";
 import { normalizeHandle, validateUsername } from "@/lib/username";
+import { track } from "@/lib/analytics";
 
 const ACCENT = "#D4537E";
 const DEEP = "#1a1a1a";
@@ -177,8 +178,9 @@ export function UsernameOnboarding() {
           }).catch(() => {});
         }
       } catch { /* ignore */ }
-      // Successo: emetti evento + chiudi modal
+      // Successo: emetti evento + chiudi modal + analytics
       window.dispatchEvent(new CustomEvent("begift:username-set", { detail: { username: handle } }));
+      track("signup_completed", { has_referrer: !!localStorage.getItem("begift_ref") });
       setShow(false);
     } catch (e) {
       console.error("[UsernameOnboarding] submit failed", e);

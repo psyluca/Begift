@@ -4,6 +4,7 @@ import { useI18n } from "@/lib/i18n";
 
 import { useEffect, useState } from "react";
 import { createBrowserClient } from "@supabase/ssr";
+import { track } from "@/lib/analytics";
 
 const ACCENT = "#D4537E", DEEP = "#1a1a1a", MUTED = "#888", LIGHT = "#f7f5f2";
 
@@ -61,6 +62,7 @@ export default function HomePage() {
         localStorage.setItem("begift_ref", normalized);
         const exp = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toUTCString();
         document.cookie = `begift_ref=${normalized}; path=/; expires=${exp}; SameSite=Lax`;
+        track("referral_landing", { ref: normalized });
       } catch { /* ignore */ }
     }
   }, []);

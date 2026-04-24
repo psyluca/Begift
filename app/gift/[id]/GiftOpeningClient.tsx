@@ -5,6 +5,7 @@ import { createBrowserClient } from "@supabase/ssr";
 import SharedGiftSVG from "@/components/GiftSVG";
 import GiftChat from "@/components/GiftChat";
 import { ReportGiftButton } from "@/components/ReportGiftButton";
+import { track } from "@/lib/analytics";
 import type { Gift, Reaction, ReactionType } from "@/types";
 
 const ACCENT = "#D4537E";
@@ -873,6 +874,16 @@ export default function GiftOpeningClient({ gift }: { gift: Gift }) {
 
   const openGift = () => {
     if (phase !== "idle") return;
+    // Analytics: traccia UNA volta l'apertura dal punto di vista del
+    // destinatario. Escludiamo preview (?from=create) e creator che
+    // apre il proprio gift — gia' gestiti come "not counted" altrove.
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const isPreview = params.get("from") === "create";
+      if (!isPreview && !isCreator) {
+        track("gift_opened", { occasion: (gift as any)?.occasion ?? "none" });
+      }
+    } catch { /* ignore */ }
     if (pkg?.sound && pkg.sound !== "none") {
       const aud = playSound(pkg.sound, (pkg as any).customSoundUrl);
       if (aud) { audioRef.current = aud; setPlaying(true); aud.addEventListener("ended", () => setPlaying(false)); }

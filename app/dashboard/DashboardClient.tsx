@@ -10,6 +10,7 @@ import type { Gift, Reaction } from "@/types";
 import { ShareButton } from "@/components/ShareButton";
 import { PushPermissionCard } from "@/components/PushPermissionCard";
 import { InviteFriendWidget } from "@/components/InviteFriendWidget";
+import { RemindersWidget } from "@/components/RemindersWidget";
 
 const ACCENT = "#D4537E", DEEP = "#1a1a1a", MUTED = "#888", LIGHT = "#f7f5f2";
 
@@ -520,6 +521,15 @@ export default function DashboardClient({ user: initialUser, initialSentGifts, i
           <PushPermissionCard/>
         </div>
       )}
+
+      {/* Reminders widget — discoverability del sistema ricorrenze.
+          Sempre visibile (anche a utenti nuovi senza gift): in quello
+          stato mostra CTA "aggiungi la prima ricorrenza" che e' un
+          ottimo primo touch per retention (chi salva una ricorrenza
+          torna ogni anno in automatico). */}
+      <div style={{maxWidth:640,margin:"0 auto",padding:"0 20px"}}>
+        <RemindersWidget/>
+      </div>
 
       {/* Invite friend widget — mostra il referral link personale
           dell'utente solo dopo che ha mandato almeno 1 regalo. Stesso

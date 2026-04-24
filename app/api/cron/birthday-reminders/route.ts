@@ -126,6 +126,12 @@ export async function GET(req: NextRequest) {
         .from("reminders")
         .update({ last_notified_at: new Date().toISOString() })
         .eq("id", reminder.id);
+      // Analytics server-side: Plausible accetta pageview fake dal
+      // server se forniamo User-Agent e X-Forwarded-For. Non lo
+      // facciamo qui per semplicita': l'evento reminder_fired
+      // verra' incrementato solo quando l'utente clicca sulla push
+      // e atterra in /create?recipient=..., dove tracciamo il deep
+      // link nell'istanza client (vedi CreateGiftClient).
       processed.push({
         id: reminder.id,
         result: `sent (${result.sent}/${result.sent + result.failed} endpoints)`,
