@@ -50,11 +50,36 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly",
       priority: 0.9,
     },
+    // Pagine pilastro per AEO: use case long-form + FAQ + press
+    {
+      url: `${baseUrl}/per-chi`,
+      lastModified: now,
+      changeFrequency: "monthly",
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/faq`,
+      lastModified: now,
+      changeFrequency: "monthly",
+      priority: 0.7,
+    },
+    {
+      url: `${baseUrl}/press`,
+      lastModified: now,
+      changeFrequency: "yearly",
+      priority: 0.4,
+    },
     {
       url: `${baseUrl}/install`,
       lastModified: now,
       changeFrequency: "monthly",
       priority: 0.5,
+    },
+    {
+      url: `${baseUrl}/security`,
+      lastModified: now,
+      changeFrequency: "yearly",
+      priority: 0.3,
     },
     {
       url: `${baseUrl}/privacy`,
