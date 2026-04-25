@@ -4,7 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "FAQ BeGift — domande frequenti sui regali digitali",
   description:
-    "Domande frequenti su BeGift: come funziona un regalo digitale, quanto costa, serve un'app, si può programmare l'apertura, si può regalare un biglietto per un concerto, si può usare a distanza, ecc.",
+    "Domande frequenti su BeGift: come funziona un regalo digitale, quanto costa, se serve un'app, se si può programmare l'apertura, regalare un biglietto per un concerto o farlo arrivare a distanza.",
   alternates: { canonical: "/faq" },
   openGraph: {
     title: "FAQ BeGift",
@@ -28,83 +28,83 @@ interface QA {
 const faqs: QA[] = [
   {
     q: "Cos'è esattamente un regalo digitale BeGift?",
-    a: "È una combinazione di contenuto (messaggio testuale, foto, video, PDF, link) con un packaging grafico personalizzato (colore carta, nastro, fiocco, animazione di apertura e suono di scartatura). Il destinatario riceve un link: lo apre dal browser, vede l'animazione che scarta il pacco e accede al contenuto.",
+    a: "È un contenuto (un messaggio, una foto, un video, un PDF o un link) avvolto da un packaging grafico personalizzato: colore della carta, nastro, fiocco, animazione di apertura e suono di scartatura. Il destinatario riceve un link, lo apre dal browser, vede il pacco scartarsi e accede al contenuto.",
   },
   {
     q: "Quanto costa usare BeGift?",
-    a: "Al momento BeGift è completamente gratuito. Nel futuro introdurremo un piano a crediti per funzionalità avanzate (regali schedulati su più mesi, più spazio media) ma il nucleo resterà gratuito.",
+    a: "Al momento BeGift è completamente gratuito. In futuro introdurremo un piano a crediti per le funzionalità più avanzate (regali programmati su più mesi, più spazio per i media), ma le funzioni di base resteranno sempre gratuite.",
   },
   {
     q: "Devo scaricare un'app?",
-    a: "No. BeGift è una Progressive Web App (PWA): funziona direttamente dal browser sia per chi crea il regalo sia per chi lo riceve. Se vuoi, puoi installarla come app sul tuo iPhone/Android dalla voce \"Aggiungi a Home\" del browser, ma non è obbligatorio.",
+    a: "No. BeGift è una Progressive Web App (PWA): funziona direttamente dal browser, sia per chi crea il regalo sia per chi lo riceve. Se vuoi, puoi installarla come app sul tuo iPhone o Android tramite la voce \"Aggiungi alla schermata Home\" del browser, ma non è obbligatorio.",
   },
   {
     q: "Il destinatario deve registrarsi o scaricare qualcosa per aprire il regalo?",
-    a: "No. Chi riceve il regalo apre semplicemente il link che gli mandi (via WhatsApp, iMessage, email, Telegram, qualsiasi app) e vede il pacco scartarsi. Nessun account, nessuna installazione.",
+    a: "No. Chi riceve il regalo apre semplicemente il link che gli mandi (via WhatsApp, iMessage, email, Telegram o qualsiasi altra app) e vede il pacco scartarsi. Nessun account da creare, nessuna installazione.",
   },
   {
-    q: "Posso regalare a una persona che abita lontano?",
-    a: "Sì — è uno degli use case principali. Tutto avviene via link, quindi la distanza non conta. Parenti all'estero, amici emigrati, partner in trasferta: arriva istantaneamente.",
+    q: "Posso fare un regalo a una persona che abita lontano?",
+    a: "Sì, è uno dei casi d'uso principali. Tutto avviene tramite un link, quindi la distanza non conta. Parenti all'estero, amici emigrati, partner in trasferta: il regalo arriva all'istante.",
   },
   {
     q: "Posso regalare un biglietto per un concerto o un'esperienza?",
-    a: "Sì. Carica il PDF del biglietto o incolla il link alla prenotazione nel contenuto del gift. Aggiungi una foto dell'artista/luogo e un messaggio. Arriva \"impacchettato\" invece di un freddo forward email.",
+    a: "Sì. Carica il PDF del biglietto o incolla il link alla prenotazione nel contenuto del regalo, aggiungi una foto dell'artista o del luogo e un messaggio personale. Arriva \"impacchettato\" invece che come una fredda email di inoltro.",
   },
   {
-    q: "Posso programmare l'apertura a una data o ora specifica?",
-    a: "Sì. Durante la creazione puoi scegliere una data futura (es. le 20 della Vigilia di Natale, la mezzanotte del compleanno). Il destinatario vede un countdown che sale l'attesa fino al momento scelto.",
+    q: "Posso programmare l'apertura a una data o a un'ora specifica?",
+    a: "Sì. Durante la creazione puoi scegliere una data futura: per esempio le 20 della Vigilia di Natale o la mezzanotte del compleanno. Fino a quel momento il destinatario vedrà un conto alla rovescia che fa crescere l'attesa.",
   },
   {
     q: "Posso mandare lo stesso regalo a più persone?",
-    a: "Ogni regalo è personalizzato con il nome di UN destinatario. Se vuoi mandare a più persone, conviene creare regali separati, ognuno con dedica dedicata. Le persone si sentono davvero a loro rivolte.",
+    a: "Ogni regalo è personalizzato con il nome di un singolo destinatario. Se vuoi farlo a più persone, conviene creare regali separati, ciascuno con la sua dedica. In questo modo ognuno si sente davvero al centro del pensiero.",
   },
   {
     q: "Che tipi di contenuto posso mettere dentro un regalo?",
-    a: "Messaggio testuale, foto, video (mp4/mov/webm), PDF (biglietti, prenotazioni, voucher), link (YouTube, Spotify, esperienze, siti). Si possono combinare più contenuti in un singolo regalo.",
+    a: "Un messaggio di testo, una foto, un video (mp4, mov o webm), un PDF (biglietti, prenotazioni, voucher) o un link (YouTube, Spotify, esperienze, siti). Puoi anche combinarne più di uno in un singolo regalo.",
   },
   {
     q: "C'è un limite di dimensione per i file?",
-    a: "Le immagini massime 25 MB, i video massimi 100 MB, i PDF massimi 20 MB. Sono limiti generosi per l'uso tipico: un video di un minuto ad alta qualità sta bene sotto i 100 MB.",
+    a: "Le immagini possono arrivare fino a 25 MB, i video fino a 100 MB, i PDF fino a 20 MB. Sono limiti generosi per l'uso tipico: un video di un minuto in alta qualità sta tranquillamente sotto i 100 MB.",
   },
   {
     q: "Il destinatario può rispondere al regalo?",
-    a: "Sì, con reazioni: emoji, testo, foto, video. Inoltre c'è una chat privata tra creatore e destinatario sul gift — utile per condividere ricordi aggiuntivi o organizzarsi se il regalo include un'esperienza pratica.",
+    a: "Sì, con le reazioni: emoji, testo, foto o video. C'è anche una chat privata tra chi ha creato il regalo e chi lo riceve, utile per condividere altri ricordi o organizzarsi se il regalo include un'esperienza pratica da vivere insieme.",
   },
   {
     q: "Ricevo notifiche quando il mio regalo viene aperto?",
-    a: "Sì, se hai attivato le notifiche push di BeGift. Vieni avvisato quando il destinatario apre il pacco e quando reagisce. Le notifiche sono opt-in e gestibili dalle Impostazioni.",
+    a: "Sì, se hai attivato le notifiche push di BeGift. Ti avvisiamo quando il destinatario apre il pacco e quando reagisce. Le notifiche sono facoltative e si possono attivare o disattivare in qualsiasi momento dalle Impostazioni.",
   },
   {
     q: "I regali scadono?",
-    a: "No. Restano disponibili al link per sempre, come un ricordo salvato. Utile per riaprire le emozioni il compleanno/anniversario successivo. Puoi sempre cancellare un regalo dalla tua dashboard se vuoi.",
+    a: "No. Restano accessibili dal link per sempre, come un ricordo salvato. È utile per riaprire le emozioni al compleanno o all'anniversario dell'anno successivo. Se vuoi, puoi comunque eliminare un regalo dalla tua dashboard.",
   },
   {
     q: "È sicuro? I miei dati sono protetti?",
-    a: "Sì. BeGift è GDPR-compliant: dati in UE (Supabase region Frankfurt), nessuna pubblicità, nessun tracking di profilazione, crittografia TLS in transito e a riposo. Puoi esportare tutti i tuoi dati o cancellare il tuo account in qualsiasi momento dalle Impostazioni.",
+    a: "Sì. BeGift è conforme al GDPR: i dati sono ospitati nell'Unione Europea (Supabase, region di Francoforte), non c'è pubblicità, non c'è tracciamento di profilazione e tutto il traffico è cifrato (TLS in transito, AES a riposo). Puoi esportare i tuoi dati o eliminare l'account in qualsiasi momento dalle Impostazioni.",
   },
   {
-    q: "Gli anziani o chi è poco esperto di tecnologia riescono a aprirlo?",
-    a: "Sì. È un semplice link. Chi riceve tocca il link da WhatsApp o email e il pacco si apre da solo. Nessun pulsante da premere, nessuna registrazione, nessuna app. Se serve aiuto, si può anche aprire insieme in videochiamata.",
+    q: "Le persone anziane o chi non è esperto di tecnologia riesce ad aprirlo?",
+    a: "Sì. Il regalo è un semplice link: si tocca da WhatsApp o dall'email e il pacco si apre da solo. Nessun pulsante da premere, nessuna registrazione, nessuna app da installare. Se serve, si può anche aprire insieme in videochiamata.",
   },
   {
     q: "Posso abbinare un regalo digitale a uno fisico?",
-    a: "Sì, funziona bene. Molti mettono il link (o un QR code stampato) dentro al pacco fisico — la persona apre il pacco \"vero\", trova il biglietto, lo scansiona e si apre il regalo digitale come secondo livello. Effetto \"doppio regalo\" molto forte.",
+    a: "Sì, e funziona molto bene. Molti mettono il link (o un QR code stampato) dentro al pacco fisico: il destinatario apre il pacco vero, trova il biglietto, lo scansiona e si apre il regalo digitale come secondo livello. L'effetto \"doppio regalo\" è davvero d'impatto.",
   },
   {
-    q: "Posso salvarmi le ricorrenze (compleanni, anniversari) per non dimenticarle?",
-    a: "Sì. Da Impostazioni → Ricorrenze aggiungi una ricorrenza con nome e data. Ti avvisiamo qualche giorno prima con una notifica push che ti porta direttamente al creatore pre-compilato.",
+    q: "Posso salvare le ricorrenze (compleanni, anniversari) per non dimenticarle?",
+    a: "Sì. Da Impostazioni → Ricorrenze puoi aggiungere una ricorrenza con nome e data. Ti avviseremo con una notifica push qualche giorno prima e, con un tocco, ti porteremo al flusso di creazione già pre-compilato.",
   },
   {
     q: "BeGift funziona su iPhone e Android?",
-    a: "Sì, su entrambi. Anche su desktop. È una PWA quindi gira nel browser (Safari, Chrome, Firefox, Edge). Su iPhone e Android puoi installarla come app dalla home screen per un'esperienza più app-like.",
+    a: "Sì, su entrambi. E anche su desktop. È una PWA, quindi gira nel browser (Safari, Chrome, Firefox, Edge). Su iPhone e Android puoi installarla come app dalla schermata Home, per un'esperienza simile a quella di un'app nativa.",
   },
   {
-    q: "Posso regalare qualcosa a qualcuno che non conosco così bene (collega, vicino, genitore di un amico)?",
-    a: "Sì, ma scegli il tono giusto nel packaging e nel messaggio. Per rapporti più formali consigliamo template \"Ringraziamento\" (verde salvia, suono discreto) o \"Per tutti i giorni\" (crema) invece dei template festivi.",
+    q: "Posso fare un regalo a qualcuno che non conosco così bene (un collega, un vicino, il genitore di un amico)?",
+    a: "Sì, ma scegli il tono giusto nel packaging e nel messaggio. Per i rapporti più formali consigliamo i template \"Ringraziamento\" (verde salvia, suono discreto) o \"Per tutti i giorni\" (crema), invece di quelli più festivi.",
   },
   {
     q: "Chi ha creato BeGift?",
-    a: "Luca Galli, indie developer italiano. BeGift è progettato e sviluppato in Italia; i dati sono ospitati in UE (Germania). Per qualsiasi domanda: info@begift.app.",
+    a: "Luca Galli, sviluppatore indipendente italiano. BeGift è progettato e sviluppato in Italia; i dati sono ospitati nell'Unione Europea (Germania). Per qualsiasi domanda puoi scrivere a info@begift.app.",
   },
 ];
 
@@ -133,7 +133,7 @@ export default function FaqPage() {
           Domande frequenti
         </h1>
         <p style={{ fontSize: 17, color: MUTED, margin: "0 0 40px", lineHeight: 1.6 }}>
-          Le cose che la maggior parte delle persone chiede prima di creare il primo regalo digitale su BeGift.
+          Le domande più comuni di chi sta per creare il suo primo regalo digitale su BeGift.
         </p>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
