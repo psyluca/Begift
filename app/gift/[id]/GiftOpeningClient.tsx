@@ -924,8 +924,12 @@ export default function GiftOpeningClient({ gift }: { gift: Gift }) {
               if (!deviceId) { deviceId = Math.random().toString(36).slice(2); localStorage.setItem("begift_device_id", deviceId); }
               // Save device_id in cookie for login callback
               document.cookie = `begift_device_id=${deviceId}; path=/; max-age=86400; SameSite=Lax`;
-              fetch("/api/gift-opens", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ giftId: gift.id, deviceId }) });
-            } catch {}
+              fetch("/api/gift-opens", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ giftId: gift.id, deviceId }),
+              }).catch((e) => console.error("[gift-opens] POST failed", e));
+            } catch (e) { console.error("[gift-opens] setup failed", e); }
           }
         }, 280); }
       };
@@ -933,7 +937,10 @@ export default function GiftOpeningClient({ gift }: { gift: Gift }) {
     } else {
       setTimeout(() => {
         setPhase("revealed"); setOpened(true);
-        if (!previewMode) {
+        // Stesso skip-set del ramo "lift" sopra: niente registrazione
+        // apertura per mittente in preview / appena-creato / proprio
+        // creator (era inconsistente con il ramo lift, fix 2026-04-25).
+        if (!previewMode && !fromCreate && !isCreator) {
           try {
             const stored = JSON.parse(localStorage.getItem("begift_received") || "[]");
             if (!stored.find((g: any) => g.id === gift.id)) {
@@ -943,8 +950,13 @@ export default function GiftOpeningClient({ gift }: { gift: Gift }) {
           try {
             let deviceId = localStorage.getItem("begift_device_id");
             if (!deviceId) { deviceId = Math.random().toString(36).slice(2); localStorage.setItem("begift_device_id", deviceId); }
-            fetch("/api/gift-opens", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ giftId: gift.id, deviceId }) });
-          } catch {}
+            document.cookie = `begift_device_id=${deviceId}; path=/; max-age=86400; SameSite=Lax`;
+            fetch("/api/gift-opens", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ giftId: gift.id, deviceId }),
+            }).catch((e) => console.error("[gift-opens] POST failed", e));
+          } catch (e) { console.error("[gift-opens] setup failed", e); }
         }
       }, 1250);
     }
