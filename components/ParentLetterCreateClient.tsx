@@ -263,7 +263,7 @@ export function ParentLetterCreateClient({ config }: Props) {
                 }}>
                   <input
                     type="file"
-                    accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+                    accept="image/*"
                     onChange={(e) => e.target.files?.[0] && handlePhoto(e.target.files[0])}
                     style={{ display: "none" }}
                   />

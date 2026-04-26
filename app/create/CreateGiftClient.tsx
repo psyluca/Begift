@@ -916,7 +916,14 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
                     + Aggiungi
                     <input
                       type="file"
-                      accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+                      // accept generico "image/*": su iOS Safari, accept
+                      // con elenco di MIME specifici DEGRADA il picker
+                      // a single-select (forza a premere "Annulla/Fatto"
+                      // dopo 1 sola foto). Con image/* il picker iOS
+                      // mostra la libreria con checkbox e permette di
+                      // selezionarne piu' di una. La validazione MIME
+                      // server-side (lib/uploadValidate) filtra comunque.
+                      accept="image/*"
                       multiple
                       style={{ display: "none" }}
                       onChange={async (e) => {
