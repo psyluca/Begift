@@ -462,31 +462,35 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
   /** Multi-select per le SOLE foto al primo step. La prima foto diventa
    *  il contenuto principale (cUrl); le restanti (max 8) finiscono
    *  direttamente in extraMedia, cosi' l'utente non deve passare per
-   *  "+ Aggiungi" allo step 4. Video e PDF restano single. */
+   *  "+ Aggiungi" allo step 4. Video e PDF restano single.
+   *
+   *  IMPORTANTE: il caricamento delle foto extra avviene in background
+   *  SENZA toccare `loading`. `loading` e' usato dal bottone "Crea link"
+   *  allo step 5: se restasse true durante il background upload, il
+   *  bottone resterebbe disabilitato e l'utente non potrebbe creare il
+   *  regalo. Le extras sono best-effort: se l'utente preme "Crea link"
+   *  prima che finiscano, partono solo quelle gia' presenti. */
   const onPhotos = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
     if (files.length === 0) return;
-    setLoading(true);
-    try {
-      const [first, ...rest] = files;
-      const firstUrl = await upload(first, "gift-media");
-      setCType("image");
-      setCUrl(firstUrl);
-      setCFile(first.name);
-      // Avanza subito al prossimo step: l'utente vede il messaggio
-      // mentre le foto extra continuano a caricarsi in background.
-      next();
-      const extras = rest.slice(0, 8);
-      for (const f of extras) {
-        try {
-          const url = await upload(f, "gift-media");
-          if (url) setExtraMedia((prev) => [...prev, { url, kind: "image" }]);
-        } catch (err) {
-          console.error("[create] extra photo upload failed", err);
-        }
+    const [first, ...rest] = files;
+    // Solo la PRIMA foto blocca: e' il contenuto principale e serve
+    // per avanzare. `useUpload` gia' gestisce il suo `uploading` flag
+    // visualizzato nello step 3 (riga 779).
+    const firstUrl = await upload(first, "gift-media");
+    setCType("image");
+    setCUrl(firstUrl);
+    setCFile(first.name);
+    next();
+    // Le extras partono come fire-and-forget. Non blocchiamo `loading`.
+    const extras = rest.slice(0, 8);
+    for (const f of extras) {
+      try {
+        const url = await upload(f, "gift-media");
+        if (url) setExtraMedia((prev) => [...prev, { url, kind: "image" }]);
+      } catch (err) {
+        console.error("[create] extra photo upload failed", err);
       }
-    } finally {
-      setLoading(false);
     }
   };
 
