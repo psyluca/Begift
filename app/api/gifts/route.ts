@@ -94,6 +94,11 @@ export async function POST(req: NextRequest) {
         content_text:      body.contentText ?? null,
         content_file_name: body.contentFileName ?? null,
         scheduled_at:      scheduledAt,
+        // Template speciali (Festa della Mamma "Lettera che cresce", ecc.):
+        // se il client passa template_type + template_data li persistiamo,
+        // altrimenti restano NULL (gift "classico").
+        template_type:     body.template_type ?? null,
+        template_data:     body.template_data ?? null,
       })
       .select()
       .single();

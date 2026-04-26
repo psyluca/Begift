@@ -56,6 +56,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly",
       priority: 0.85,
     },
+    {
+      // Festa della Mamma — landing speciale "Lettera che cresce".
+      // Priority alta nei mesi prima dell'11 maggio.
+      url: `${baseUrl}/festa-mamma`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.95,
+    },
     // Pagine pilastro per AEO: use case long-form + FAQ + press
     {
       url: `${baseUrl}/per-chi`,

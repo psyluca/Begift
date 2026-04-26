@@ -57,13 +57,18 @@ export interface Reaction {
 
 export interface CreateGiftBody {
   recipientName:   string;
-  senderAlias?:    string;
-  message?:        string;
+  senderAlias?:    string | null;
+  message?:        string | null;
   packaging:       Packaging;
-  contentType?:    ContentType;
-  contentUrl?:     string;
-  contentText?:    string;
-  contentFileName?: string;
+  contentType?:    ContentType | null;
+  contentUrl?:     string | null;
+  contentText?:    string | null;
+  contentFileName?: string | null;
+  scheduledAt?:    string | null;
+  // Template speciali (Festa della Mamma "Lettera che cresce", ecc.):
+  // tipo del template + payload JSON con i campi strutturati specifici.
+  template_type?:  string | null;
+  template_data?:  Record<string, unknown> | null;
 }
 
 export interface CreateReactionBody {

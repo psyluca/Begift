@@ -11,6 +11,8 @@ import { ShareButton } from "@/components/ShareButton";
 import { PushPermissionCard } from "@/components/PushPermissionCard";
 import { InviteFriendWidget } from "@/components/InviteFriendWidget";
 import { RemindersWidget } from "@/components/RemindersWidget";
+import { MonthlySuggestionsWidget } from "@/components/MonthlySuggestionsWidget";
+import { OneYearAgoWidget } from "@/components/OneYearAgoWidget";
 
 const ACCENT = "#D4537E", DEEP = "#1a1a1a", MUTED = "#888", LIGHT = "#f7f5f2";
 
@@ -521,6 +523,21 @@ export default function DashboardClient({ user: initialUser, initialSentGifts, i
           <PushPermissionCard/>
         </div>
       )}
+
+      {/* Monthly suggestions — calendario festivita' del mese.
+          Sempre visibile, anche a utenti nuovi: da' un motivo
+          strutturale per tornare ogni mese senza dipendere dalle
+          ricorrenze personali. */}
+      <div style={{maxWidth:640,margin:"0 auto",padding:"0 20px"}}>
+        <MonthlySuggestionsWidget/>
+      </div>
+
+      {/* "Un anno fa" — replay del proprio archivio. Si auto-nasconde
+          se l'utente non ha gift di un anno fa. Effetto nostalgia +
+          nudge a rifare il gesto per la stessa persona. */}
+      <div style={{maxWidth:640,margin:"0 auto",padding:"0 20px"}}>
+        <OneYearAgoWidget/>
+      </div>
 
       {/* Reminders widget — discoverability del sistema ricorrenze.
           Sempre visibile (anche a utenti nuovi senza gift): in quello
