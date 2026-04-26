@@ -459,6 +459,37 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
     setCType(type); setCUrl(url); setCFile(f.name); next();
   };
 
+  /** Multi-select per le SOLE foto al primo step. La prima foto diventa
+   *  il contenuto principale (cUrl); le restanti (max 8) finiscono
+   *  direttamente in extraMedia, cosi' l'utente non deve passare per
+   *  "+ Aggiungi" allo step 4. Video e PDF restano single. */
+  const onPhotos = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    if (files.length === 0) return;
+    setLoading(true);
+    try {
+      const [first, ...rest] = files;
+      const firstUrl = await upload(first, "gift-media");
+      setCType("image");
+      setCUrl(firstUrl);
+      setCFile(first.name);
+      // Avanza subito al prossimo step: l'utente vede il messaggio
+      // mentre le foto extra continuano a caricarsi in background.
+      next();
+      const extras = rest.slice(0, 8);
+      for (const f of extras) {
+        try {
+          const url = await upload(f, "gift-media");
+          if (url) setExtraMedia((prev) => [...prev, { url, kind: "image" }]);
+        } catch (err) {
+          console.error("[create] extra photo upload failed", err);
+        }
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const updatePackaging = async () => {
     if (!result) return;
     setLoading(true);
@@ -753,7 +784,7 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
                 <div style={PREVIEW_WRAP}><PhotoPreview/></div>
                 <div style={TILE_LABEL}>{t("create.photo")}</div>
                 <div style={TILE_HINT}>{t("create.hint_photo")}</div>
-                <input type="file" accept="image/*" style={{display:"none"}} onChange={e=>onFile(e,"image")}/>
+                <input type="file" accept="image/*" multiple style={{display:"none"}} onChange={onPhotos}/>
               </label>
               <label className="tile" style={TILE_STYLE}>
                 <div style={PREVIEW_WRAP}><VideoPreview/></div>
