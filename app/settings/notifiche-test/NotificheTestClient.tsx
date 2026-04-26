@@ -55,7 +55,7 @@ export default function NotificheTestClient() {
   const [justReconnected, setJustReconnected] = useState(false);
   const [cleaning, setCleaning] = useState(false);
   const [cleanResult, setCleanResult] = useState<string | null>(null);
-  const [debug, setDebug] = useState<{ resolved_user_id?: string; raw_count_same_user?: number } | null>(null);
+  const [debug, setDebug] = useState<Record<string, unknown> | null>(null);
 
   useEffect(() => {
     // 1. Permission state
@@ -416,14 +416,17 @@ export default function NotificheTestClient() {
         {debug && (
           <Card>
             <CardHeader>Diagnostica avanzata</CardHeader>
-            <Hint>
-              Se i numeri non combaciano sappiamo che c'e' un problema di filtro.
-            </Hint>
-            <div style={{ fontSize: 11, color: MUTED, fontFamily: "ui-monospace,Menlo,monospace", marginTop: 8, lineHeight: 1.7 }}>
-              <div>userId: {debug.resolved_user_id?.slice(0, 8)}…</div>
-              <div>device count (raw): {debug.raw_count_same_user}</div>
-              <div>device count (lista mostrata): {subs?.length ?? "—"}</div>
-            </div>
+            <Hint>Dati raw lato server per debug.</Hint>
+            <pre style={{
+              fontSize: 10, color: DEEP, fontFamily: "ui-monospace,Menlo,monospace",
+              marginTop: 8, lineHeight: 1.6,
+              background: "#fafaf7", padding: 10, borderRadius: 8,
+              border: "1px solid #e0dbd5",
+              whiteSpace: "pre-wrap", wordBreak: "break-all",
+              maxHeight: 240, overflow: "auto",
+            }}>
+              {JSON.stringify(debug, null, 2)}
+            </pre>
           </Card>
         )}
       </div>
