@@ -102,6 +102,11 @@ export async function POST(req: NextRequest) {
     };
     if (body.template_type) insertRow.template_type = body.template_type;
     if (body.template_data) insertRow.template_data = body.template_data;
+    // Multi-foto: persistito SOLO se array non vuoto.
+    // Limite max 9 elementi (compatibile con la migration 016).
+    if (Array.isArray(body.extra_media) && body.extra_media.length > 0) {
+      insertRow.extra_media = body.extra_media.slice(0, 9);
+    }
 
     const { data, error } = await supabase
       .from("gifts")

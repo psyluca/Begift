@@ -69,6 +69,10 @@ export interface CreateGiftBody {
   // tipo del template + payload JSON con i campi strutturati specifici.
   template_type?:  string | null;
   template_data?:  Record<string, unknown> | null;
+  // Multi-foto: media aggiuntivi oltre al content_url primario.
+  // Array di oggetti { url, kind }. Massimo 9 elementi (10 totali
+  // contando il primario).
+  extra_media?:    Array<{ url: string; kind: "image" | "video" }> | null;
 }
 
 export interface CreateReactionBody {

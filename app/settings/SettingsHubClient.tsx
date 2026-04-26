@@ -213,6 +213,26 @@ export default function SettingsHubClient() {
               </div>
             </>
           ) : null}
+          <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 8 }}>
+            <Link href="/notifiche" style={{
+              display: "block", textAlign: "center",
+              padding: "10px",
+              background: "transparent", color: ACCENT,
+              border: `1.5px solid ${ACCENT}`, borderRadius: 40,
+              fontSize: 13, fontWeight: 700, textDecoration: "none",
+            }}>
+              📥 Storico notifiche
+            </Link>
+            <Link href="/settings/notifiche-test" style={{
+              display: "block", textAlign: "center",
+              padding: "10px",
+              background: "transparent", color: MUTED,
+              border: `1.5px solid ${BORDER}`, borderRadius: 40,
+              fontSize: 13, fontWeight: 600, textDecoration: "none",
+            }}>
+              🧪 Test notifiche
+            </Link>
+          </div>
         </Section>
 
         {/* ── RICORRENZE ───────────────────────────────── */}

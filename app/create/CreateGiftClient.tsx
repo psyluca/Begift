@@ -353,6 +353,9 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
   const [senderAlias, setSenderAlias] = useState("");
   const [cType,   setCType]   = useState<string|null>(null);
   const [cUrl,    setCUrl]    = useState("");
+  // Multi-foto: foto AGGIUNTIVE oltre a cUrl. Vengono persistite in
+  // gifts.extra_media. Limite 8 (totale 9 contando la primary).
+  const [extraMedia, setExtraMedia] = useState<{ url: string; kind: "image" }[]>([]);
   const [cText,   setCText]   = useState("");
   const [cFile,   setCFile]   = useState("");
   const [msg,     setMsg]     = useState("");
@@ -509,6 +512,8 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
         recipientName: name, senderAlias: senderAlias||undefined, message: msg, packaging: {...pkg, ...(customSoundUrl ? {customSoundUrl, customSoundTitle: customSoundTitle||undefined} : {})},
         contentType: cType, contentUrl: cUrl, contentText: effectiveContentText, contentFileName: cFile,
         scheduledAt: scheduledAtIso,
+        // Multi-foto: inviato solo se cType="image" e ci sono extra
+        extra_media: cType === "image" && extraMedia.length > 0 ? extraMedia : undefined,
       }),
     });
     const data = await res.json();
@@ -607,7 +612,7 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
         <button onClick={()=>{setStep(isFile?4:5);setIsEditing(true);}} style={{background:"#f0f4ff",color:"#3B5BDB",border:"2px solid #3B5BDB",borderRadius:40,padding:"12px 24px",fontSize:14,fontWeight:700,cursor:"pointer"}}>
           {t("create.edit_packaging")}
         </button>
-        <button onClick={()=>{setResult(null);setStep(1);setOccasion(null);setName("");setSenderAlias("");setMsg("");setCType(null);setCUrl("");setCText("");setCFile("");setCustomSoundUrl("");setCustomSoundName("");setCustomSoundTitle("");setPkg(DEFAULT_PKG);}} style={{background:"transparent",color:ACCENT,border:"1.5px solid #f9c8d9",borderRadius:40,padding:"12px 24px",fontSize:14,fontWeight:600,cursor:"pointer"}}>
+        <button onClick={()=>{setResult(null);setStep(1);setOccasion(null);setName("");setSenderAlias("");setMsg("");setCType(null);setCUrl("");setCText("");setCFile("");setCustomSoundUrl("");setCustomSoundName("");setCustomSoundTitle("");setPkg(DEFAULT_PKG);setExtraMedia([]);}} style={{background:"transparent",color:ACCENT,border:"1.5px solid #f9c8d9",borderRadius:40,padding:"12px 24px",fontSize:14,fontWeight:600,cursor:"pointer"}}>
           {t("create.create_another")}
         </button>
       </div>
@@ -885,6 +890,104 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
           <button onClick={next} style={{display:"block",width:"100%",background:"none",border:"none",color:MUTED,padding:"10px",fontSize:13,cursor:"pointer",marginTop:4}}>{t("common.skip")}</button>
         </>}
         {step===4&&isFile&&<>
+          {/* Multi-foto: solo per cType="image". Permette di aggiungere
+              fino a 8 foto extra (totale 9 con la primary). Quando il
+              destinatario apre il gift, vede uno stack sfogliabile (2-4)
+              o una griglia con lightbox (5+). */}
+          {cType === "image" && (
+            <div style={{
+              marginBottom: 22,
+              padding: "14px 16px",
+              background: "#fafaf7",
+              border: `1px solid #eadfd5`,
+              borderRadius: 12,
+            }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: DEEP }}>
+                  📸 Album · {1 + extraMedia.length} {extraMedia.length === 0 ? "foto" : "foto totali"}
+                </div>
+                {extraMedia.length < 8 && (
+                  <label style={{
+                    background: ACCENT, color: "#fff",
+                    fontSize: 12, fontWeight: 700,
+                    borderRadius: 20, padding: "6px 12px",
+                    cursor: "pointer",
+                  }}>
+                    + Aggiungi
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+                      multiple
+                      style={{ display: "none" }}
+                      onChange={async (e) => {
+                        const files = Array.from(e.target.files ?? []);
+                        if (files.length === 0) return;
+                        const slots = 8 - extraMedia.length;
+                        const toUpload = files.slice(0, slots);
+                        for (const f of toUpload) {
+                          try {
+                            const url = await upload(f, "gift-media");
+                            if (url) setExtraMedia((prev) => [...prev, { url, kind: "image" }]);
+                          } catch (err) {
+                            console.error("[create] extra photo upload failed", err);
+                          }
+                        }
+                        // Reset input cosi' lo stesso file puo' essere ri-selezionato
+                        e.target.value = "";
+                      }}
+                    />
+                  </label>
+                )}
+              </div>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {/* Foto primaria (cUrl) — non rimovibile da qui, e' il
+                    contenuto principale. */}
+                {cUrl && (
+                  <div style={{
+                    width: 64, height: 64,
+                    borderRadius: 8,
+                    overflow: "hidden",
+                    border: `2px solid ${ACCENT}`,
+                    position: "relative",
+                  }}>
+                    <img src={cUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }}/>
+                    <div style={{
+                      position: "absolute", top: 0, left: 0,
+                      background: ACCENT, color: "#fff",
+                      fontSize: 9, fontWeight: 700,
+                      padding: "1px 5px",
+                      borderBottomRightRadius: 6,
+                    }}>1ª</div>
+                  </div>
+                )}
+                {extraMedia.map((m, i) => (
+                  <div key={i} style={{
+                    width: 64, height: 64,
+                    borderRadius: 8,
+                    overflow: "hidden",
+                    border: `1.5px solid #e0dbd5`,
+                    position: "relative",
+                  }}>
+                    <img src={m.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }}/>
+                    <button
+                      onClick={() => setExtraMedia((prev) => prev.filter((_, idx) => idx !== i))}
+                      aria-label="Rimuovi foto"
+                      style={{
+                        position: "absolute", top: 2, right: 2,
+                        background: "rgba(0,0,0,.6)", color: "#fff",
+                        border: "none", borderRadius: "50%",
+                        width: 18, height: 18, fontSize: 12,
+                        cursor: "pointer", lineHeight: 1,
+                      }}
+                    >×</button>
+                  </div>
+                ))}
+              </div>
+              <div style={{ fontSize: 11, color: MUTED, marginTop: 8, lineHeight: 1.5 }}>
+                Aggiungi fino a {8 - extraMedia.length} foto extra. Quando aprira' il regalo, le sfogliera' come un album.
+              </div>
+            </div>
+          )}
           <h2 style={{fontSize:24,fontWeight:800,color:DEEP,margin:"0 0 20px"}}>{t("create.packaging_title")}</h2>
           <div style={{display:"flex",gap:20,flexWrap:"wrap",alignItems:"flex-start",justifyContent:"center"}}>
             <div style={{width:152,flexShrink:0,background:"#f0ece8",borderRadius:18,padding:"12px 8px 8px"}}>

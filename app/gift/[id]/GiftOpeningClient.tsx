@@ -8,6 +8,7 @@ import { ReportGiftButton } from "@/components/ReportGiftButton";
 import { track } from "@/lib/analytics";
 import { ParentLetterReveal, type ParentLetterData } from "@/components/ParentLetterReveal";
 import { templateByType } from "@/lib/parent-templates";
+import { MultiPhotoGallery } from "@/components/MultiPhotoGallery";
 import type { Gift, Reaction, ReactionType } from "@/types";
 
 const ACCENT = "#D4537E";
@@ -306,9 +307,21 @@ function GiftContent({ gift }: { gift: Gift }) {
 
   return (
     <div style={{ maxWidth: 420, margin: "0 auto" }}>
-      {gift.content_type === "image" && gift.content_url && (
-        <PolaroidPhoto src={gift.content_url} caption={gift.message} />
-      )}
+      {gift.content_type === "image" && gift.content_url && (() => {
+        // Multi-foto: se gift.extra_media ha elementi, costruiamo
+        // un array completo (primary + extra) e usiamo la
+        // MultiPhotoGallery (stack se 2-4, griglia+lightbox se 5+).
+        // Altrimenti fallback al singolo PolaroidPhoto storico.
+        const extra = (gift as { extra_media?: Array<{ url: string; kind?: string }> | null }).extra_media;
+        const allPhotos: string[] = [
+          gift.content_url,
+          ...((extra ?? []).filter((m) => m && m.url && (m.kind === "image" || !m.kind)).map((m) => m.url)),
+        ];
+        if (allPhotos.length > 1) {
+          return <MultiPhotoGallery photos={allPhotos} caption={gift.message} />;
+        }
+        return <PolaroidPhoto src={gift.content_url} caption={gift.message} />;
+      })()}
       {gift.content_type === "video" && gift.content_url && (
         <VideoFrame url={gift.content_url} />
       )}
