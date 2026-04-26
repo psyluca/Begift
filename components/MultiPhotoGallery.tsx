@@ -202,7 +202,13 @@ export function MultiPhotoGallery({ photos, caption }: Props) {
           type="button"
           onClick={async () => {
             for (let i = 0; i < photos.length; i++) {
-              await downloadMedia({ url: photos[i], filename: `begift-foto-${i + 1}.jpg` });
+              const r = await downloadMedia({ url: photos[i], filename: `begift-foto-${i + 1}.jpg` });
+              // Se l'utente cancella la share sheet (tipico iOS), o
+              // qualcosa fallisce, fermiamo il loop. Continuare
+              // significherebbe scatenare share sheet a catena (su
+              // iOS dopo che il user-gesture e' scaduto, il prossimo
+              // share() diventa un window.open about:blank).
+              if (r !== "success") break;
             }
           }}
           aria-label="Scarica tutte le foto"
