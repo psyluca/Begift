@@ -304,10 +304,15 @@ export default function NotificheTestClient() {
           )}
           {/* Cleanup duplicati: visibile sempre se ci sono >1 sub, o se
               il backend dice che ce ne sono ma il client non le vede. */}
-          {((subs?.length ?? 0) > 1 || (debug?.raw_count_same_user ?? 0) > 1) && (
+          {(() => {
+            const rawCount = (debug && typeof debug.q2_count_eq === "number" ? debug.q2_count_eq : 0)
+              || (debug && typeof debug.raw_count_same_user === "number" ? debug.raw_count_same_user : 0);
+            const visibleMax = Math.max(subs?.length ?? 0, rawCount);
+            if (visibleMax <= 1) return null;
+            return (
             <div style={{ marginTop: 12, padding: "10px 12px", background: "#fffaf0", border: "1px solid #f0e1c5", borderRadius: 8 }}>
               <div style={{ fontSize: 12, color: DEEP, fontWeight: 600, marginBottom: 6 }}>
-                Hai {Math.max(subs?.length ?? 0, debug?.raw_count_same_user ?? 0)} subscription registrate.
+                Hai {visibleMax} subscription registrate.
                 Probabilmente sono duplicati accumulati (succede dopo update iOS).
               </div>
               <button
@@ -329,7 +334,8 @@ export default function NotificheTestClient() {
                 </div>
               )}
             </div>
-          )}
+            );
+          })()}
           {subs && subs.length > 0 && (
             <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 8 }}>
               {subs.map((s) => (
