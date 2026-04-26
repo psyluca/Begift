@@ -356,6 +356,12 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
   // Multi-foto: foto AGGIUNTIVE oltre a cUrl. Vengono persistite in
   // gifts.extra_media. Limite 8 (totale 9 contando la primary).
   const [extraMedia, setExtraMedia] = useState<{ url: string; kind: "image" }[]>([]);
+  // Counter delle foto extra ancora in upload background. Quando > 0
+  // il bottone "Crea link" e "+ Aggiungi" si disabilita, e mostriamo
+  // un indicatore. Evita la race condition in cui l'utente clicca
+  // submit prima che le extras siano arrivate in extraMedia, e il
+  // regalo veniva salvato con sola foto principale.
+  const [extrasPending, setExtrasPending] = useState(0);
   const [cText,   setCText]   = useState("");
   const [cFile,   setCFile]   = useState("");
   const [msg,     setMsg]     = useState("");
@@ -482,14 +488,21 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
     setCUrl(firstUrl);
     setCFile(first.name);
     next();
-    // Le extras partono come fire-and-forget. Non blocchiamo `loading`.
+    // Le extras partono come fire-and-forget. Non blocchiamo `loading`,
+    // ma incrementiamo `extrasPending` cosi' UI mostra il caricamento
+    // e il bottone "Crea link" sa di doversi disabilitare finche'
+    // tutte le extras non sono arrivate (altrimenti il submit parte
+    // con extra_media vuoto).
     const extras = rest.slice(0, 8);
+    if (extras.length > 0) setExtrasPending((c) => c + extras.length);
     for (const f of extras) {
       try {
         const url = await upload(f, "gift-media");
         if (url) setExtraMedia((prev) => [...prev, { url, kind: "image" }]);
       } catch (err) {
         console.error("[create] extra photo upload failed", err);
+      } finally {
+        setExtrasPending((c) => Math.max(0, c - 1));
       }
     }
   };
@@ -1008,12 +1021,15 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
                         if (files.length === 0) return;
                         const slots = 8 - extraMedia.length;
                         const toUpload = files.slice(0, slots);
+                        setExtrasPending((c) => c + toUpload.length);
                         for (const f of toUpload) {
                           try {
                             const url = await upload(f, "gift-media");
                             if (url) setExtraMedia((prev) => [...prev, { url, kind: "image" }]);
                           } catch (err) {
                             console.error("[create] extra photo upload failed", err);
+                          } finally {
+                            setExtrasPending((c) => Math.max(0, c - 1));
                           }
                         }
                         // Reset input cosi' lo stesso file puo' essere ri-selezionato
@@ -1070,6 +1086,20 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
               <div style={{ fontSize: 11, color: MUTED, marginTop: 8, lineHeight: 1.5 }}>
                 Aggiungi fino a {8 - extraMedia.length} foto extra. Quando aprira' il regalo, le sfogliera' come un album.
               </div>
+              {extrasPending > 0 && (
+                <div style={{
+                  marginTop: 8, fontSize: 12, fontWeight: 600,
+                  color: ACCENT, display: "flex", alignItems: "center", gap: 6,
+                }}>
+                  <span style={{
+                    display: "inline-block", width: 12, height: 12,
+                    border: `2px solid ${ACCENT}`, borderRightColor: "transparent",
+                    borderRadius: "50%", animation: "begiftSpin .8s linear infinite",
+                  }}/>
+                  Caricamento album in corso ({extrasPending} {extrasPending === 1 ? "foto rimanente" : "foto rimanenti"})...
+                  <style>{`@keyframes begiftSpin { to { transform: rotate(360deg); } }`}</style>
+                </div>
+              )}
             </div>
           )}
           <h2 style={{fontSize:24,fontWeight:800,color:DEEP,margin:"0 0 20px"}}>{t("create.packaging_title")}</h2>
@@ -1209,8 +1239,13 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
           ) : (
             <>
               <ScheduleSection mode={schedMode} setMode={setSchedMode} value={scheduledAt} setValue={setScheduledAt} />
-              <button onClick={submit} disabled={loading || (schedMode==="later" && !scheduledAt)} style={{display:"block",width:"100%",background:(loading || (schedMode==="later" && !scheduledAt))?"#e0dbd5":ACCENT,color:"#fff",border:"none",borderRadius:40,padding:"15px",fontSize:15,fontWeight:700,cursor:loading?"not-allowed":"pointer",marginTop:8}}>
-                {loading ? t("create.creating") : (schedMode === "later" ? "⏰ Programma regalo" : t("create.create_link"))}
+              {extrasPending > 0 && (
+                <div style={{textAlign:"center",fontSize:12,color:ACCENT,fontWeight:600,marginTop:8}}>
+                  ⏳ Caricamento album in corso ({extrasPending} {extrasPending === 1 ? "foto" : "foto"})... attendi pochi secondi.
+                </div>
+              )}
+              <button onClick={submit} disabled={loading || extrasPending>0 || (schedMode==="later" && !scheduledAt)} style={{display:"block",width:"100%",background:(loading || extrasPending>0 || (schedMode==="later" && !scheduledAt))?"#e0dbd5":ACCENT,color:"#fff",border:"none",borderRadius:40,padding:"15px",fontSize:15,fontWeight:700,cursor:(loading||extrasPending>0)?"not-allowed":"pointer",marginTop:8}}>
+                {loading ? t("create.creating") : extrasPending > 0 ? `Album in caricamento (${extrasPending})...` : (schedMode === "later" ? "⏰ Programma regalo" : t("create.create_link"))}
               </button>
             </>
           )}
@@ -1221,8 +1256,13 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
             <h2 style={{fontSize:24,fontWeight:800,color:DEEP,margin:"0 0 10px"}}>{t("create.ready")}</h2>
             <p style={{color:MUTED,marginBottom:24}}>{t("create.gift_ready_for", { name })}</p>
             <ScheduleSection mode={schedMode} setMode={setSchedMode} value={scheduledAt} setValue={setScheduledAt} />
-            <button onClick={submit} disabled={loading || (schedMode==="later" && !scheduledAt)} style={{display:"block",width:"100%",background:(loading || (schedMode==="later" && !scheduledAt))?"#e0dbd5":ACCENT,color:"#fff",border:"none",borderRadius:40,padding:"15px",fontSize:15,fontWeight:700,cursor:loading?"not-allowed":"pointer"}}>
-              {loading ? t("create.creating") : (schedMode === "later" ? "⏰ Programma regalo" : t("create.create_link"))}
+            {extrasPending > 0 && (
+              <div style={{fontSize:12,color:ACCENT,fontWeight:600,marginBottom:10}}>
+                ⏳ Caricamento album ({extrasPending} {extrasPending === 1 ? "foto" : "foto"} in corso)... attendi pochi secondi.
+              </div>
+            )}
+            <button onClick={submit} disabled={loading || extrasPending>0 || (schedMode==="later" && !scheduledAt)} style={{display:"block",width:"100%",background:(loading || extrasPending>0 || (schedMode==="later" && !scheduledAt))?"#e0dbd5":ACCENT,color:"#fff",border:"none",borderRadius:40,padding:"15px",fontSize:15,fontWeight:700,cursor:(loading||extrasPending>0)?"not-allowed":"pointer"}}>
+              {loading ? t("create.creating") : extrasPending > 0 ? `Album in caricamento (${extrasPending})...` : (schedMode === "later" ? "⏰ Programma regalo" : t("create.create_link"))}
             </button>
           </div>
         )}
