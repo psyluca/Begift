@@ -9,6 +9,7 @@ import { track } from "@/lib/analytics";
 import { ParentLetterReveal, type ParentLetterData } from "@/components/ParentLetterReveal";
 import { templateByType } from "@/lib/parent-templates";
 import { MultiPhotoGallery } from "@/components/MultiPhotoGallery";
+import { downloadMedia } from "@/lib/downloadMedia";
 import type { Gift, Reaction, ReactionType } from "@/types";
 
 const ACCENT = "#D4537E";
@@ -378,7 +379,7 @@ function GiftContent({ gift }: { gift: Gift }) {
 function PolaroidPhoto({ src, caption }: { src: string; caption: string | null }) {
   const shortCaption = caption && caption.length > 140 ? caption.slice(0, 137) + "…" : caption;
   return (
-    <div style={{ display: "flex", justifyContent: "center", marginBottom: 24, perspective: 1000 }}>
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14, marginBottom: 24, perspective: 1000 }}>
       <div style={{
         background: "#fff",
         padding: "14px 14px 0",
@@ -425,6 +426,36 @@ function PolaroidPhoto({ src, caption }: { src: string; caption: string | null }
         }}>
           {shortCaption || ""}
         </div>
+      </div>
+      {/* Pulsante "Scarica" sotto la polaroid: il destinatario puo'
+          salvare la foto sul proprio dispositivo. Su iOS attiva il
+          sheet di sistema (Save to Photos); altrove fa download
+          diretto. Vedi lib/downloadMedia per il dettaglio. */}
+      <div style={{ display: "flex", justifyContent: "center" }}>
+        <button
+          type="button"
+          onClick={() => void downloadMedia({ url: src, filename: "begift-foto.jpg" })}
+          aria-label="Scarica foto"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            background: "#fff",
+            color: DEEP,
+            border: "1px solid rgba(220,200,170,.7)",
+            borderRadius: 999,
+            padding: "8px 16px",
+            fontSize: 13,
+            fontWeight: 600,
+            cursor: "pointer",
+            boxShadow: "0 2px 8px rgba(0,0,0,.08)",
+            fontFamily: "inherit",
+            transform: "rotate(-1.5deg)",
+          }}
+        >
+          <span aria-hidden style={{ fontSize: 15, lineHeight: 1 }}>⬇</span>
+          <span>Scarica foto</span>
+        </button>
       </div>
     </div>
   );

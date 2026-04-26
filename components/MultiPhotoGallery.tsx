@@ -18,13 +18,57 @@
  */
 
 import { useState } from "react";
+import { downloadMedia } from "@/lib/downloadMedia";
 
 const ROSE = "#fff";
 const BORDER = "rgba(220,200,170,.7)";
+const DOWNLOAD_ACCENT = "#1a1a1a";
 
 interface Props {
   photos: string[];
   caption?: string | null;
+}
+
+/** Pulsante riusabile per scaricare una foto. Variante "dark" per
+ *  lightbox (sfondo nero), "light" per layout chiari (stack/single). */
+function DownloadBtn({ src, index, total, variant = "light" }: {
+  src: string;
+  index: number;
+  total: number;
+  variant?: "light" | "dark";
+}) {
+  const isDark = variant === "dark";
+  const filename = total > 1 ? `begift-foto-${index + 1}.jpg` : "begift-foto.jpg";
+  return (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        void downloadMedia({ url: src, filename });
+      }}
+      aria-label="Scarica foto"
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 6,
+        background: isDark ? "rgba(255,255,255,.18)" : "rgba(255,255,255,.95)",
+        color: isDark ? "#fff" : DOWNLOAD_ACCENT,
+        border: isDark ? "1px solid rgba(255,255,255,.25)" : `1px solid ${BORDER}`,
+        borderRadius: 999,
+        padding: "8px 14px",
+        fontSize: 13,
+        fontWeight: 600,
+        cursor: "pointer",
+        backdropFilter: "blur(8px)",
+        WebkitBackdropFilter: "blur(8px)",
+        boxShadow: isDark ? "none" : "0 2px 8px rgba(0,0,0,.08)",
+        fontFamily: "inherit",
+      }}
+    >
+      <span aria-hidden style={{ fontSize: 15, lineHeight: 1 }}>⬇</span>
+      <span>Scarica</span>
+    </button>
+  );
 }
 
 export function MultiPhotoGallery({ photos, caption }: Props) {
@@ -93,6 +137,9 @@ export function MultiPhotoGallery({ photos, caption }: Props) {
         </div>
         <div style={{ textAlign: "center", marginTop: 18, fontSize: 12, color: "#888" }}>
           {stackIndex + 1} di {photos.length} · tocca per sfogliare
+        </div>
+        <div style={{ textAlign: "center", marginTop: 12 }}>
+          <DownloadBtn src={photos[stackIndex]} index={stackIndex} total={photos.length} variant="light" />
         </div>
         {caption && (
           <p style={{
@@ -168,8 +215,16 @@ export function MultiPhotoGallery({ photos, caption }: Props) {
               color: "#fff", border: "none", borderRadius: "50%",
               width: 36, height: 36, fontSize: 20,
               cursor: "pointer", lineHeight: 1,
+              zIndex: 2,
             }}
           >×</button>
+          {/* Pulsante scarica in alto-sinistra del lightbox */}
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{ position: "absolute", top: 16, left: 16, zIndex: 2 }}
+          >
+            <DownloadBtn src={photos[lightbox]} index={lightbox} total={photos.length} variant="dark" />
+          </div>
           <img
             src={photos[lightbox]}
             alt=""
@@ -254,6 +309,9 @@ function SinglePolaroid({ src, caption }: { src: string; caption?: string | null
           &ldquo;{caption}&rdquo;
         </p>
       )}
+      <div style={{ textAlign: "center", marginTop: 14 }}>
+        <DownloadBtn src={src} index={0} total={1} variant="light" />
+      </div>
     </div>
   );
 }
