@@ -105,17 +105,29 @@ export default function NotificheTestClient() {
   };
 
   const cleanup = async () => {
-    if (!confirm("Cancellare tutte le subscription duplicate e tenere solo l'ultima?")) return;
+    if (!confirm("Cancellare TUTTE le subscription esistenti e crearne una sola fresca?")) return;
     setCleaning(true);
     setCleanResult(null);
     try {
+      // Step 1: cancella TUTTE le sub server-side
       const res = await fetchAuthed("/api/push/cleanup", { method: "POST" });
       const data = await res.json();
-      if (res.ok) {
-        setCleanResult(`✓ Pulite ${data.deleted} subscription duplicate. Tenute: ${data.after}.`);
-        await reloadStatus();
+      if (!res.ok) {
+        setCleanResult(`Errore cleanup: ${data.error || res.status}`);
+        return;
+      }
+      // Step 2: crea una sub fresca con forceRefresh per evitare di
+      // riusare la stale che il SW potrebbe avere ancora in cache.
+      const sub = await ensurePushSubscription({ forceRefresh: true });
+      if (sub.ok) {
+        setCleanResult(`✓ Reset completo: cancellate ${data.deleted}, creata 1 nuova subscription fresca.`);
+        setJustReconnected(true);
+        // Dai tempo al DB di propagare l'upsert prima di rileggere lo stato.
+        setTimeout(() => { reloadStatus(); }, 1500);
+        setTimeout(() => { reloadStatus(); }, 4500);
       } else {
-        setCleanResult(`Errore: ${data.error || res.status}`);
+        setCleanResult(`Cancellate ${data.deleted}, ma non sono riuscito a crearne una nuova: ${sub.reason}`);
+        await reloadStatus();
       }
     } catch (e) {
       console.error("[cleanup] failed", e);
@@ -329,7 +341,7 @@ export default function NotificheTestClient() {
                   fontFamily: "inherit",
                 }}
               >
-                {cleaning ? "Pulizia…" : "🧹 Pulisci duplicati"}
+                {cleaning ? "Reset in corso…" : "🧹 Reset completo (cancella + ricrea)"}
               </button>
               {cleanResult && (
                 <div style={{ marginTop: 8, fontSize: 12, color: cleanResult.startsWith("✓") ? OK : ERR }}>

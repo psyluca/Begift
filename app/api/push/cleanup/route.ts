@@ -47,29 +47,33 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "server" }, { status: 500 });
   }
 
-  if (!all || all.length <= 1) {
-    return NextResponse.json({ ok: true, before: all?.length ?? 0, after: all?.length ?? 0, deleted: 0 });
-  }
+  // Nuovo comportamento (2026-04-26): cancella TUTTE le sub
+  // dell'utente. Il client deve poi richiamare ensurePushSubscription
+  // con forceRefresh per crearne una fresca. In questo modo non c'e'
+  // ambiguita' su quale sia la "buona" e si esce dal loop di
+  // ricreazione automatica che capita su iOS PWA dopo cleanup
+  // parziale.
+  console.log(`[push/cleanup] user=${userId} found ${all?.length ?? 0} subs to delete`);
 
-  // Mantieni solo l'id piu' recente, cancella tutto il resto.
-  const keepId = (all[0] as { id: string }).id;
-  const toDelete = (all as { id: string }[]).slice(1).map((s) => s.id);
+  if (!all || all.length === 0) {
+    return NextResponse.json({ ok: true, before: 0, after: 0, deleted: 0 });
+  }
 
   const { error: delError } = await admin
     .from("push_subscriptions")
     .delete()
-    .in("id", toDelete);
+    .eq("user_id", userId);
 
   if (delError) {
     console.error("[push/cleanup] delete error", delError);
-    return NextResponse.json({ error: "server" }, { status: 500 });
+    return NextResponse.json({ error: "server", detail: delError.message }, { status: 500 });
   }
 
   return NextResponse.json({
     ok: true,
     before: all.length,
-    after: 1,
-    deleted: toDelete.length,
-    kept: keepId,
+    after: 0,
+    deleted: all.length,
+    note: "All subs deleted. Client should call ensurePushSubscription({forceRefresh:true}) to create a fresh one.",
   });
 }
