@@ -6,6 +6,7 @@ import SharedGiftSVG from "@/components/GiftSVG";
 import GiftChat from "@/components/GiftChat";
 import { ReportGiftButton } from "@/components/ReportGiftButton";
 import { track } from "@/lib/analytics";
+import { MothersDayLetterReveal, type MothersDayLetterData } from "@/components/MothersDayLetterReveal";
 import type { Gift, Reaction, ReactionType } from "@/types";
 
 const ACCENT = "#D4537E";
@@ -283,6 +284,22 @@ function BowSVG({ type, color, cx, cy, size: s }: { type: string; color: string;
 // ── Gift content renderer ─────────────────────────────────────────────────────
 function GiftContent({ gift }: { gift: Gift }) {
   const { t } = useI18n();
+
+  // Template speciali: se gift.template_type e' valorizzato, renderizziamo
+  // un componente dedicato invece del flusso classico content_type-based.
+  // Per ora c'e' solo "mothers_day_letter" ma si aggiungeranno altri.
+  const templateType = (gift as { template_type?: string }).template_type;
+  const templateData = (gift as { template_data?: MothersDayLetterData }).template_data;
+  if (templateType === "mothers_day_letter" && templateData) {
+    return (
+      <MothersDayLetterReveal
+        data={templateData}
+        recipientName={gift.recipient_name}
+        senderName={(gift as { sender_alias?: string | null }).sender_alias ?? null}
+      />
+    );
+  }
+
   return (
     <div style={{ maxWidth: 420, margin: "0 auto" }}>
       {gift.content_type === "image" && gift.content_url && (
@@ -1169,6 +1186,46 @@ export default function GiftOpeningClient({ gift }: { gift: Gift }) {
         {opened && !isCreator && loggedIn && fromName && !previewMode && (
           <div style={{ marginTop: 32, paddingTop: 28, borderTop: "1px solid #ede8e0" }}>
             <ThankWithGiftCTA senderName={fromName} originalGiftId={gift.id} />
+          </div>
+        )}
+
+        {/* Reverse-virality nudge generico: per chi ha aperto un regalo
+            ed e' loggato, suggerisce di mandarne uno a qualcun altro.
+            Diverso dal "ringrazia con regalo" perche' non e' diretto al
+            mittente originale ma a chiunque venga in mente.
+            Pattern: dopo aver ricevuto un'emozione, sei nel "mood" giusto
+            per restituirne una. K-factor reale dell'app dipende da qui. */}
+        {opened && !isCreator && loggedIn && !previewMode && (
+          <div style={{
+            marginTop: 24,
+            background: "#fff",
+            border: "1px solid #ede8e0",
+            borderRadius: 16,
+            padding: "20px 22px",
+            textAlign: "center",
+          }}>
+            <div style={{ fontSize: 26, marginBottom: 8 }} aria-hidden>💭</div>
+            <h3 style={{ fontSize: 16, fontWeight: 700, color: DEEP, margin: "0 0 6px" }}>
+              C'e' qualcuno a cui hai pensato oggi?
+            </h3>
+            <p style={{ fontSize: 13, color: MUTED, lineHeight: 1.5, margin: "0 0 14px" }}>
+              Mandagli un pensiero. Anche solo per dire ti penso, ora.
+            </p>
+            <a
+              href="/create"
+              style={{
+                display: "inline-block",
+                background: ACCENT,
+                color: "#fff",
+                borderRadius: 40,
+                padding: "10px 22px",
+                fontSize: 13,
+                fontWeight: 700,
+                textDecoration: "none",
+              }}
+            >
+              Crea un regalo
+            </a>
           </div>
         )}
       </div>
