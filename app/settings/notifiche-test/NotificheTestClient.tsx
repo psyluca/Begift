@@ -49,6 +49,10 @@ export default function NotificheTestClient() {
   const [needsLogin, setNeedsLogin] = useState(false);
   const [reconnecting, setReconnecting] = useState(false);
   const [reconnectResult, setReconnectResult] = useState<string | null>(null);
+  // Flag che abilita il bottone test per qualche secondo dopo una
+  // riconnessione riuscita, anche se il refetch server-side dello
+  // stato non e' ancora arrivato/non vede ancora la sub appena salvata.
+  const [justReconnected, setJustReconnected] = useState(false);
 
   useEffect(() => {
     // 1. Permission state
@@ -108,8 +112,15 @@ export default function NotificheTestClient() {
       if (result.ok) {
         const action = result.refreshed ? "rigenerata" : (result.created ? "creata" : "riallineata");
         setReconnectResult(`✓ Subscription ${action}. Premi qui sotto "Mandami una notifica" per testare.`);
-        // Aggiorna la lista delle subscriptions
-        await reloadStatus();
+        // Abilita subito il bottone test anche se il fetch dello stato
+        // potrebbe non riflettere ancora la nuova subscription (race
+        // possibile con il DB su Supabase region remota).
+        setJustReconnected(true);
+        // Reload con piccolo ritardo per dare tempo al DB di propagare
+        // l'upsert. Su iPhone iOS PWA puo' essere ancora piu' lento.
+        setTimeout(() => { reloadStatus(); }, 1500);
+        // Secondo retry dopo altri 3 secondi se ancora 0 (resilienza).
+        setTimeout(() => { reloadStatus(); }, 4500);
       } else {
         const map: Record<string, string> = {
           unsupported: "Il browser non supporta le notifiche push.",
@@ -148,6 +159,9 @@ export default function NotificheTestClient() {
       setTestResult("Errore di rete. Riprova.");
     } finally {
       setBusy(false);
+      // Dopo il test, refresh dello stato per aggiornare la lista
+      // device (utile per mostrare last_used_at nuovo).
+      setTimeout(() => { reloadStatus(); }, 800);
     }
   };
 
@@ -315,7 +329,7 @@ export default function NotificheTestClient() {
           </Hint>
           <button
             onClick={sendTest}
-            disabled={busy || permission !== "granted" || (subs?.length ?? 0) === 0}
+            disabled={busy || permission !== "granted" || ((subs?.length ?? 0) === 0 && !justReconnected)}
             style={{
               marginTop: 12,
               width: "100%",
@@ -323,7 +337,7 @@ export default function NotificheTestClient() {
               borderRadius: 40, padding: "12px 24px",
               fontSize: 14, fontWeight: 700,
               cursor: busy ? "wait" : "pointer",
-              opacity: (permission !== "granted" || (subs?.length ?? 0) === 0) ? 0.5 : 1,
+              opacity: (permission !== "granted" || ((subs?.length ?? 0) === 0 && !justReconnected)) ? 0.5 : 1,
               fontFamily: "inherit",
             }}
           >
