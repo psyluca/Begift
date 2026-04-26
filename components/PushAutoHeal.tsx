@@ -53,10 +53,17 @@ export function PushAutoHeal() {
           return;
         }
         // Drift rilevato: granted ma 0 subscriptions in DB.
-        // Tentiamo re-subscribe silenzioso.
-        const result = await ensurePushSubscription();
+        // Tentiamo re-subscribe con FORCE REFRESH: la sub esistente
+        // nel SW potrebbe essere stale (endpoint cancellato dal
+        // cleanup 410 lato server). Forziamo unsubscribe + nuovo
+        // subscribe per ottenere un endpoint fresco dal push service.
+        const result = await ensurePushSubscription({ forceRefresh: true });
         if (result.ok) {
-          console.log("[PushAutoHeal] re-subscribed", result.created ? "(new)" : "(restored)");
+          console.log("[PushAutoHeal] healed",
+            result.refreshed ? "(refreshed stale sub)"
+            : result.created ? "(new sub)"
+            : "(restored existing)"
+          );
         } else {
           console.log("[PushAutoHeal] could not auto-heal:", result.reason);
         }

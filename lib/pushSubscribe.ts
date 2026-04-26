@@ -23,10 +23,18 @@
 import { createSupabaseClient } from "@/lib/supabase/client";
 
 export type SubscribeResult =
-  | { ok: true; created: boolean }
+  | { ok: true; created: boolean; refreshed: boolean }
   | { ok: false; reason: "unsupported" | "permission" | "vapid" | "save_failed" | "subscribe_failed" | "auth"; detail?: string };
 
-export async function ensurePushSubscription(): Promise<SubscribeResult> {
+export interface EnsureOptions {
+  /** Se true, forza unsubscribe della subscription esistente prima di
+   *  subscribe nuova. Utile quando si sospetta che la sub sia stale
+   *  (endpoint scaduto lato push service) ma il browser la ritiene
+   *  ancora valida. Caso classico: dopo update iOS. */
+  forceRefresh?: boolean;
+}
+
+export async function ensurePushSubscription(opts: EnsureOptions = {}): Promise<SubscribeResult> {
   if (typeof window === "undefined") {
     return { ok: false, reason: "unsupported" };
   }
@@ -50,12 +58,29 @@ export async function ensurePushSubscription(): Promise<SubscribeResult> {
 
     let sub = await registration.pushManager.getSubscription();
     let created = false;
+    let refreshed = false;
+
+    // Se forceRefresh, butta via la sub esistente e ricreane una
+    // fresca. Risolve il caso "endpoint stale": il browser pensa di
+    // avere una sub valida ma il push service l'ha invalidata, ogni
+    // tentativo di send fallisce con 410 Gone, il server cancella
+    // la riga dal DB e l'utente resta in stato "fantasma".
+    if (sub && opts.forceRefresh) {
+      try {
+        await sub.unsubscribe();
+      } catch (e) {
+        console.warn("[pushSubscribe] unsubscribe failed (ignored)", e);
+      }
+      sub = null;
+      refreshed = true;
+    }
+
     if (!sub) {
       sub = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(vapidKey) as BufferSource,
       });
-      created = true;
+      created = !refreshed;
     }
 
     // POST al backend (idempotente: l'endpoint fa upsert per endpoint).
@@ -76,7 +101,7 @@ export async function ensurePushSubscription(): Promise<SubscribeResult> {
     if (!res.ok) {
       return { ok: false, reason: "save_failed", detail: `HTTP ${res.status}` };
     }
-    return { ok: true, created };
+    return { ok: true, created, refreshed };
   } catch (e) {
     console.error("[pushSubscribe] failed", e);
     return { ok: false, reason: "subscribe_failed", detail: (e as Error)?.message };

@@ -99,12 +99,15 @@ export default function NotificheTestClient() {
     setReconnecting(true);
     setReconnectResult(null);
     try {
-      const result = await ensurePushSubscription();
+      // forceRefresh: butta via la subscription stale del SW e ne crea
+      // una fresca. Risolve il drift "endpoint stale" tipico di iOS
+      // dove il browser pensa di avere una sub valida ma il push
+      // service la rifiuta (410 Gone), il server cancella la riga e
+      // l'utente resta fantasma.
+      const result = await ensurePushSubscription({ forceRefresh: true });
       if (result.ok) {
-        setReconnectResult(result.created
-          ? "✓ Notifiche riconnesse con successo. Riprova il test qui sotto."
-          : "✓ Subscription gia' presente, riallineata col server."
-        );
+        const action = result.refreshed ? "rigenerata" : (result.created ? "creata" : "riallineata");
+        setReconnectResult(`✓ Subscription ${action}. Premi qui sotto "Mandami una notifica" per testare.`);
         // Aggiorna la lista delle subscriptions
         await reloadStatus();
       } else {
