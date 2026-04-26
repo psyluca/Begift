@@ -81,25 +81,31 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Build dell'insert: i campi template_* vengono inclusi SOLO
+    // se il client li passa esplicitamente. In questo modo il route
+    // funziona anche se la migration 013_gift_templates.sql non e'
+    // ancora stata eseguita in produzione (le colonne potrebbero
+    // non esistere ancora). Il flusso normale (senza template
+    // speciali) non fa riferimento a quelle colonne, quindi nessun
+    // errore "column does not exist".
+    const insertRow: Record<string, unknown> = {
+      creator_id:        userId,
+      recipient_name:    body.recipientName.trim(),
+      sender_alias:      body.senderAlias ?? null,
+      message:           body.message ?? null,
+      packaging:         body.packaging,
+      content_type:      body.contentType ?? null,
+      content_url:       body.contentUrl ?? null,
+      content_text:      body.contentText ?? null,
+      content_file_name: body.contentFileName ?? null,
+      scheduled_at:      scheduledAt,
+    };
+    if (body.template_type) insertRow.template_type = body.template_type;
+    if (body.template_data) insertRow.template_data = body.template_data;
+
     const { data, error } = await supabase
       .from("gifts")
-      .insert({
-        creator_id:        userId,
-        recipient_name:    body.recipientName.trim(),
-        sender_alias:      body.senderAlias ?? null,
-        message:           body.message ?? null,
-        packaging:         body.packaging,
-        content_type:      body.contentType ?? null,
-        content_url:       body.contentUrl ?? null,
-        content_text:      body.contentText ?? null,
-        content_file_name: body.contentFileName ?? null,
-        scheduled_at:      scheduledAt,
-        // Template speciali (Festa della Mamma "Lettera che cresce", ecc.):
-        // se il client passa template_type + template_data li persistiamo,
-        // altrimenti restano NULL (gift "classico").
-        template_type:     body.template_type ?? null,
-        template_data:     body.template_data ?? null,
-      })
+      .insert(insertRow)
       .select()
       .single();
 
