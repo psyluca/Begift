@@ -540,27 +540,69 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
       if (!isNaN(d.getTime())) scheduledAtIso = d.toISOString();
     }
 
-    const res = await fetch("/api/gifts", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", ...authHeader },
-      body: JSON.stringify({
-        recipientName: name, senderAlias: senderAlias||undefined, message: msg, packaging: {...pkg, ...(customSoundUrl ? {customSoundUrl, customSoundTitle: customSoundTitle||undefined} : {})},
-        contentType: cType, contentUrl: cUrl, contentText: effectiveContentText, contentFileName: cFile,
-        scheduledAt: scheduledAtIso,
-        // Multi-foto: inviato solo se cType="image" e ci sono extra
-        extra_media: cType === "image" && extraMedia.length > 0 ? extraMedia : undefined,
-      }),
-    });
-    const data = await res.json();
-    setLoading(false);
-    if (res.ok) {
-      setResult(data);
-      setStep(99);
-      track("gift_created", {
-        occasion: occasion ?? "none",
-        content_type: cType ?? "message",
-        scheduled: !!scheduledAtIso,
+    try {
+      const res = await fetch("/api/gifts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeader },
+        body: JSON.stringify({
+          recipientName: name, senderAlias: senderAlias||undefined, message: msg, packaging: {...pkg, ...(customSoundUrl ? {customSoundUrl, customSoundTitle: customSoundTitle||undefined} : {})},
+          contentType: cType, contentUrl: cUrl, contentText: effectiveContentText, contentFileName: cFile,
+          scheduledAt: scheduledAtIso,
+          // Multi-foto: inviato solo se cType="image" e ci sono extra
+          extra_media: cType === "image" && extraMedia.length > 0 ? extraMedia : undefined,
+        }),
       });
+      const data = await res.json().catch(() => ({}));
+      setLoading(false);
+      if (res.ok) {
+        setResult(data);
+        setStep(99);
+        track("gift_created", {
+          occasion: occasion ?? "none",
+          content_type: cType ?? "message",
+          scheduled: !!scheduledAtIso,
+        });
+        return;
+      }
+      // Errore visibile: l'utente capisce subito cosa e' successo
+      // invece di vedere il bottone tornare cliccabile senza feedback.
+      const detail = (data as { error?: string; message?: string }).error
+        || (data as { message?: string }).message
+        || `Errore HTTP ${res.status}`;
+      console.error("[create/submit] failed", res.status, data);
+      // Auto-retry SENZA extra_media se l'errore sembra colonna mancante
+      // (migration 016 non eseguita). Cosi' il regalo parte con la sola
+      // foto principale invece di bloccarsi.
+      const isExtraMediaColMissing = /extra_media/i.test(detail) && /column|does not exist|schema/i.test(detail);
+      if (isExtraMediaColMissing && extraMedia.length > 0) {
+        console.warn("[create/submit] extra_media column missing → retry without album");
+        setLoading(true);
+        const retry = await fetch("/api/gifts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...authHeader },
+          body: JSON.stringify({
+            recipientName: name, senderAlias: senderAlias||undefined, message: msg, packaging: {...pkg, ...(customSoundUrl ? {customSoundUrl, customSoundTitle: customSoundTitle||undefined} : {})},
+            contentType: cType, contentUrl: cUrl, contentText: effectiveContentText, contentFileName: cFile,
+            scheduledAt: scheduledAtIso,
+          }),
+        });
+        const retryData = await retry.json().catch(() => ({}));
+        setLoading(false);
+        if (retry.ok) {
+          setResult(retryData);
+          setStep(99);
+          alert("Regalo creato, ma le foto extra dell'album non sono state salvate (la colonna extra_media manca nel DB: esegui la migration 016).");
+          return;
+        }
+        alert("Errore creazione regalo: " + ((retryData as { error?: string }).error || retry.status));
+        return;
+      }
+      alert("Impossibile creare il regalo: " + detail);
+    } catch (e) {
+      setLoading(false);
+      const msg = e instanceof Error ? e.message : "errore di rete";
+      console.error("[create/submit] exception", e);
+      alert("Errore di rete creando il regalo: " + msg + "\nVerifica la connessione e riprova.");
     }
   };
 
