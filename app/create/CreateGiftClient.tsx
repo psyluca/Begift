@@ -8,6 +8,7 @@ import InAppSend from "@/components/InAppSend";
 import { AIMessageHelper } from "@/components/AIMessageHelper";
 import { ShareButton } from "@/components/ShareButton";
 import { SaveReminderPrompt } from "@/components/SaveReminderPrompt";
+import { MilestoneToast } from "@/components/MilestoneToast";
 import { track } from "@/lib/analytics";
 
 const ACCENT = "#D4537E", DEEP = "#1a1a1a", MUTED = "#888", LIGHT = "#f7f5f2";
@@ -539,6 +540,9 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
   // RESULT — gift created
   if (result && step !== 4 && step !== 5) return (
     <main style={{minHeight:"100vh",background:LIGHT,fontFamily:"system-ui,sans-serif",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:24,textAlign:"center",position:"relative"}}>
+      {/* MilestoneToast: mostra una sola volta per soglia (3, 5, 10,
+          25, 50, 100 regali totali). Si auto-nasconde dopo 8 secondi. */}
+      <MilestoneToast />
       {/* Escape hatch — link piccolo in alto a sx per tornare alla
           dashboard anche se BottomNav è nascosta (es. su web desktop
           in certi browser). */}

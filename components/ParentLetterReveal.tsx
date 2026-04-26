@@ -1,29 +1,27 @@
 "use client";
 
 /**
- * MothersDayLetterReveal — vista "rivelata" del template Festa della
- * Mamma "Lettera che cresce". Renderizzata dentro GiftOpeningClient
- * dopo che il pacco e' stato scartato (phase === "revealed") quando
- * gift.template_type === "mothers_day_letter".
+ * ParentLetterReveal — vista "rivelata" generica del template
+ * "Lettera che cresce" (per Festa della Mamma e Festa del Papa').
  *
- * Si occupa SOLO del contenuto post-apertura: sequenza emotiva di
- * Parola grande -> Polaroid -> Ricordo -> Lezione -> Canzone (embed)
- * -> Voucher (link).
+ * Sostituisce / generalizza MothersDayLetterReveal: stessa struttura
+ * cinematografica (parola -> polaroid -> ricordo -> lezione -> canzone
+ * -> voucher -> firma), ma palette, microcopy e packaging vengono
+ * presi dalla config (vedi lib/parent-templates.ts).
  *
- * Layout pensato per essere letto in sequenza, dall'alto verso il
- * basso, con un ritmo simile a una poesia. Stile Georgia per le
- * parti emotive (titolo + ricordo) per separarle visivamente
- * dall'UI dell'app.
+ * Effetti polish:
+ * - Animazione di entrata progressiva di ogni blocco
+ * - Confetti rosa/oro o verde/oro che cadono al mount
+ * - Suono carillon delicato 6 sec via Web Audio API
  */
 
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
+import type { ParentTemplateConfig } from "@/lib/parent-templates";
 
-const ROSE = "#F4DCD8";
-const GOLD = "#D4A340";
 const DEEP = "#1a1a1a";
 const MUTED = "#6a6a6a";
 
-export interface MothersDayLetterData {
+export interface ParentLetterData {
   word?: string | null;
   memory?: string | null;
   photo_url?: string | null;
@@ -33,24 +31,19 @@ export interface MothersDayLetterData {
 }
 
 interface Props {
-  data: MothersDayLetterData;
+  data: ParentLetterData;
   recipientName: string;
   senderName?: string | null;
+  config: ParentTemplateConfig;
 }
 
-/** Estrae l'embed-URL da un link Spotify track o playlist. */
 function spotifyEmbed(url: string): string | null {
   try {
     const u = new URL(url);
     if (!u.hostname.includes("spotify.com")) return null;
-    // open.spotify.com/track/XYZ -> open.spotify.com/embed/track/XYZ
     return u.origin + "/embed" + u.pathname;
-  } catch {
-    return null;
-  }
+  } catch { return null; }
 }
-
-/** Estrae l'embed-URL da un link YouTube. */
 function youtubeEmbed(url: string): string | null {
   try {
     const u = new URL(url);
@@ -63,44 +56,135 @@ function youtubeEmbed(url: string): string | null {
       return id ? `https://www.youtube.com/embed/${id}` : null;
     }
     return null;
-  } catch {
-    return null;
-  }
+  } catch { return null; }
 }
 
-export function MothersDayLetterReveal({ data, recipientName, senderName }: Props) {
+function playMusicBox() {
+  if (typeof window === "undefined") return;
+  const W = window as unknown as {
+    AudioContext?: typeof AudioContext;
+    webkitAudioContext?: typeof AudioContext;
+  };
+  const Ctor = W.AudioContext || W.webkitAudioContext;
+  if (!Ctor) return;
+  try {
+    const ctx = new Ctor();
+    const notes = [659.25, 783.99, 1046.5, 1318.5, 1760, 1567.9, 1318.5, 1046.5, 1318.5, 1567.9];
+    const beat = 0.45;
+    const now = ctx.currentTime;
+    notes.forEach((freq, i) => {
+      const t = now + i * beat;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "triangle";
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(0.18, t + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 1.2);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(t);
+      osc.stop(t + 1.3);
+    });
+    setTimeout(() => { try { ctx.close(); } catch { /* ignore */ } }, 1000 * (notes.length * beat + 2));
+  } catch { /* silente */ }
+}
+
+function ConfettiRain({ palette }: { palette: string[] }) {
+  const pieces = 28;
+  return (
+    <div aria-hidden style={{
+      position: "absolute", inset: 0, pointerEvents: "none",
+      overflow: "hidden", borderRadius: 20,
+    }}>
+      {Array.from({ length: pieces }).map((_, i) => {
+        const left = Math.round((i / pieces) * 100 + Math.random() * 6);
+        const delay = Math.random() * 0.8;
+        const duration = 2.4 + Math.random() * 1.6;
+        const size = 6 + Math.random() * 6;
+        const bg = palette[i % palette.length];
+        const rotate = Math.round(Math.random() * 360);
+        return (
+          <span
+            key={i}
+            style={{
+              position: "absolute",
+              top: -20,
+              left: `${left}%`,
+              width: size,
+              height: size * 0.45,
+              background: bg,
+              transform: `rotate(${rotate}deg)`,
+              animation: `confFall ${duration}s ${delay}s ease-in forwards`,
+              opacity: 0.9,
+              borderRadius: 1,
+            }}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+export function ParentLetterReveal({ data, recipientName, senderName, config }: Props) {
   const spotifySrc = data.song_url ? spotifyEmbed(data.song_url) : null;
   const youtubeSrc = data.song_url ? youtubeEmbed(data.song_url) : null;
+
+  const playedRef = useRef(false);
+  const [showConfetti, setShowConfetti] = useState(false);
+  useEffect(() => {
+    if (playedRef.current) return;
+    playedRef.current = true;
+    setShowConfetti(true);
+    const t = setTimeout(() => playMusicBox(), 250);
+    const t2 = setTimeout(() => setShowConfetti(false), 5000);
+    return () => { clearTimeout(t); clearTimeout(t2); };
+  }, []);
+
+  const confettiPalette = [config.paletteAccent, config.paperColor, "#fff", "#D4537E"];
 
   return (
     <div style={{
       maxWidth: 480,
       margin: "0 auto",
       padding: "32px 22px 60px",
-      background: `linear-gradient(180deg, ${ROSE} 0%, #FFFFFF 200px)`,
+      background: `linear-gradient(180deg, ${config.paletteBg} 0%, #FFFFFF 200px)`,
       borderRadius: 20,
       fontFamily: "system-ui, -apple-system, sans-serif",
+      position: "relative",
     }}>
-      {/* Titolo: la parola in calligrafia oro */}
+      <style>{`
+        @keyframes confFall {
+          0%   { transform: translateY(0) rotate(0deg); opacity: 0; }
+          10%  { opacity: 1; }
+          100% { transform: translateY(620px) rotate(540deg); opacity: 0; }
+        }
+        @keyframes pLetterIn {
+          from { opacity: 0; transform: translateY(14px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .p-fade-in { animation: pLetterIn .7s ease both; }
+      `}</style>
+      {showConfetti && <ConfettiRain palette={confettiPalette} />}
+
       {data.word && (
-        <div style={{
+        <div className="p-fade-in" style={{
           fontFamily: "Georgia, 'Times New Roman', serif",
           fontStyle: "italic",
           fontWeight: 700,
           fontSize: "clamp(46px, 12vw, 72px)",
-          color: GOLD,
+          color: config.paletteAccent,
           textAlign: "center",
           lineHeight: 1.05,
           margin: "12px 0 24px",
           letterSpacing: "-1px",
+          animationDelay: "0.1s",
         }}>
           &ldquo;{data.word}&rdquo;
         </div>
       )}
 
-      {/* Polaroid */}
       {data.photo_url && (
-        <div style={{ textAlign: "center", margin: "0 0 28px" }}>
+        <div className="p-fade-in" style={{ textAlign: "center", margin: "0 0 28px", animationDelay: "0.8s" }}>
           <div style={{
             display: "inline-block",
             padding: 10,
@@ -115,7 +199,6 @@ export function MothersDayLetterReveal({ data, recipientName, senderName }: Prop
               alt={`Una foto di ${recipientName}`}
               style={{ display: "block", width: "min(260px, 70vw)", height: "min(260px, 70vw)", objectFit: "cover" }}
             />
-            {/* Scotch carta in alto */}
             <div style={{
               position: "absolute",
               top: -10,
@@ -130,11 +213,10 @@ export function MothersDayLetterReveal({ data, recipientName, senderName }: Prop
         </div>
       )}
 
-      {/* Ricordo */}
       {data.memory && (
-        <div style={{ margin: "0 0 28px" }}>
+        <div className="p-fade-in" style={{ margin: "0 0 28px", animationDelay: "1.5s" }}>
           <div style={{ fontSize: 12, color: MUTED, textTransform: "uppercase", letterSpacing: ".1em", fontWeight: 700, marginBottom: 10, textAlign: "center" }}>
-            Il mio ricordo più nitido con te
+            {config.revealCaptions.memoryHeader}
           </div>
           <p style={{
             fontFamily: "Georgia, 'Times New Roman', serif",
@@ -150,17 +232,17 @@ export function MothersDayLetterReveal({ data, recipientName, senderName }: Prop
         </div>
       )}
 
-      {/* Lezione */}
       {data.lesson && (
-        <div style={{
+        <div className="p-fade-in" style={{
           margin: "0 0 28px",
           padding: "20px 22px",
           background: "#fffaf0",
-          border: `1px solid ${ROSE}`,
+          border: `1px solid ${config.paletteBg}`,
           borderRadius: 14,
+          animationDelay: "2.2s",
         }}>
           <div style={{ fontSize: 12, color: MUTED, textTransform: "uppercase", letterSpacing: ".1em", fontWeight: 700, marginBottom: 8, textAlign: "center" }}>
-            Quello che mi hai insegnato senza dirmelo
+            {config.revealCaptions.lessonHeader}
           </div>
           <p style={{
             fontSize: "clamp(15px, 4vw, 17px)",
@@ -174,11 +256,10 @@ export function MothersDayLetterReveal({ data, recipientName, senderName }: Prop
         </div>
       )}
 
-      {/* Canzone */}
       {(spotifySrc || youtubeSrc) && (
-        <div style={{ margin: "0 0 28px" }}>
-          <div style={{ fontSize: 13, color: GOLD, textAlign: "center", marginBottom: 10, fontWeight: 600 }}>
-            ♪ La nostra canzone
+        <div className="p-fade-in" style={{ margin: "0 0 28px", animationDelay: "2.9s" }}>
+          <div style={{ fontSize: 13, color: config.paletteAccent, textAlign: "center", marginBottom: 10, fontWeight: 600 }}>
+            {config.revealCaptions.songHeader}
           </div>
           {spotifySrc && (
             <iframe
@@ -207,16 +288,15 @@ export function MothersDayLetterReveal({ data, recipientName, senderName }: Prop
         </div>
       )}
 
-      {/* Voucher allegato */}
       {data.voucher_url && (
-        <div style={{ margin: "0 0 28px", textAlign: "center" }}>
+        <div className="p-fade-in" style={{ margin: "0 0 28px", textAlign: "center", animationDelay: "3.5s" }}>
           <a
             href={data.voucher_url}
             target="_blank"
             rel="noopener noreferrer"
             style={{
               display: "inline-block",
-              background: GOLD,
+              background: config.paletteAccent,
               color: "#fff",
               border: "none",
               borderRadius: 40,
@@ -224,23 +304,23 @@ export function MothersDayLetterReveal({ data, recipientName, senderName }: Prop
               fontSize: 14,
               fontWeight: 700,
               textDecoration: "none",
-              boxShadow: "0 8px 22px rgba(212,163,64,.35)",
+              boxShadow: `0 8px 22px ${config.paletteAccent}55`,
             }}
           >
-            🎁 Apri il regalo allegato
+            {config.revealCaptions.voucherCta}
           </a>
           <div style={{ fontSize: 11, color: MUTED, marginTop: 8 }}>
-            Un piccolo extra che ho voluto aggiungere
+            {config.revealCaptions.voucherSubtitle}
           </div>
         </div>
       )}
 
-      {/* Firma */}
-      <div style={{
+      <div className="p-fade-in" style={{
         marginTop: 32,
         paddingTop: 24,
-        borderTop: `1px solid ${ROSE}`,
+        borderTop: `1px solid ${config.paletteBg}`,
         textAlign: "center",
+        animationDelay: "4.2s",
       }}>
         <p style={{
           fontFamily: "Georgia, 'Times New Roman', serif",
@@ -249,17 +329,17 @@ export function MothersDayLetterReveal({ data, recipientName, senderName }: Prop
           color: DEEP,
           margin: "0 0 6px",
         }}>
-          Ti voglio bene,
+          {config.revealCaptions.farewellLine}
         </p>
         <p style={{
           fontFamily: "Georgia, 'Times New Roman', serif",
           fontStyle: "italic",
           fontSize: 19,
-          color: GOLD,
+          color: config.paletteAccent,
           fontWeight: 700,
           margin: 0,
         }}>
-          {senderName || "il/la tuo/a bambino/a"}
+          {senderName || config.revealCaptions.senderFallback}
         </p>
       </div>
     </div>

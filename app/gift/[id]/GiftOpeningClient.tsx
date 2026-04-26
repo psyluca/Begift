@@ -6,7 +6,8 @@ import SharedGiftSVG from "@/components/GiftSVG";
 import GiftChat from "@/components/GiftChat";
 import { ReportGiftButton } from "@/components/ReportGiftButton";
 import { track } from "@/lib/analytics";
-import { MothersDayLetterReveal, type MothersDayLetterData } from "@/components/MothersDayLetterReveal";
+import { ParentLetterReveal, type ParentLetterData } from "@/components/ParentLetterReveal";
+import { templateByType } from "@/lib/parent-templates";
 import type { Gift, Reaction, ReactionType } from "@/types";
 
 const ACCENT = "#D4537E";
@@ -287,15 +288,18 @@ function GiftContent({ gift }: { gift: Gift }) {
 
   // Template speciali: se gift.template_type e' valorizzato, renderizziamo
   // un componente dedicato invece del flusso classico content_type-based.
-  // Per ora c'e' solo "mothers_day_letter" ma si aggiungeranno altri.
+  // Mothers/Fathers Day "Lettera che cresce" condividono lo stesso
+  // ParentLetterReveal con config diverse (mom/dad).
   const templateType = (gift as { template_type?: string }).template_type;
-  const templateData = (gift as { template_data?: MothersDayLetterData }).template_data;
-  if (templateType === "mothers_day_letter" && templateData) {
+  const templateData = (gift as { template_data?: ParentLetterData }).template_data;
+  const parentConfig = templateByType(templateType);
+  if (parentConfig && templateData) {
     return (
-      <MothersDayLetterReveal
+      <ParentLetterReveal
         data={templateData}
         recipientName={gift.recipient_name}
         senderName={(gift as { sender_alias?: string | null }).sender_alias ?? null}
+        config={parentConfig}
       />
     );
   }

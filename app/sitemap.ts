@@ -64,6 +64,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "weekly",
       priority: 0.95,
     },
+    {
+      // Festa del Papà — stesso template "Lettera che cresce" per il 19 giugno.
+      url: `${baseUrl}/festa-papa`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.92,
+    },
     // Pagine pilastro per AEO: use case long-form + FAQ + press
     {
       url: `${baseUrl}/per-chi`,
