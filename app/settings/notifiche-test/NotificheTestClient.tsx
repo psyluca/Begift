@@ -17,6 +17,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { fetchAuthed } from "@/lib/clientAuth";
+import { ensurePushSubscription } from "@/lib/pushSubscribe";
 
 const ACCENT = "#D4537E";
 const DEEP = "#1a1a1a";
@@ -46,6 +47,8 @@ export default function NotificheTestClient() {
   const [busy, setBusy] = useState(false);
   const [testResult, setTestResult] = useState<string | null>(null);
   const [needsLogin, setNeedsLogin] = useState(false);
+  const [reconnecting, setReconnecting] = useState(false);
+  const [reconnectResult, setReconnectResult] = useState<string | null>(null);
 
   useEffect(() => {
     // 1. Permission state
@@ -81,6 +84,47 @@ export default function NotificheTestClient() {
       } catch { /* ignore */ }
     })();
   }, []);
+
+  const reloadStatus = async () => {
+    try {
+      const res = await fetchAuthed("/api/push/status");
+      if (res.ok) {
+        const data = await res.json();
+        setSubs(data.subscriptions ?? []);
+      }
+    } catch { /* ignore */ }
+  };
+
+  const reconnect = async () => {
+    setReconnecting(true);
+    setReconnectResult(null);
+    try {
+      const result = await ensurePushSubscription();
+      if (result.ok) {
+        setReconnectResult(result.created
+          ? "✓ Notifiche riconnesse con successo. Riprova il test qui sotto."
+          : "✓ Subscription gia' presente, riallineata col server."
+        );
+        // Aggiorna la lista delle subscriptions
+        await reloadStatus();
+      } else {
+        const map: Record<string, string> = {
+          unsupported: "Il browser non supporta le notifiche push.",
+          permission: "Devi prima autorizzare le notifiche dal browser.",
+          vapid: "Configurazione mancante (contatta support).",
+          save_failed: "Errore di rete nel salvataggio. Riprova.",
+          subscribe_failed: "Errore nel collegamento al servizio push. Riprova.",
+          auth: "Sessione scaduta — ricarica la pagina e riprova.",
+        };
+        setReconnectResult(`Errore: ${map[result.reason] || result.reason}`);
+      }
+    } catch (e) {
+      console.error("[notifiche-test] reconnect failed", e);
+      setReconnectResult("Errore di rete. Riprova.");
+    } finally {
+      setReconnecting(false);
+    }
+  };
 
   const sendTest = async () => {
     setBusy(true);
@@ -169,10 +213,51 @@ export default function NotificheTestClient() {
           <CardHeader>Device registrati</CardHeader>
           {subs === null && <Hint>Caricamento…</Hint>}
           {subs && subs.length === 0 && (
-            <Hint>
-              Nessun device registrato. Significa che il tuo browser non ha (ancora) sottoscritto le
-              push. Vai in dashboard e attivale dalla card "Notifiche".
-            </Hint>
+            <>
+              {permission === "granted" ? (
+                <>
+                  <Hint>
+                    <b>Stato anomalo:</b> il browser dice che le notifiche sono autorizzate, ma il
+                    server non ha nessun device registrato per te. Capita dopo un aggiornamento di
+                    sistema o se la subscription e' stata invalidata. Premi qui sotto per
+                    riconnetterti senza dover riautorizzare.
+                  </Hint>
+                  <button
+                    onClick={reconnect}
+                    disabled={reconnecting}
+                    style={{
+                      marginTop: 12,
+                      width: "100%",
+                      background: ACCENT, color: "#fff", border: "none",
+                      borderRadius: 40, padding: "11px 22px",
+                      fontSize: 14, fontWeight: 700,
+                      cursor: reconnecting ? "wait" : "pointer",
+                      opacity: reconnecting ? 0.7 : 1,
+                      fontFamily: "inherit",
+                    }}
+                  >
+                    {reconnecting ? "Riconnessione…" : "🔄 Riconnetti notifiche"}
+                  </button>
+                  {reconnectResult && (
+                    <div style={{
+                      marginTop: 10, padding: "10px 12px",
+                      background: reconnectResult.startsWith("✓") ? "#f0f9f0" : "#fff5f5",
+                      border: `1px solid ${reconnectResult.startsWith("✓") ? "#c5e5c5" : "#f5c6c6"}`,
+                      borderRadius: 8,
+                      fontSize: 13, color: reconnectResult.startsWith("✓") ? OK : ERR,
+                      lineHeight: 1.5,
+                    }}>
+                      {reconnectResult}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <Hint>
+                  Nessun device registrato. Significa che il tuo browser non ha (ancora) sottoscritto
+                  le push. Vai in dashboard e attivale dalla card "Notifiche".
+                </Hint>
+              )}
+            </>
           )}
           {subs && subs.length > 0 && (
             <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 8 }}>

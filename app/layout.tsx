@@ -10,6 +10,7 @@ import Footer from "@/components/Footer";
 // spostata in /settings → sezione Installazione. Il componente
 // è ancora in components/ per eventuale riuso futuro.
 import { UsernameOnboarding } from "@/components/UsernameOnboarding";
+import { PushAutoHeal } from "@/components/PushAutoHeal";
 import { baseGraph } from "@/lib/structured-data";
 
 export const viewport: Viewport = {
@@ -145,6 +146,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               Installazione. Banner sticky fisso è invasivo sui primi
               visitatori; chi cerca info le trova nelle impostazioni. */}
           <UsernameOnboarding/>
+          {/* PushAutoHeal: ghost component che ripara automaticamente
+              il drift "permission granted ma 0 device in DB". Una volta
+              per sessione browser. */}
+          <PushAutoHeal/>
         </I18nProvider>
       </body>
     </html>
