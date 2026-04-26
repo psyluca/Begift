@@ -5,6 +5,7 @@ import { useI18n } from "@/lib/i18n";
 import { useEffect, useState } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 import { track } from "@/lib/analytics";
+import { SeasonalBanner } from "@/components/SeasonalBanner";
 
 const ACCENT = "#D4537E", DEEP = "#1a1a1a", MUTED = "#888", LIGHT = "#f7f5f2";
 
@@ -140,6 +141,14 @@ export default function HomePage() {
           boxShadow: "0 10px 32px rgba(212,83,126,.35)",
           transition: "transform .15s",
         }}>{t("home.cta_create")}</Link>
+      </section>
+
+      {/* ── BANNER STAGIONALE ───────────────────────────────────
+          Si auto-mostra solo nella finestra di una festivita' attiva
+          (es. 14 giorni prima di Festa della Mamma o del Papa').
+          Fuori dalla finestra ritorna null e non occupa spazio. */}
+      <section style={{ maxWidth: 720, margin: "0 auto", padding: "0 20px" }}>
+        <SeasonalBanner variant="spacious" />
       </section>
 
       {/* ── COME FUNZIONA (3 step) ──────────────────────────── */}

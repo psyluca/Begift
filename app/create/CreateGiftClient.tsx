@@ -9,6 +9,7 @@ import { AIMessageHelper } from "@/components/AIMessageHelper";
 import { ShareButton } from "@/components/ShareButton";
 import { SaveReminderPrompt } from "@/components/SaveReminderPrompt";
 import { MilestoneToast } from "@/components/MilestoneToast";
+import { SeasonalBanner } from "@/components/SeasonalBanner";
 import { track } from "@/lib/analytics";
 
 const ACCENT = "#D4537E", DEEP = "#1a1a1a", MUTED = "#888", LIGHT = "#f7f5f2";
@@ -651,6 +652,10 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
 
         {/* S1 — name + occasione */}
         {step===1&&<>
+          {/* Banner stagionale: se siamo in finestra Festa Mamma/Papa',
+              suggerisce il template "Lettera che cresce" come scorciatoia
+              alternativa al flow generico. Auto-nasconde fuori finestra. */}
+          <SeasonalBanner variant="compact" />
           <h2 style={{fontSize:24,fontWeight:800,color:DEEP,margin:"0 0 20px"}}>{t("create.step1_title")}</h2>
 
           {/* Occasion picker: se nessuna scelta, mostra griglia 4x2 di
