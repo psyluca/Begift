@@ -193,6 +193,42 @@ export function MultiPhotoGallery({ photos, caption }: Props) {
           &ldquo;{caption}&rdquo;
         </p>
       )}
+      {/* Pulsante "Scarica tutte" sotto la griglia: il destinatario
+          puo' salvare l'intero album senza dover aprire una alla volta
+          il lightbox. Le scaricate sono sequenziali per non saturare
+          la rete e perche' iOS apre il sheet di sistema una alla volta. */}
+      <div style={{ textAlign: "center", marginTop: 14, display: "flex", justifyContent: "center", gap: 10, flexWrap: "wrap" }}>
+        <button
+          type="button"
+          onClick={async () => {
+            for (let i = 0; i < photos.length; i++) {
+              await downloadMedia({ url: photos[i], filename: `begift-foto-${i + 1}.jpg` });
+            }
+          }}
+          aria-label="Scarica tutte le foto"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            background: "#fff",
+            color: DOWNLOAD_ACCENT,
+            border: `1px solid ${BORDER}`,
+            borderRadius: 999,
+            padding: "9px 16px",
+            fontSize: 13,
+            fontWeight: 600,
+            cursor: "pointer",
+            boxShadow: "0 2px 8px rgba(0,0,0,.08)",
+            fontFamily: "inherit",
+          }}
+        >
+          <span aria-hidden style={{ fontSize: 15, lineHeight: 1 }}>⬇</span>
+          <span>Scarica tutte ({photos.length})</span>
+        </button>
+        <div style={{ fontSize: 11, color: "#888", alignSelf: "center" }}>
+          oppure tocca una foto per scaricarla singolarmente
+        </div>
+      </div>
 
       {/* Lightbox */}
       {lightbox !== null && (
