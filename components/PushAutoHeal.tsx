@@ -29,48 +29,34 @@ export function PushAutoHeal() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // Skip se gia' fatto in questa sessione browser.
-    try {
-      if (sessionStorage.getItem(SESSION_FLAG) === "1") return;
-    } catch { /* private mode: continua */ }
-
+    // FIX 2026-04-26: PushAutoHeal era responsabile di accumulare
+    // subscription duplicate (12 -> 16 -> 20...) perche' su iOS PWA
+    // il sessionStorage flag non sempre persiste tra reload, e ogni
+    // mount del layout creava nuove sub. Soluzione: NON fare auto
+    // re-subscribe, limitarsi a un'unica chiamata di status per
+    // verifica. L'utente puo' usare "Riconnetti notifiche" manuale
+    // dalla diagnostic page se serve.
+    //
+    // Per il futuro: una soluzione migliore richiederebbe un dedupe
+    // server-side che cancella vecchie sub dello stesso user al
+    // momento della upsert (vedi /api/push/cleanup endpoint).
+    //
     // Skip se feature non supportate o permission non granted.
     if (!("Notification" in window)) return;
     if (Notification.permission !== "granted") return;
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
 
-    // Best-effort, non bloccante.
+    // Solo log diagnostico, niente auto-subscribe.
     (async () => {
       try {
-        // Verifica con il server quanti device ho registrati.
         const res = await fetchAuthed("/api/push/status");
         if (!res.ok) return;
         const data = await res.json();
         const dbCount = data?.subscriptions?.length ?? 0;
-        if (dbCount > 0) {
-          // Tutto in ordine, non fare niente.
-          try { sessionStorage.setItem(SESSION_FLAG, "1"); } catch { /* ignore */ }
-          return;
+        if (dbCount === 0) {
+          console.warn("[PushAutoHeal] drift detected: granted but 0 subs in DB. User can fix from /settings/notifiche-test");
         }
-        // Drift rilevato: granted ma 0 subscriptions in DB.
-        // Tentiamo re-subscribe con FORCE REFRESH: la sub esistente
-        // nel SW potrebbe essere stale (endpoint cancellato dal
-        // cleanup 410 lato server). Forziamo unsubscribe + nuovo
-        // subscribe per ottenere un endpoint fresco dal push service.
-        const result = await ensurePushSubscription({ forceRefresh: true });
-        if (result.ok) {
-          console.log("[PushAutoHeal] healed",
-            result.refreshed ? "(refreshed stale sub)"
-            : result.created ? "(new sub)"
-            : "(restored existing)"
-          );
-        } else {
-          console.log("[PushAutoHeal] could not auto-heal:", result.reason);
-        }
-        try { sessionStorage.setItem(SESSION_FLAG, "1"); } catch { /* ignore */ }
-      } catch (e) {
-        console.error("[PushAutoHeal] error", e);
-      }
+      } catch { /* silent */ }
     })();
   }, []);
 

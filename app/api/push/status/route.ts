@@ -64,8 +64,23 @@ export async function GET(req: NextRequest) {
     };
   });
 
+  // DEBUG: conteggio totale "raw" senza filtro RLS, per diagnosticare
+  // mismatch user_id (es. sub salvate sotto un altro account, o RLS
+  // cha blocca la SELECT). Dovrebbe combaciare con summary.length;
+  // se diverge, sappiamo che c'e' un problema di filtraggio.
+  const { count: rawCountSameUser } = await admin
+    .from("push_subscriptions")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId);
+
   return NextResponse.json({
     count: summary.length,
     subscriptions: summary,
+    debug: {
+      resolved_user_id: userId,
+      // Numero righe trovate con eq(user_id) tramite count(*) — deve
+      // matchare summary.length. Se diverge -> bug query/RLS.
+      raw_count_same_user: rawCountSameUser ?? 0,
+    },
   });
 }

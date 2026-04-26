@@ -53,6 +53,9 @@ export default function NotificheTestClient() {
   // riconnessione riuscita, anche se il refetch server-side dello
   // stato non e' ancora arrivato/non vede ancora la sub appena salvata.
   const [justReconnected, setJustReconnected] = useState(false);
+  const [cleaning, setCleaning] = useState(false);
+  const [cleanResult, setCleanResult] = useState<string | null>(null);
+  const [debug, setDebug] = useState<{ resolved_user_id?: string; raw_count_same_user?: number } | null>(null);
 
   useEffect(() => {
     // 1. Permission state
@@ -75,6 +78,7 @@ export default function NotificheTestClient() {
         if (!res.ok) return;
         const data = await res.json();
         setSubs(data.subscriptions ?? []);
+        setDebug(data.debug ?? null);
       } catch (e) {
         console.error("[notifiche-test] status failed", e);
       }
@@ -95,8 +99,30 @@ export default function NotificheTestClient() {
       if (res.ok) {
         const data = await res.json();
         setSubs(data.subscriptions ?? []);
+        setDebug(data.debug ?? null);
       }
     } catch { /* ignore */ }
+  };
+
+  const cleanup = async () => {
+    if (!confirm("Cancellare tutte le subscription duplicate e tenere solo l'ultima?")) return;
+    setCleaning(true);
+    setCleanResult(null);
+    try {
+      const res = await fetchAuthed("/api/push/cleanup", { method: "POST" });
+      const data = await res.json();
+      if (res.ok) {
+        setCleanResult(`✓ Pulite ${data.deleted} subscription duplicate. Tenute: ${data.after}.`);
+        await reloadStatus();
+      } else {
+        setCleanResult(`Errore: ${data.error || res.status}`);
+      }
+    } catch (e) {
+      console.error("[cleanup] failed", e);
+      setCleanResult("Errore di rete.");
+    } finally {
+      setCleaning(false);
+    }
   };
 
   const reconnect = async () => {
@@ -276,6 +302,34 @@ export default function NotificheTestClient() {
               )}
             </>
           )}
+          {/* Cleanup duplicati: visibile sempre se ci sono >1 sub, o se
+              il backend dice che ce ne sono ma il client non le vede. */}
+          {((subs?.length ?? 0) > 1 || (debug?.raw_count_same_user ?? 0) > 1) && (
+            <div style={{ marginTop: 12, padding: "10px 12px", background: "#fffaf0", border: "1px solid #f0e1c5", borderRadius: 8 }}>
+              <div style={{ fontSize: 12, color: DEEP, fontWeight: 600, marginBottom: 6 }}>
+                Hai {Math.max(subs?.length ?? 0, debug?.raw_count_same_user ?? 0)} subscription registrate.
+                Probabilmente sono duplicati accumulati (succede dopo update iOS).
+              </div>
+              <button
+                onClick={cleanup}
+                disabled={cleaning}
+                style={{
+                  background: WARN, color: "#fff", border: "none",
+                  borderRadius: 20, padding: "6px 14px",
+                  fontSize: 12, fontWeight: 700,
+                  cursor: cleaning ? "wait" : "pointer", opacity: cleaning ? 0.7 : 1,
+                  fontFamily: "inherit",
+                }}
+              >
+                {cleaning ? "Pulizia…" : "🧹 Pulisci duplicati"}
+              </button>
+              {cleanResult && (
+                <div style={{ marginTop: 8, fontSize: 12, color: cleanResult.startsWith("✓") ? OK : ERR }}>
+                  {cleanResult}
+                </div>
+              )}
+            </div>
+          )}
           {subs && subs.length > 0 && (
             <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 8 }}>
               {subs.map((s) => (
@@ -356,6 +410,22 @@ export default function NotificheTestClient() {
             </div>
           )}
         </Card>
+
+        {/* Debug — visibile sempre per ora finche' non risolviamo il
+            mismatch "backend dice X, client vede Y". */}
+        {debug && (
+          <Card>
+            <CardHeader>Diagnostica avanzata</CardHeader>
+            <Hint>
+              Se i numeri non combaciano sappiamo che c'e' un problema di filtro.
+            </Hint>
+            <div style={{ fontSize: 11, color: MUTED, fontFamily: "ui-monospace,Menlo,monospace", marginTop: 8, lineHeight: 1.7 }}>
+              <div>userId: {debug.resolved_user_id?.slice(0, 8)}…</div>
+              <div>device count (raw): {debug.raw_count_same_user}</div>
+              <div>device count (lista mostrata): {subs?.length ?? "—"}</div>
+            </div>
+          </Card>
+        )}
       </div>
     </main>
   );
