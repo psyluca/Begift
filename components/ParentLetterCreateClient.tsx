@@ -15,7 +15,7 @@ import { fetchAuthed } from "@/lib/clientAuth";
 import { useUpload } from "@/hooks/useUpload";
 import { track } from "@/lib/analytics";
 import type { ParentTemplateConfig } from "@/lib/parent-templates";
-import { SongPicker } from "@/components/SongPicker";
+import { SongPicker, type SpotifyTrack } from "@/components/SongPicker";
 
 const ACCENT = "#D4537E";
 const DEEP = "#1a1a1a";
@@ -33,6 +33,12 @@ interface Props {
  *  questo numero per invalidare draft vecchi e non confondere utenti. */
 const DRAFT_VERSION = 1;
 
+interface SongMeta {
+  name: string;
+  artists: string;
+  imageUrl: string | null;
+}
+
 interface DraftPayload {
   v: number;
   step: number;
@@ -43,6 +49,7 @@ interface DraftPayload {
   photoUrl: string;
   lesson: string;
   songUrl: string;
+  songMeta: SongMeta | null;
   voucherUrl: string;
   /** Timestamp ultimo save, per mostrare "salvato 3 minuti fa". */
   savedAt: number;
@@ -107,7 +114,19 @@ export function ParentLetterCreateClient({ config }: Props) {
   const [photoUploading, setPhotoUploading] = useState(false);
   const [lesson, setLesson] = useState("");
   const [songUrl, setSongUrl] = useState("");
+  // Metadata della canzone selezionata via SongPicker. Riempito dal
+  // callback onPickTrack; persiste nel draft localStorage cosi' la
+  // resume mostra ancora il nome canzone nel preview step 7. Resetto
+  // a null se songUrl viene svuotato (clear o draft cleared).
+  const [songMeta, setSongMeta] = useState<SongMeta | null>(null);
   const [voucherUrl, setVoucherUrl] = useState("");
+
+  useEffect(() => {
+    // Se l'utente svuota songUrl (clearSelection nel SongPicker o
+    // cancella il draft), pulisce anche songMeta. Evita preview
+    // step 7 con metadata "fantasma" senza URL associato.
+    if (!songUrl) setSongMeta(null);
+  }, [songUrl]);
 
   // Draft persistence: il banner "Riprendi" appare al mount se trovo
   // un draft con contenuto. Resta visibile finche' l'utente non sceglie
@@ -141,11 +160,11 @@ export function ParentLetterCreateClient({ config }: Props) {
     const t = setTimeout(() => {
       saveDraft(config.key, {
         step, recipientName, senderAlias, word, memory,
-        photoUrl, lesson, songUrl, voucherUrl,
+        photoUrl, lesson, songUrl, songMeta, voucherUrl,
       });
     }, 600);
     return () => clearTimeout(t);
-  }, [draftDecided, submitting, step, recipientName, senderAlias, word, memory, photoUrl, lesson, songUrl, voucherUrl, config.key]);
+  }, [draftDecided, submitting, step, recipientName, senderAlias, word, memory, photoUrl, lesson, songUrl, songMeta, voucherUrl, config.key]);
 
   const resumeDraft = () => {
     if (!pendingDraft) return;
@@ -157,6 +176,7 @@ export function ParentLetterCreateClient({ config }: Props) {
     setPhotoUrl(pendingDraft.photoUrl);
     setLesson(pendingDraft.lesson);
     setSongUrl(pendingDraft.songUrl);
+    setSongMeta(pendingDraft.songMeta ?? null);
     setVoucherUrl(pendingDraft.voucherUrl);
     setPendingDraft(null);
     setDraftDecided(true);
@@ -517,6 +537,17 @@ export function ParentLetterCreateClient({ config }: Props) {
               <SongPicker
                 value={songUrl}
                 onChange={setSongUrl}
+                onPickTrack={(t: SpotifyTrack) => {
+                  // Salviamo i metadata della track scelta cosi' nello
+                  // step 7 "Tutto pronto" il preview puo' mostrare
+                  // "La cura — Franco Battiato" invece del generico
+                  // "♪ Una canzone allegata".
+                  setSongMeta({
+                    name: t.name,
+                    artists: t.artists,
+                    imageUrl: t.imageUrl,
+                  });
+                }}
                 hint="Cerca la canzone per titolo o artista — la trovi e basta. Diventerà un player dentro il regalo."
               />
             </>
@@ -546,6 +577,7 @@ export function ParentLetterCreateClient({ config }: Props) {
               photoUrl={photoUrl}
               lesson={lesson}
               songUrl={songUrl}
+              songMeta={songMeta}
               voucherUrl={voucherUrl}
               accent={config.paletteAccent}
               bg={config.paletteBg}
@@ -650,10 +682,12 @@ function Textarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
   );
 }
 function Preview({
-  recipient, word, memory, photoUrl, lesson, songUrl, voucherUrl, accent, bg,
+  recipient, word, memory, photoUrl, lesson, songUrl, songMeta, voucherUrl, accent, bg,
 }: {
   recipient: string; word: string; memory: string;
-  photoUrl: string; lesson: string; songUrl: string; voucherUrl: string;
+  photoUrl: string; lesson: string; songUrl: string;
+  songMeta: SongMeta | null;
+  voucherUrl: string;
   accent: string; bg: string;
 }) {
   return (
@@ -690,7 +724,33 @@ function Preview({
             <i>Quello che mi hai insegnato:</i><br/>{lesson}
           </p>
         )}
-        {songUrl && <div style={{ marginTop: 14, fontSize: 11, color: MUTED }}>♪ Una canzone allegata</div>}
+        {songUrl && (
+          songMeta ? (
+            <div style={{
+              marginTop: 14,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              background: "#fff",
+              border: `1px solid ${accent}33`,
+              borderRadius: 999,
+              padding: "5px 12px 5px 5px",
+              maxWidth: "100%",
+            }}>
+              {songMeta.imageUrl ? (
+                <img src={songMeta.imageUrl} alt="" style={{ width: 26, height: 26, borderRadius: 4, objectFit: "cover", flexShrink: 0 }}/>
+              ) : (
+                <span aria-hidden style={{ fontSize: 14, lineHeight: 1 }}>♪</span>
+              )}
+              <span style={{ fontSize: 11.5, color: "#3d3d3d", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>
+                <strong style={{ color: "#1a1a1a" }}>{songMeta.name}</strong>
+                {songMeta.artists && <span style={{ opacity: 0.7 }}> — {songMeta.artists}</span>}
+              </span>
+            </div>
+          ) : (
+            <div style={{ marginTop: 14, fontSize: 11, color: MUTED }}>♪ Una canzone allegata</div>
+          )
+        )}
         {voucherUrl && <div style={{ marginTop: 6, fontSize: 11, color: MUTED }}>🎁 Voucher allegato</div>}
       </div>
     </div>
