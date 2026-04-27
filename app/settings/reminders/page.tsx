@@ -1,18 +1,15 @@
 /**
- * /settings/reminders
+ * /settings/reminders → REDIRECT a /ricorrenze
  *
- * Nessun gate server-side: il cookie-based auth di createSupabaseServer
- * è flaky su PWA iOS (abbiamo visto il bug in più punti, tra cui qui
- * — Luca veniva redirectato a /auth/login anche se loggato). Il client
- * chiama /api/reminders con fetchAuthed (Bearer dal localStorage),
- * che è affidabile. Se non loggato, la prima GET ritorna 401 e
- * SettingsRemindersClient mostra un messaggio.
+ * La pagina e' stata promossa al primo livello con la sua propria
+ * voce nella bottom nav (vedi components/BottomNav.tsx). Il vecchio
+ * URL resta funzionante via redirect server-side per non rompere
+ * eventuali bookmark, link condivisi, o riferimenti negli screenshot
+ * della community.
  */
 
-import SettingsRemindersClient from "./SettingsRemindersClient";
+import { redirect } from "next/navigation";
 
-export const dynamic = "force-dynamic";
-
-export default function SettingsRemindersPage() {
-  return <SettingsRemindersClient />;
+export default function SettingsRemindersRedirect() {
+  redirect("/ricorrenze");
 }

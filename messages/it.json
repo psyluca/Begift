@@ -4,7 +4,8 @@
     "create": "Crea",
     "gifts": "Regali",
     "reactions": "Reazioni",
-    "settings": "Impostazioni"
+    "settings": "Impostazioni",
+    "reminders": "Ricorrenze"
   },
   "auth": {
     "title": "Accedi al tuo account",

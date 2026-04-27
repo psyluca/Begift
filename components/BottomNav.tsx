@@ -58,6 +58,20 @@ function SettingsIcon({ active }: { active: boolean }) {
   );
 }
 
+/** Calendario con un piccolo cuore: ricorrenze affettive (compleanni,
+ *  anniversari, onomastici). Distinto da Bell (reactions) e da Gift. */
+function CalendarHeartIcon({ active }: { active: boolean }) {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? ACCENT : MUTED} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="5" width="18" height="16" rx="2"/>
+      <path d="M8 3v4"/>
+      <path d="M16 3v4"/>
+      <path d="M3 10h18"/>
+      <path d="M12 17.5l-2.4-2.5a1.5 1.5 0 112.4-1.8 1.5 1.5 0 112.4 1.8L12 17.5z" fill={active ? ACCENT : "none"}/>
+    </svg>
+  );
+}
+
 function Badge({ count }: { count: number }) {
   if (count <= 0) return null;
   return (
@@ -112,12 +126,20 @@ export default function BottomNav() {
     }
   };
 
+  // Bottom nav refresh 2026-04-27: "Settings" rimosso dal primo livello
+  // (resta accessibile tappando il proprio handle/avatar in TopBar) e
+  // sostituito da "Ricorrenze". Le ricorrenze sono il vero motore di
+  // retention per un'app di regali — meritano un tab dedicato. Settings
+  // e' configurazione, non flusso quotidiano.
+  // Voce SettingsIcon resta importata per uso futuro / TopBar; non
+  // viene piu' renderizzata qui.
+  void SettingsIcon;
   const items = [
-    { id: "home",      label: t("nav.home"),      onClick: () => router.push("/"),             icon: (a: boolean) => <HomeIcon active={a}/>,     active: pathname === "/" },
-    { id: "create",    label: t("nav.create"),    onClick: () => router.push("/create"),       icon: (a: boolean) => <PlusIcon active={a}/>,     active: pathname === "/create" },
-    { id: "dashboard", label: t("nav.gifts"),     onClick: handleGiftClick,                    icon: (a: boolean) => <GiftIcon active={a}/>,     active: pathname === "/dashboard",  giftBadge: true },
-    { id: "reactions", label: t("nav.reactions"), onClick: handleReactionsClick,               icon: (a: boolean) => <BellIcon active={a}/>,     active: pathname === "/reactions",   reactionBadge: true },
-    { id: "settings",  label: t("nav.settings"),  onClick: () => router.push("/settings"),     icon: (a: boolean) => <SettingsIcon active={a}/>, active: pathname.startsWith("/settings") },
+    { id: "home",       label: t("nav.home"),                onClick: () => router.push("/"),            icon: (a: boolean) => <HomeIcon active={a}/>,           active: pathname === "/" },
+    { id: "create",     label: t("nav.create"),              onClick: () => router.push("/create"),      icon: (a: boolean) => <PlusIcon active={a}/>,           active: pathname === "/create" },
+    { id: "dashboard",  label: t("nav.gifts"),               onClick: handleGiftClick,                   icon: (a: boolean) => <GiftIcon active={a}/>,           active: pathname === "/dashboard",   giftBadge: true },
+    { id: "reactions",  label: t("nav.reactions"),           onClick: handleReactionsClick,              icon: (a: boolean) => <BellIcon active={a}/>,           active: pathname === "/reactions",   reactionBadge: true },
+    { id: "ricorrenze", label: t("nav.reminders"),  onClick: () => router.push("/ricorrenze"),  icon: (a: boolean) => <CalendarHeartIcon active={a}/>,  active: pathname.startsWith("/ricorrenze") },
   ];
 
   return (

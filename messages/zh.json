@@ -4,7 +4,8 @@
     "create": "创建",
     "gifts": "礼物",
     "reactions": "回应",
-    "settings": "设置"
+    "settings": "设置",
+    "reminders": "纪念日"
   },
   "auth": {
     "title": "登录您的账户",
