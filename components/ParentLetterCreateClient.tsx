@@ -66,6 +66,21 @@ export function ParentLetterCreateClient({ config }: Props) {
     }
   })();
 
+  /** Step 3+ sono tutti OPZIONALI (foto, lezione, canzone, voucher).
+   *  Quando l'utente non ha inserito ancora nulla, il bottone "Avanti"
+   *  diventa "Salta" per comunicare esplicitamente che puo' procedere
+   *  anche a vuoto. Migliora la friction percepita — molti utenti
+   *  pre-fix pensavano che servisse riempire ogni campo. */
+  const stepIsEmpty = (() => {
+    switch (step) {
+      case 3: return !photoUrl;
+      case 4: return !lesson.trim();
+      case 5: return !songUrl;
+      case 6: return !voucherUrl;
+      default: return false;
+    }
+  })();
+
   const next = () => { if (step < totalSteps - 1) setStep(step + 1); setError(null); };
   const prev = () => { if (step > 0) setStep(step - 1); setError(null); };
 
@@ -387,7 +402,7 @@ export function ParentLetterCreateClient({ config }: Props) {
                 fontFamily: "inherit",
               }}
             >
-              {!canAdvance && step >= 3 ? "Salta →" : "Avanti →"}
+              {stepIsEmpty ? "Salta →" : "Avanti →"}
             </button>
           ) : (
             <button
