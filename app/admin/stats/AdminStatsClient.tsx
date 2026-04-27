@@ -103,9 +103,17 @@ export default function AdminStatsClient() {
         <h1 style={{ fontSize: 28, fontWeight: 800, color: DEEP, margin: "0 0 4px" }}>
           📊 Admin stats
         </h1>
-        <p style={{ fontSize: 13, color: MUTED, margin: "0 0 28px" }}>
+        <p style={{ fontSize: 13, color: MUTED, margin: "0 0 14px" }}>
           Numeri chiave del prodotto — aggiornati real-time.
         </p>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 24 }}>
+          <a href="/admin/reports" style={{ fontSize: 12, fontWeight: 700, color: ACCENT, background: "#fff", border: `1px solid #e8e4de`, borderRadius: 999, padding: "6px 14px", textDecoration: "none" }}>
+            🚩 Reports
+          </a>
+          <a href="/admin/announce" style={{ fontSize: 12, fontWeight: 700, color: ACCENT, background: "#fff", border: `1px solid #e8e4de`, borderRadius: 999, padding: "6px 14px", textDecoration: "none" }}>
+            📣 Campagne email
+          </a>
+        </div>
 
         {/* ── Pannello Salute lancio (post 2026-04-27) ──────────── */}
         {(data.health || data.activity_24h) && (

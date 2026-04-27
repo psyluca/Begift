@@ -45,6 +45,14 @@ export interface WelcomeParams {
   name?: string;
 }
 
+export interface FestaMammaAnnounceParams {
+  /** Display name o username, fallback "ciao". */
+  name?: string;
+  /** Giorni mancanti alla Festa della Mamma — calcolato dal mittente
+   *  cosi' la mail e' fresca anche se inviata a 3gg dall'evento. */
+  daysLeft: number;
+}
+
 interface RenderedEmail {
   subject: string;
   html: string;
@@ -199,6 +207,44 @@ export function welcomeTemplate(p: WelcomeParams): RenderedEmail {
       ctaUrl: `${appUrl()}/create`,
     }),
     text: `${headline}\n\nBeGift e' il modo piu' caldo per regalare a distanza. Crea il tuo primo regalo: ${appUrl()}/create\n\nFesta della Mamma: ${appUrl()}/festa-mamma`,
+  };
+}
+
+export function festaMammaAnnounceTemplate(p: FestaMammaAnnounceParams): RenderedEmail {
+  const name = p.name?.trim() || "ciao";
+  const days = p.daysLeft;
+  const urgencyHint =
+    days <= 0 ? "è domani" :
+    days === 1 ? "è domani" :
+    days <= 3 ? `è tra ${days} giorni` :
+    days <= 7 ? `è tra ${days} giorni — sei ancora in tempo` :
+    `è tra ${days} giorni`;
+  const subject = days <= 7
+    ? `💐 ${days <= 1 ? "Domani" : `Tra ${days} giorni`} è la Festa della Mamma — pronto?`
+    : `💐 Festa della Mamma — c'è un template apposta`;
+  const headline = `Ciao ${name}, la Festa della Mamma ${urgencyHint}`;
+  const body = `
+    <p style="margin:0 0 14px;">In questi giorni stiamo finendo di preparare BeGift per la <strong>Festa della Mamma</strong>. Volevo dirti che c'è un template dedicato che ti accompagna in 5 domande — esce una "Lettera che cresce" piuttosto bella, con foto e canzone se ti va.</p>
+    <p style="margin:0 0 14px;">Tempo stimato: <strong>3 minuti</strong>. Si fa anche dal cellulare.</p>
+    <p style="margin:0 0 8px;font-weight:700;">Tre cose se vuoi farlo:</p>
+    <ul style="margin:0 0 16px 18px;padding:0;line-height:1.7;">
+      <li>Una <strong>foto recente</strong> della mamma (anche di te con lei)</li>
+      <li>Un <strong>ricordo</strong> che vi accomuna (vacanze, una frase ricorrente, una cucina)</li>
+      <li>Una <strong>canzone</strong> che vi lega — basta il nome, lo cerchiamo noi</li>
+    </ul>
+    <p style="margin:0 0 6px;color:#888;font-size:13px;">P.S. Stiamo per fare il lancio "vero" proprio in questi giorni e ogni feedback dei primi utenti vale tantissimo. Se trovi qualcosa che non torna, scrivici a <a href="mailto:ciao@begift.app" style="color:#888;">ciao@begift.app</a> — leggiamo tutto.</p>
+  `;
+  return {
+    subject,
+    html: shell({
+      preheader: days <= 7 ? `Mancano ${days <= 1 ? "ore" : `${days} giorni`} — il template Mamma è pronto` : `Mancano ${days} giorni — c'è il template apposta`,
+      headline,
+      bodyHtml: body,
+      ctaLabel: "Crea il regalo per la mamma",
+      ctaUrl: `${appUrl()}/festa-mamma`,
+      footerNote: "Hai ricevuto questa email perchè sei tra i primi utenti BeGift. Mandiamo poche email all'anno — niente newsletter, solo annunci concreti.",
+    }),
+    text: `${headline}\n\nC'è un template dedicato che ti accompagna in 5 domande — esce una "Lettera che cresce" piuttosto bella, con foto e canzone se ti va.\n\nTempo: 3 minuti. Si fa anche dal cellulare.\n\nCrea: ${appUrl()}/festa-mamma`,
   };
 }
 

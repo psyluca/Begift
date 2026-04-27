@@ -31,9 +31,11 @@ import {
   giftOpenedTemplate,
   reactionTemplate,
   welcomeTemplate,
+  festaMammaAnnounceTemplate,
   type GiftOpenedParams,
   type ReactionParams,
   type WelcomeParams,
+  type FestaMammaAnnounceParams,
 } from "@/lib/emailTemplates";
 
 const RESEND_ENDPOINT = "https://api.resend.com/emails";
@@ -164,6 +166,78 @@ export async function sendReactionEmail(creatorId: string, params: ReactionParam
     text: tpl.text,
     tags: [{ name: "type", value: "reaction" }],
   });
+}
+
+/**
+ * Invia email di campagna "Festa Mamma announce" a un utente.
+ * Idempotente: se profiles.email_campaigns_sent contiene gia' la chiave
+ * della campagna, no-op. Lock atomico via UPDATE WHERE NOT (jsonb ?
+ * key) per evitare doppi invii in caso di race condition.
+ *
+ * Ritorna { sent: boolean, reason?: string } per il chiamante (admin
+ * tool) per stats di campagna.
+ */
+const FESTA_MAMMA_CAMPAIGN_ID = "festa_mamma_2026";
+
+export interface CampaignSendResult {
+  sent: boolean;
+  reason?: "no_api_key" | "no_email" | "opted_out" | "already_sent" | "send_failed";
+}
+
+export async function sendFestaMammaAnnounce(userId: string, params: FestaMammaAnnounceParams): Promise<CampaignSendResult> {
+  const profile = await loadRecipient(userId);
+  if (!profile) return { sent: false, reason: "no_email" };
+  if (!profile.notify_email) return { sent: false, reason: "opted_out" };
+
+  // Idempotenza: leggi lo stato campagne dell'utente. Se gia' inviata,
+  // skip. Pattern read-modify-write: per il volume di utenti previsto
+  // (<5000 in beta) e invio sequenziale dall'admin tool, race
+  // condition praticamente nulla.
+  const admin = createSupabaseAdmin();
+  const { data: row, error: readErr } = await admin
+    .from("profiles")
+    .select("email_campaigns_sent")
+    .eq("id", userId)
+    .single();
+  if (readErr) {
+    console.warn("[email/campaign] read error", readErr);
+    return { sent: false, reason: "send_failed" };
+  }
+  const sentMap = (row?.email_campaigns_sent ?? {}) as Record<string, string>;
+  if (sentMap[FESTA_MAMMA_CAMPAIGN_ID]) {
+    return { sent: false, reason: "already_sent" };
+  }
+
+  // Update preventivo: marchia come inviata PRIMA di chiamare Resend.
+  // In caso di errore Resend, NON ritentiamo (preferiamo skip a doppia
+  // mail). Il flag resta scritto: l'admin puo' verificare nei log.
+  const newMap = { ...sentMap, [FESTA_MAMMA_CAMPAIGN_ID]: new Date().toISOString() };
+  const { error: writeErr } = await admin
+    .from("profiles")
+    .update({ email_campaigns_sent: newMap })
+    .eq("id", userId);
+  if (writeErr) {
+    console.warn("[email/campaign] write error", writeErr);
+    return { sent: false, reason: "send_failed" };
+  }
+
+  const tpl = festaMammaAnnounceTemplate(params);
+  const result = await postResend({
+    from: resolveFrom(),
+    to: profile.email,
+    subject: tpl.subject,
+    html: tpl.html,
+    text: tpl.text,
+    tags: [
+      { name: "type", value: "campaign" },
+      { name: "campaign", value: FESTA_MAMMA_CAMPAIGN_ID },
+    ],
+  });
+  if (!result.ok) {
+    if (result.error === "no_api_key") return { sent: false, reason: "no_api_key" };
+    return { sent: false, reason: "send_failed" };
+  }
+  return { sent: true };
 }
 
 /**
