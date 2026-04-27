@@ -101,6 +101,27 @@ export default function HomePage() {
             50%     { transform: translateY(-8px); }
           }
         `}</style>
+        {/* Beta badge sopra al claim: comunica posizionamento prudente
+            (servizio in evoluzione) e abbassa l'aspettativa legale degli
+            utenti early adopters. Pre-launch & primi mesi del lancio. */}
+        <div style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 6,
+          background: "rgba(212,83,126,.10)",
+          border: `1px solid ${ACCENT}33`,
+          color: ACCENT,
+          fontSize: 11,
+          fontWeight: 700,
+          letterSpacing: "0.06em",
+          textTransform: "uppercase",
+          borderRadius: 999,
+          padding: "5px 12px",
+          marginBottom: 14,
+        }}>
+          <span aria-hidden style={{ width: 6, height: 6, borderRadius: "50%", background: ACCENT, display: "inline-block" }}/>
+          Beta pubblica
+        </div>
         <h1 style={{
           fontSize: "clamp(34px,9vw,60px)", fontWeight: 900,
           letterSpacing: "-2px", color: DEEP, margin: "0 0 18px",
@@ -141,6 +162,17 @@ export default function HomePage() {
           boxShadow: "0 10px 32px rgba(212,83,126,.35)",
           transition: "transform .15s",
         }}>{t("home.cta_create")}</Link>
+        {/* Disclaimer "beta": il servizio e' lanciato come anteprima
+            pubblica. Riduce le aspettative implicite e rende esplicito
+            che il prodotto puo' evolvere — utile sia legalmente sia
+            come patto di onesta' con gli early users. */}
+        <p style={{
+          marginTop: 14, fontSize: 11.5, color: MUTED,
+          maxWidth: 360, marginLeft: "auto", marginRight: "auto",
+          lineHeight: 1.5,
+        }}>
+          Servizio in beta pubblica · funzionalità in evoluzione · gratis durante la beta
+        </p>
       </section>
 
       {/* ── BANNER STAGIONALE ───────────────────────────────────

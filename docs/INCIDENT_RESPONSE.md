@@ -144,6 +144,19 @@ Il team BeGift
 - [ ] Aggiornamento stato su status page (es. status.begift.app futuro)
 - [ ] Post-mortem entro 7 giorni
 
+### 3.1 Kill switch — pausa rapida creazione regali
+
+Se serve **fermare immediatamente** la creazione di nuovi gift senza aspettare un deploy (es. bot massivo, contenuto illegale ricorrente, picco di costo Supabase, abuso che richiede tempo per essere capito):
+
+1. Apri **Vercel Dashboard → Project BeGift → Settings → Environment Variables**.
+2. Aggiungi (o setta) `BEGIFT_DISABLE_CREATE` con valore `on`. Applica a "Production".
+3. Clicca **Redeploy** sull'ultima deploy oppure attendi pochi secondi che Vercel propaghi (su Edge Functions e' quasi istantaneo).
+4. Da quel momento `POST /api/gifts` ritorna `503 Service Unavailable` con messaggio `"Stiamo facendo manutenzione su BeGift. La creazione di nuovi regali e' temporaneamente disabilitata. Riprova fra qualche minuto."` e header `Retry-After: 300`. Il client mostra un alert user-friendly.
+5. **Importante:** lettura dei gift esistenti, reazioni e chat continuano a funzionare. Solo la creazione di nuovi e' bloccata.
+6. Quando l'incidente e' risolto, rimuovi la variabile (o setta `off`) e redeploy. Non lasciare il kill switch attivo piu' del necessario — comunica via social/email che il servizio e' tornato.
+
+Implementazione: `app/api/gifts/route.ts` controlla `process.env.BEGIFT_DISABLE_CREATE` all'inizio del POST. Valori riconosciuti: `on`, `1`, `true`, `yes` (case-insensitive).
+
 ---
 
 ## 4. Procedura P2 — Vulnerabilità non sfruttata

@@ -37,6 +37,23 @@ async function getUserId(req: NextRequest): Promise<string | null> {
 
 export async function POST(req: NextRequest) {
   try {
+    // Kill switch: se BEGIFT_DISABLE_CREATE=on (o "1", "true"), la
+    // creazione di nuovi regali e' bloccata con 503 + messaggio
+    // user-friendly. Pensato come "pausa rapida" per il founder in
+    // caso di incidente (CSAM, abuso massivo, problema di costo)
+    // senza dover toccare codice o fare deploy. Cambi nella env var
+    // si propagano in pochi secondi su Vercel.
+    const kill = (process.env.BEGIFT_DISABLE_CREATE || "").toLowerCase();
+    if (kill === "on" || kill === "1" || kill === "true" || kill === "yes") {
+      return NextResponse.json(
+        {
+          error: "service_paused",
+          message: "Stiamo facendo manutenzione su BeGift. La creazione di nuovi regali e' temporaneamente disabilitata. Riprova fra qualche minuto.",
+        },
+        { status: 503, headers: { "Retry-After": "300" } }
+      );
+    }
+
     const body: CreateGiftBody = await req.json();
     if (!body.recipientName?.trim()) {
       return NextResponse.json({ error: "recipientName is required" }, { status: 400 });

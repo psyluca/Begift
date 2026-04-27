@@ -583,6 +583,14 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
         || (data as { message?: string }).message
         || `Errore HTTP ${res.status}`;
       console.error("[create/submit] failed", res.status, data);
+      // Kill switch attivo (503): messaggio dedicato user-friendly
+      // invece dell'errore generico, perche' non e' un bug dell'utente.
+      if (res.status === 503) {
+        const friendly = (data as { message?: string }).message
+          || "BeGift e' in manutenzione. Riprova fra qualche minuto.";
+        alert(friendly);
+        return;
+      }
       // Auto-retry SENZA extra_media se l'errore sembra colonna mancante
       // (migration 016 non eseguita). Cosi' il regalo parte con la sola
       // foto principale invece di bloccarsi.

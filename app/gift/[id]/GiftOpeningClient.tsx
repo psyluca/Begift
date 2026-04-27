@@ -10,6 +10,7 @@ import { ParentLetterReveal, type ParentLetterData } from "@/components/ParentLe
 import { templateByType } from "@/lib/parent-templates";
 import { MultiPhotoGallery } from "@/components/MultiPhotoGallery";
 import { downloadMedia } from "@/lib/downloadMedia";
+import { RecipientNotice } from "@/components/RecipientNotice";
 import type { Gift, Reaction, ReactionType } from "@/types";
 
 const ACCENT = "#D4537E";
@@ -1301,6 +1302,16 @@ export default function GiftOpeningClient({ gift }: { gift: Gift }) {
         </div>
         <p style={{ margin: "3px 0 0", fontSize: 11, color: "#bbb" }}>Made with ❤️ by BeGift</p>
       </div>
+      {/* Informativa GDPR per il destinatario al primo apri-regalo:
+          comunica trasparenza su trattamento dati di terzi e visibilita'
+          immediata del canale di segnalazione + privacy. Non in
+          preview (il mittente sta solo guardando l'anteprima). */}
+      {!previewMode && (
+        <RecipientNotice
+          giftId={gift.id}
+          senderLabel={(gift as { sender_alias?: string | null }).sender_alias || gift.recipient_name || null}
+        />
+      )}
       {/* GiftChat nascosto in preview mode: il mittente sta solo guardando
           l'anteprima, non deve aprire/interagire con la chat reale */}
       {!previewMode && (

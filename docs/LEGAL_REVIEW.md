@@ -114,6 +114,9 @@ Il codice sorgente contiene i seguenti documenti legali in bozza:
 - **Rate limit creazione**: max 20 gift/giorno/utente (anti-spam)
 - **Delete account**: endpoint `POST /api/profile/delete` con cascade automatico
 - **Log auditabile**: ogni gift ha `creator_id` e timestamp, Supabase log automatico accessi
+- **Informativa destinatario** (`components/RecipientNotice.tsx`): banner persistente al primo apri-regalo che richiama trasparenza GDPR sul trattamento dati di terzi e segnala canale `mailto:abuse@begift.app` + `mailto:privacy@begift.app`. Dismissabile per gift_id, non blocking.
+- **Kill switch operativo**: env var `BEGIFT_DISABLE_CREATE=on` blocca con 503 la creazione di nuovi gift entro pochi secondi (no deploy richiesto). Pensato per pausa rapida del founder in caso di incidente (CSAM, abuso massivo, problema costi). Documentato in `INCIDENT_RESPONSE.md`.
+- **Posizionamento Beta pubblica**: badge in homepage + disclaimer "servizio in evoluzione". Riduce aspettative implicite di stabilità/durabilità del servizio rispetto a una v1.0.
 
 ---
 
