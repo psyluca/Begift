@@ -221,7 +221,7 @@ export function festaMammaAnnounceTemplate(p: FestaMammaAnnounceParams): Rendere
     `è tra ${days} giorni`;
   const subject = days <= 7
     ? `💐 ${days <= 1 ? "Domani" : `Tra ${days} giorni`} è la Festa della Mamma — pronto?`
-    : `💐 Festa della Mamma — c'è un template apposta`;
+    : `💐 Festa della Mamma — c'è un template dedicato`;
   const headline = `Ciao ${name}, la Festa della Mamma ${urgencyHint}`;
   const body = `
     <p style="margin:0 0 14px;">In questi giorni stiamo finendo di preparare BeGift per la <strong>Festa della Mamma</strong>. Volevo dirti che c'è un template dedicato che ti accompagna in 5 domande — esce una "Lettera che cresce" piuttosto bella, con foto e canzone se ti va.</p>
@@ -237,7 +237,7 @@ export function festaMammaAnnounceTemplate(p: FestaMammaAnnounceParams): Rendere
   return {
     subject,
     html: shell({
-      preheader: days <= 7 ? `Mancano ${days <= 1 ? "ore" : `${days} giorni`} — il template Mamma è pronto` : `Mancano ${days} giorni — c'è il template apposta`,
+      preheader: days <= 7 ? `Mancano ${days <= 1 ? "ore" : `${days} giorni`} — il template Mamma è pronto` : `Mancano ${days} giorni — c'è il template dedicato`,
       headline,
       bodyHtml: body,
       ctaLabel: "Crea il regalo per la mamma",
