@@ -252,7 +252,7 @@ export function ParentLetterCreateClient({ config }: Props) {
         song_url: songUrl.trim() || null,
         voucher_url: voucherUrl.trim() || null,
       };
-      const body = {
+      const baseBody = {
         recipientName: recipientName.trim(),
         senderAlias: senderAlias.trim() || null,
         message: `Per ${config.pronoun} ${config.parentNoun}. ${memory.trim()}`,
@@ -264,8 +264,11 @@ export function ParentLetterCreateClient({ config }: Props) {
           openAnimation: "lift",
           sound: "chime",
         },
-        contentType: "message",
+        contentType: "message" as const,
         contentText: memory.trim(),
+      };
+      const body = {
+        ...baseBody,
         template_type: config.templateType,
         template_data: templateData,
       };
@@ -274,28 +277,85 @@ export function ParentLetterCreateClient({ config }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      const data = await res.json();
-      if (!res.ok) {
-        if (res.status === 401) {
-          router.push(`/auth/login?next=${encodeURIComponent(`${config.landingPath}/crea`)}`);
-          return;
-        }
-        setError(data.message || data.error || "Errore nella creazione. Riprova.");
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok) {
+        track("gift_created", {
+          occasion: config.key === "mother" ? "mothers_day" : "fathers_day",
+          content_type: "template",
+          template: config.templateType,
+        });
+        clearDraft(config.key);
+        router.push(`${data.url || `/gift/${data.id}`}?from=create`);
         return;
       }
-      track("gift_created", {
-        occasion: config.key === "mother" ? "mothers_day" : "fathers_day",
-        content_type: "template",
-        template: config.templateType,
-      });
-      // Submit ok → il draft non serve piu', pulisco. Se l'utente
-      // tornera' a /festa-mamma/crea per fare un secondo regalo,
-      // ripartira' da zero (no banner ingombrante).
-      clearDraft(config.key);
-      router.push(`${data.url || `/gift/${data.id}`}?from=create`);
+
+      // Auth scaduta → login
+      if (res.status === 401) {
+        router.push(`/auth/login?next=${encodeURIComponent(`${config.landingPath}/crea`)}`);
+        return;
+      }
+
+      // Kill switch operativo (env var BEGIFT_DISABLE_CREATE=on su Vercel)
+      if (res.status === 503) {
+        const friendly = (data as { message?: string }).message
+          || "BeGift e' in manutenzione. Riprova fra qualche minuto.";
+        setError(friendly);
+        return;
+      }
+
+      // Rate limit raggiunto (20 gift/giorno)
+      if (res.status === 429) {
+        const friendly = (data as { message?: string }).message
+          || "Hai raggiunto il limite di 20 regali al giorno. Riprova domani.";
+        setError(friendly);
+        return;
+      }
+
+      const detail = (data as { error?: string; message?: string }).error
+        || (data as { message?: string }).message
+        || `Errore HTTP ${res.status}`;
+      console.error("[parent-letter] submit failed", res.status, data);
+
+      // Heuristica: se l'errore matcha "template_type/template_data
+      // column does not exist" (migration 013 non ancora eseguita su
+      // un ambiente), riprovo SENZA quei campi. Il regalo parte come
+      // gift "message" semplice — perde il rendering speciale ma
+      // arriva comunque al destinatario. Stesso pattern di
+      // CreateGiftClient con extra_media (commit aa8ce79).
+      const colMissing = /template_(type|data)/i.test(detail) && /column|does not exist|schema/i.test(detail);
+      if (colMissing) {
+        console.warn("[parent-letter] template columns missing → retry without template payload");
+        const retry = await fetchAuthed("/api/gifts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(baseBody),
+        });
+        const retryData = await retry.json().catch(() => ({}));
+        if (retry.ok) {
+          track("gift_created", {
+            occasion: config.key === "mother" ? "mothers_day" : "fathers_day",
+            content_type: "template",
+            template: `${config.templateType}_fallback`,
+          });
+          clearDraft(config.key);
+          // Avviso non blocking: il regalo parte ma senza rendering speciale
+          alert("Regalo creato. Nota: il rendering speciale del template potrebbe non essere disponibile su questo ambiente — il destinatario vedra' un regalo standard.");
+          router.push(`${retryData.url || `/gift/${retryData.id}`}?from=create`);
+          return;
+        }
+        const retryDetail = (retryData as { error?: string; message?: string }).error
+          || (retryData as { message?: string }).message
+          || `HTTP ${retry.status}`;
+        setError(`Errore nella creazione: ${retryDetail}`);
+        return;
+      }
+
+      setError(`Errore nella creazione: ${detail}`);
     } catch (e) {
-      console.error("[parent-letter] submit failed", e);
-      setError("Errore di rete. Riprova.");
+      console.error("[parent-letter] submit exception", e);
+      const msg = e instanceof Error ? e.message : "errore di rete";
+      setError(`Errore di rete: ${msg}. Verifica la connessione e riprova.`);
     } finally {
       setSubmitting(false);
     }
