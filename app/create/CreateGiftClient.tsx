@@ -10,7 +10,6 @@ import { ShareButton } from "@/components/ShareButton";
 import { SaveReminderPrompt } from "@/components/SaveReminderPrompt";
 import { MilestoneToast } from "@/components/MilestoneToast";
 import { SeasonalBanner } from "@/components/SeasonalBanner";
-import { SongPicker } from "@/components/SongPicker";
 import { track } from "@/lib/analytics";
 
 const ACCENT = "#D4537E", DEEP = "#1a1a1a", MUTED = "#888", LIGHT = "#f7f5f2";
@@ -372,12 +371,6 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
   const [customSoundUrl, setCustomSoundUrl] = useState<string>("");
   const [customSoundName, setCustomSoundName] = useState<string>("");
   const [customSoundTitle, setCustomSoundTitle] = useState<string>("");
-  // Packaging sound mode: "file" = upload MP3 dell'utente,
-  // "spotify" = cerca una canzone su Spotify e usa il preview 30s
-  // (URL p.scdn.co/...) come packaging sound. Default "file" per
-  // retrocompatibilita'. La modalita' resetta nascostamente quando
-  // l'utente rimuove la canzone scelta.
-  const [pkgSoundMode, setPkgSoundMode] = useState<"file"|"spotify">("file");
   // Scheduling: "now" = invio immediato, "later" = programmato a scheduledAt
   const [schedMode, setSchedMode] = useState<"now"|"later">("now");
   const [scheduledAt, setScheduledAt] = useState<string>(""); // datetime-local format YYYY-MM-DDTHH:MM
@@ -1159,42 +1152,17 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
                       <input type="text" placeholder={t("create.song_title_placeholder")} value={customSoundTitle} onChange={e=>setCustomSoundTitle(e.target.value)} style={{width:"100%",fontSize:12,padding:"6px 10px",border:"1px solid #b2dfce",borderRadius:8,outline:"none",background:"#fff",color:"#1a1a1a",boxSizing:"border-box"}}/>
                     </div>
                   ) : (
-                    <>
-                      {/* Toggle modalita': carica file vs cerca su Spotify.
-                          Spotify usa il preview 30s (mp3 da p.scdn.co) come
-                          packaging sound. Funziona col player <audio> esistente. */}
-                      <div style={{display:"flex",gap:0,marginBottom:8,background:"#f0ece8",borderRadius:10,padding:3}}>
-                        <button onClick={()=>setPkgSoundMode("file")} style={{flex:1,padding:"6px 10px",borderRadius:8,fontSize:11.5,fontWeight:700,border:"none",cursor:"pointer",background:pkgSoundMode==="file"?"#fff":"transparent",color:pkgSoundMode==="file"?DEEP:MUTED,boxShadow:pkgSoundMode==="file"?"0 1px 3px rgba(0,0,0,.06)":"none"}}>📁 Carica file</button>
-                        <button onClick={()=>setPkgSoundMode("spotify")} style={{flex:1,padding:"6px 10px",borderRadius:8,fontSize:11.5,fontWeight:700,border:"none",cursor:"pointer",background:pkgSoundMode==="spotify"?"#fff":"transparent",color:pkgSoundMode==="spotify"?DEEP:MUTED,boxShadow:pkgSoundMode==="spotify"?"0 1px 3px rgba(0,0,0,.06)":"none"}}>🎵 Cerca su Spotify</button>
-                      </div>
-                      {pkgSoundMode==="file" ? (
-                        <label style={{display:"block",background:"#fff",border:"1.5px dashed #d5cfc8",borderRadius:12,padding:"12px",textAlign:"center",cursor:"pointer"}}>
-                          <span style={{fontSize:12,color:MUTED}}>MP3, M4A, WAV (max 10MB)</span>
-                          <input type="file" accept="audio/*" style={{display:"none"}} onChange={async e=>{
-                            const file=e.target.files?.[0]; if(!file) return;
-                            if(file.size>10*1024*1024){alert("File troppo grande (max 10MB)");return;}
-                            const url=await upload(file,"gift-media");
-                            setCustomSoundUrl(url);
-                            setCustomSoundName(file.name);
-                            setPkg(p=>({...p,sound:"custom" as any}));
-                          }}/>
-                        </label>
-                      ) : (
-                        <SongPicker
-                          value=""
-                          requirePreview
-                          hint="Cerca per titolo o artista. Sceglieremo i 30s migliori da Spotify."
-                          onChange={()=>{ /* gestito da onPickTrack */ }}
-                          onPickTrack={(t)=>{
-                            if (!t.previewUrl) return;
-                            setCustomSoundUrl(t.previewUrl);
-                            setCustomSoundName(`${t.name} — ${t.artists}`);
-                            setCustomSoundTitle(`${t.name} — ${t.artists}`);
-                            setPkg(p=>({...p,sound:"custom" as any}));
-                          }}
-                        />
-                      )}
-                    </>
+                    <label style={{display:"block",background:"#fff",border:"1.5px dashed #d5cfc8",borderRadius:12,padding:"12px",textAlign:"center",cursor:"pointer"}}>
+                      <span style={{fontSize:12,color:MUTED}}>MP3, M4A, WAV (max 10MB)</span>
+                      <input type="file" accept="audio/*" style={{display:"none"}} onChange={async e=>{
+                        const file=e.target.files?.[0]; if(!file) return;
+                        if(file.size>10*1024*1024){alert("File troppo grande (max 10MB)");return;}
+                        const url=await upload(file,"gift-media");
+                        setCustomSoundUrl(url);
+                        setCustomSoundName(file.name);
+                        setPkg(p=>({...p,sound:"custom" as any}));
+                      }}/>
+                    </label>
                   )}
                 </div>
               </div>
@@ -1256,38 +1224,16 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
                       />
                     </div>
                   ) : (
-                    <>
-                      <div style={{display:"flex",gap:0,marginBottom:8,background:"#f0ece8",borderRadius:10,padding:3}}>
-                        <button onClick={()=>setPkgSoundMode("file")} style={{flex:1,padding:"6px 10px",borderRadius:8,fontSize:11.5,fontWeight:700,border:"none",cursor:"pointer",background:pkgSoundMode==="file"?"#fff":"transparent",color:pkgSoundMode==="file"?DEEP:MUTED,boxShadow:pkgSoundMode==="file"?"0 1px 3px rgba(0,0,0,.06)":"none"}}>📁 Carica file</button>
-                        <button onClick={()=>setPkgSoundMode("spotify")} style={{flex:1,padding:"6px 10px",borderRadius:8,fontSize:11.5,fontWeight:700,border:"none",cursor:"pointer",background:pkgSoundMode==="spotify"?"#fff":"transparent",color:pkgSoundMode==="spotify"?DEEP:MUTED,boxShadow:pkgSoundMode==="spotify"?"0 1px 3px rgba(0,0,0,.06)":"none"}}>🎵 Cerca su Spotify</button>
-                      </div>
-                      {pkgSoundMode==="spotify" ? (
-                        <SongPicker
-                          value=""
-                          requirePreview
-                          hint="Cerca per titolo o artista. Sceglieremo i 30s migliori da Spotify."
-                          onChange={()=>{ /* gestito da onPickTrack */ }}
-                          onPickTrack={(t)=>{
-                            if (!t.previewUrl) return;
-                            setCustomSoundUrl(t.previewUrl);
-                            setCustomSoundName(`${t.name} — ${t.artists}`);
-                            setCustomSoundTitle(`${t.name} — ${t.artists}`);
-                            setPkg(p=>({...p,sound:"custom" as any}));
-                          }}
-                        />
-                      ) : (
-                        <label style={{display:"block",background:"#fff",border:"1.5px dashed #d5cfc8",borderRadius:12,padding:"12px",textAlign:"center",cursor:"pointer"}}>
-                          <span style={{fontSize:12,color:MUTED}}>MP3, M4A, WAV (max 10MB)</span>
-                          <input type="file" accept="audio/*" style={{display:"none"}} onChange={async e=>{
-                            const file=e.target.files?.[0]; if(!file) return;
-                            if(file.size>10*1024*1024){alert("File troppo grande (max 10MB)");return;}
-                            const url=await upload(file,"gift-media");
-                            setCustomSoundUrl(url);setCustomSoundName(file.name);
-                            setPkg(p=>({...p,sound:"custom" as any}));
-                          }}/>
-                        </label>
-                      )}
-                    </>
+                    <label style={{display:"block",background:"#fff",border:"1.5px dashed #d5cfc8",borderRadius:12,padding:"12px",textAlign:"center",cursor:"pointer"}}>
+                      <span style={{fontSize:12,color:MUTED}}>MP3, M4A, WAV (max 10MB)</span>
+                      <input type="file" accept="audio/*" style={{display:"none"}} onChange={async e=>{
+                        const file=e.target.files?.[0]; if(!file) return;
+                        if(file.size>10*1024*1024){alert("File troppo grande (max 10MB)");return;}
+                        const url=await upload(file,"gift-media");
+                        setCustomSoundUrl(url);setCustomSoundName(file.name);
+                        setPkg(p=>({...p,sound:"custom" as any}));
+                      }}/>
+                    </label>
                   )}
                 </div>
               </div>
