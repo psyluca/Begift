@@ -48,8 +48,14 @@ interface Props {
    *  quando l'utente clicca un risultato. Non viene chiamato in
    *  modalita' URL libero. */
   onPickTrack?: (track: SpotifyTrack) => void;
-  /** Filtro opzionale: se true, mostra SOLO le tracks che hanno
-   *  previewUrl (utile per packaging sound dove serve l'mp3). */
+  /** Se true, indica al picker che il chiamante ha bisogno di
+   *  previewUrl (es. packaging sound che usa l'mp3 30s). NON filtra
+   *  i risultati — in Italia molte tracks Spotify popolari non hanno
+   *  preview per ragioni di licensing locale, filtrare lato client
+   *  produrrebbe "Nessun risultato" per query valide. Comportamento:
+   *  i risultati senza preview vengono mostrati con opacita' ridotta
+   *  e icona 🔇; al click su una track senza preview, l'utente vede
+   *  un alert con suggerimento. */
   requirePreview?: boolean;
   /** Hint sotto al campo. Default: "Cerca per titolo o artista". */
   hint?: string;
@@ -90,9 +96,12 @@ export function SongPicker({ value, onChange, onPickTrack, requirePreview, hint 
         }
         const data = await res.json();
         const tracks = (data.tracks ?? []) as SpotifyTrack[];
-        // Se il chiamante richiede previewUrl (modalita' packaging sound),
-        // filtriamo le tracks che ne sono prive (~10-15% in IT).
-        setResults(requirePreview ? tracks.filter((t) => !!t.previewUrl) : tracks);
+        // Mostriamo TUTTE le tracks indipendentemente da requirePreview.
+        // In Italia molte canzoni popolari non hanno previewUrl (licensing
+        // locale): filtrare lato client darebbe "Nessun risultato" per
+        // query valide. Marchiamo invece le tracks senza preview nel
+        // render (opacita' ridotta + icona) e gestiamo il click.
+        setResults(tracks);
       } catch {
         setResults([]);
       } finally {
@@ -108,6 +117,17 @@ export function SongPicker({ value, onChange, onPickTrack, requirePreview, hint 
   // o link incollato manualmente in modalita' URL), non lo sovrascriviamo.
   // Mostriamo lo stato selezionato se proviene da un click sui risultati.
   const handlePick = (t: SpotifyTrack) => {
+    // Quando il chiamante richiede previewUrl (es. packaging sound),
+    // intercetta il click su tracks senza preview con un alert
+    // chiaro, senza chiamare onPickTrack (altrimenti il packaging
+    // resterebbe muto silenziosamente).
+    if (requirePreview && !t.previewUrl) {
+      alert(
+        `"${t.name}" di ${t.artists} non ha un'anteprima ascoltabile da Spotify in Italia (licensing). ` +
+        `Scegli un'altra canzone, oppure usa "Carica file" per caricare un MP3 tuo.`
+      );
+      return;
+    }
     setSelected(t);
     onChange(t.spotifyUrl);
     onPickTrack?.(t);
@@ -244,37 +264,52 @@ export function SongPicker({ value, onChange, onPickTrack, requirePreview, hint 
 
       {!loading && results && results.length > 0 && (
         <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 6 }}>
-          {results.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => handlePick(t)}
-              style={{
-                display: "flex", alignItems: "center", gap: 10,
-                background: "#fff", border: `1px solid ${BORDER}`,
-                borderRadius: 12, padding: "8px 10px",
-                cursor: "pointer", fontFamily: "inherit",
-                textAlign: "left", width: "100%",
-                transition: "border-color .15s, background .15s",
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.borderColor = ACCENT; e.currentTarget.style.background = "#fff9fb"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.background = "#fff"; }}
-            >
-              {t.imageUrl ? (
-                <img src={t.imageUrl} alt="" style={{ width: 44, height: 44, borderRadius: 6, objectFit: "cover", flexShrink: 0 }} />
-              ) : (
-                <div style={{ width: 44, height: 44, borderRadius: 6, background: "#eee", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>♪</div>
-              )}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13.5, fontWeight: 700, color: DEEP, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {t.name}
+          {results.map((t) => {
+            // Track non utilizzabile per il caso d'uso del chiamante:
+            // serve previewUrl ma manca. Mostriamo comunque ma con
+            // segnale visivo (opacita' ridotta + icona 🔇) e click
+            // → alert con suggerimento.
+            const noPreview = requirePreview && !t.previewUrl;
+            return (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => handlePick(t)}
+                title={noPreview ? "Nessuna anteprima Spotify in Italia per questa canzone" : undefined}
+                style={{
+                  display: "flex", alignItems: "center", gap: 10,
+                  background: "#fff", border: `1px solid ${BORDER}`,
+                  borderRadius: 12, padding: "8px 10px",
+                  cursor: "pointer", fontFamily: "inherit",
+                  textAlign: "left", width: "100%",
+                  transition: "border-color .15s, background .15s",
+                  opacity: noPreview ? 0.55 : 1,
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = ACCENT; e.currentTarget.style.background = "#fff9fb"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.background = "#fff"; }}
+              >
+                {t.imageUrl ? (
+                  <img src={t.imageUrl} alt="" style={{ width: 44, height: 44, borderRadius: 6, objectFit: "cover", flexShrink: 0 }} />
+                ) : (
+                  <div style={{ width: 44, height: 44, borderRadius: 6, background: "#eee", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>♪</div>
+                )}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13.5, fontWeight: 700, color: DEEP, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {noPreview && <span aria-hidden style={{ marginRight: 4 }}>🔇</span>}
+                    {t.name}
+                  </div>
+                  <div style={{ fontSize: 11.5, color: MUTED, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 1 }}>
+                    {t.artists}
+                  </div>
                 </div>
-                <div style={{ fontSize: 11.5, color: MUTED, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 1 }}>
-                  {t.artists}
-                </div>
-              </div>
-            </button>
-          ))}
+              </button>
+            );
+          })}
+          {requirePreview && results.some((t) => !t.previewUrl) && (
+            <div style={{ marginTop: 4, fontSize: 11, color: MUTED, textAlign: "center", lineHeight: 1.5 }}>
+              🔇 = senza anteprima Spotify in Italia. Spesso capita con artisti italiani famosi.
+            </div>
+          )}
         </div>
       )}
 
