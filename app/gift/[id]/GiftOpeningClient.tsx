@@ -11,6 +11,7 @@ import { templateByType } from "@/lib/parent-templates";
 import { MultiPhotoGallery } from "@/components/MultiPhotoGallery";
 import { downloadMedia } from "@/lib/downloadMedia";
 import { RecipientNotice } from "@/components/RecipientNotice";
+import { ShareButton } from "@/components/ShareButton";
 import type { Gift, Reaction, ReactionType } from "@/types";
 
 const ACCENT = "#D4537E";
@@ -1083,15 +1084,82 @@ export default function GiftOpeningClient({ gift }: { gift: Gift }) {
       </div>
 
       {fromCreate && (
-        <div style={{ background:"#fff8e1", borderBottom:"1px solid #ffe082", padding:"12px 20px", display:"flex", alignItems:"center", justifyContent:"space-between", gap:12 }}>
-          <span style={{ fontSize:13, color:"#5d4037", fontWeight:600 }}>{t("gift.preview_banner")}</span>
-          {/* Bug fix 2026-04-27: window.close() e' bloccato dal browser
-              per tab non aperti via window.open() — il bottone non
-              rispondeva. Sostituito con link a /dashboard, stesso
-              pattern del banner previewMode sotto. */}
-          <a href="/dashboard" style={{ background:"#5d4037", color:"#fff", border:"none", borderRadius:20, padding:"8px 16px", fontSize:12, fontWeight:700, textDecoration:"none", whiteSpace:"nowrap", display:"inline-block" }}>
-            {t("gift.close_preview")}
-          </a>
+        // Pannello "Regalo creato! Condividi" — mostrato dopo il submit
+        // del template Festa Mamma/Papà (e potenzialmente futuri flow
+        // che fanno redirect a /gift/{id}?from=create). Bug fix
+        // 2026-04-27: prima mostrava solo "Chiudi anteprima" e
+        // l'utente non aveva modo di OTTENERE il link da inviare —
+        // restava bloccato a vedere l'anteprima. Ora c'e' link
+        // copiabile + ShareButton (Web Share API + fallback wa.me).
+        <div style={{
+          background: "linear-gradient(135deg, #fff8e1 0%, #fff5e6 100%)",
+          borderBottom: "1px solid #ffe082",
+          padding: "16px 20px",
+        }}>
+          <div style={{ maxWidth: 480, margin: "0 auto" }}>
+            <div style={{ fontSize: 14, color: "#5d4037", fontWeight: 800, marginBottom: 4 }}>
+              🎉 Regalo creato!
+            </div>
+            <div style={{ fontSize: 12, color: "#7a5a3f", marginBottom: 10, lineHeight: 1.5 }}>
+              Invia questo link a <strong>{gift.recipient_name}</strong>. Sotto vedi l'anteprima.
+            </div>
+            <div style={{
+              display: "flex", alignItems: "center", gap: 6,
+              background: "#fff", border: "1px solid #ffe082",
+              borderRadius: 10, padding: "8px 10px",
+              marginBottom: 10,
+            }}>
+              <code style={{
+                flex: 1, minWidth: 0, fontSize: 11.5, color: "#5d4037",
+                overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                fontFamily: "ui-monospace, monospace",
+              }}>
+                {typeof window !== "undefined" ? window.location.origin : ""}/gift/{gift.id}
+              </code>
+              <button
+                onClick={() => {
+                  const url = `${window.location.origin}/gift/${gift.id}`;
+                  navigator.clipboard.writeText(url).catch(() => {});
+                  // Feedback visivo: piccolo toast inline
+                  const btn = document.getElementById("fromcreate-copy-btn");
+                  if (btn) {
+                    const orig = btn.textContent;
+                    btn.textContent = "✓ Copiato";
+                    setTimeout(() => { if (btn.textContent === "✓ Copiato") btn.textContent = orig; }, 1800);
+                  }
+                }}
+                id="fromcreate-copy-btn"
+                style={{
+                  background: "#5d4037", color: "#fff", border: "none",
+                  borderRadius: 8, padding: "5px 10px",
+                  fontSize: 11, fontWeight: 700, cursor: "pointer",
+                  whiteSpace: "nowrap", flexShrink: 0,
+                }}
+              >
+                📋 Copia
+              </button>
+            </div>
+            <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+              <div style={{ flex: 1, minWidth: 180 }}>
+                <ShareButton
+                  giftUrl={`${typeof window !== "undefined" ? window.location.origin : ""}/gift/${gift.id}`}
+                  recipientName={gift.recipient_name || "te"}
+                  variant="pill"
+                />
+              </div>
+              <a href="/dashboard" style={{
+                background: "transparent",
+                color: "#7a5a3f",
+                border: "1.5px solid #d4af6a",
+                borderRadius: 20,
+                padding: "8px 14px",
+                fontSize: 12, fontWeight: 600,
+                textDecoration: "none", whiteSpace: "nowrap",
+              }}>
+                {t("gift.close_preview")}
+              </a>
+            </div>
+          </div>
         </div>
       )}
       {previewMode && !fromCreate && (
