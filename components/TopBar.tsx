@@ -131,6 +131,33 @@ export default function TopBar() {
                 📊
               </a>
             )}
+            {/* Bottone Impostazioni esplicito — visibile e scopribile.
+                Aggiunto 2026-04-27 dopo che la voce "Settings" e' stata
+                rimossa dalla bottom nav (sostituita da Ricorrenze).
+                Senza un punto d'accesso chiaro in TopBar, l'utente non
+                trovava piu' impostazioni: l'avatar+handle gia' linkava
+                a /settings ma la affordance non era ovvia. */}
+            <a
+              href="/settings"
+              title="Impostazioni"
+              aria-label="Impostazioni"
+              style={{
+                background: "transparent",
+                border: "1.5px solid #e0dbd5",
+                borderRadius: 20,
+                width: 32, height: 32,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                textDecoration: "none",
+                flexShrink: 0,
+                lineHeight: 1,
+                color: DEEP,
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+              </svg>
+            </a>
             {/* Avatar circolare + @handle cliccabili → /settings (hub).
                 Il bottone Esci è stato spostato dentro il hub per
                 alleggerire la TopBar su mobile. */}
