@@ -110,13 +110,25 @@ export async function POST(req: NextRequest) {
     email_campaigns_sent: Record<string, string> | null;
   };
 
-  const candidates: Row[] = ((rows ?? []) as Row[]).filter((r) => {
+  const filtered: Row[] = ((rows ?? []) as Row[]).filter((r) => {
     if (!r.email) return false;
     if (r.notify_email === false) return false;
     const sent = r.email_campaigns_sent ?? {};
     if (sent[CAMPAIGN_ID]) return false;
     return true;
   });
+
+  // Dedupe per email (case-insensitive + trim): se ci sono 2 profili
+  // con la stessa email — capita se un utente cancella e si
+  // ri-registra, o per un trigger Supabase doppio — manteniamo solo
+  // il primo. Last write wins lo rende idempotente all'ordine.
+  // Senza questo, lo stesso indirizzo riceverebbe N copie della mail.
+  const byEmail = new Map<string, Row>();
+  for (const r of filtered) {
+    const key = r.email.toLowerCase().trim();
+    if (!byEmail.has(key)) byEmail.set(key, r);
+  }
+  const candidates: Row[] = Array.from(byEmail.values());
 
   const truncated = candidates.slice(0, limit);
   const sample = truncated.slice(0, 5).map((r) => ({
