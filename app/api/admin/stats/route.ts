@@ -48,6 +48,8 @@ export async function GET(req: NextRequest) {
 
   const admin = createSupabaseAdmin();
   const now = new Date();
+  const d1 = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+  const d2 = new Date(now.getTime() - 48 * 60 * 60 * 1000).toISOString();
   const d7 = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
   const d30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
@@ -213,6 +215,72 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  // ── Health pre-launch (post 2026-04-27) ───────────────────────
+  // Metriche per il founder per monitorare la prima settimana di
+  // lancio. Pensate per essere "actionable" — se un numero e'
+  // brutto, c'e' qualcosa da fare subito.
+  const [
+    reportsOpenRes,
+    reports24hRes,
+    created24hRes,
+    createdYesterdayRes,
+    opens24hRes,
+    users24hRes,
+  ] = await Promise.all([
+    // Segnalazioni DSA aperte (status pending/open) — devono essere
+    // gestite in tempi ragionevoli per non perdere safe harbor.
+    admin.from("reports").select("id", { count: "exact", head: true }).in("status", ["pending", "open"]).then(
+      (r) => r,
+      () => ({ count: 0, error: null as unknown })
+    ),
+    admin.from("reports").select("id", { count: "exact", head: true }).gte("created_at", d1).then(
+      (r) => r,
+      () => ({ count: 0, error: null as unknown })
+    ),
+    admin.from("gifts").select("id", { count: "exact", head: true }).gte("created_at", d1),
+    admin.from("gifts").select("id", { count: "exact", head: true }).gte("created_at", d2).lt("created_at", d1),
+    admin.from("gift_opens").select("gift_id").gte("opened_at", d1),
+    admin.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", d1),
+  ]);
+
+  const reportsOpen = (reportsOpenRes as { count?: number }).count ?? 0;
+  const reports24h = (reports24hRes as { count?: number }).count ?? 0;
+  const created24h = created24hRes.count ?? 0;
+  const createdYesterday = createdYesterdayRes.count ?? 0;
+  const opens24hSet = new Set<string>();
+  (opens24hRes.data ?? []).forEach((o: { gift_id: string }) => opens24hSet.add(o.gift_id));
+  const opened24h = opens24hSet.size;
+  const newUsers24h = users24hRes.count ?? 0;
+
+  // Variazione % oggi vs ieri (clip a +/-999% per evitare numeri
+  // ridicoli quando ieri = 0). Se entrambi sono 0, e' "—".
+  let createdVsYesterdayPct: number | null = null;
+  if (createdYesterday > 0) {
+    createdVsYesterdayPct = Math.round(((created24h - createdYesterday) / createdYesterday) * 100);
+    createdVsYesterdayPct = Math.max(-999, Math.min(999, createdVsYesterdayPct));
+  } else if (created24h > 0) {
+    createdVsYesterdayPct = 999; // novita' (da 0 a qualcosa)
+  }
+
+  // Funnel signup → primo gift (utenti registrati negli ultimi 7gg
+  // che hanno creato almeno un gift). Indicatore di onboarding.
+  const { data: newUsers7d } = await admin
+    .from("profiles")
+    .select("id")
+    .gte("created_at", d7);
+  const newUserIds = (newUsers7d ?? []).map((u: { id: string }) => u.id);
+  let funnelFirstGift = 0;
+  if (newUserIds.length > 0) {
+    const { data: theirGifts } = await admin
+      .from("gifts")
+      .select("creator_id")
+      .in("creator_id", newUserIds);
+    const creatorsWithGift = new Set<string>();
+    (theirGifts ?? []).forEach((g: { creator_id: string }) => creatorsWithGift.add(g.creator_id));
+    funnelFirstGift = creatorsWithGift.size;
+  }
+  const funnelConversionRate = newUserIds.length > 0 ? funnelFirstGift / newUserIds.length : 0;
+
   return NextResponse.json({
     totals: {
       gifts_created: giftsTotalCount,
@@ -227,6 +295,21 @@ export async function GET(req: NextRequest) {
       users_active: activeUsersSet.size,
       gifts_created: created7d.data?.length ?? 0,
       gifts_opened: opened7dSet.size,
+    },
+    activity_24h: {
+      gifts_created: created24h,
+      gifts_opened: opened24h,
+      new_users: newUsers24h,
+      gifts_created_vs_yesterday_pct: createdVsYesterdayPct,
+    },
+    health: {
+      reports_open: reportsOpen,
+      reports_24h: reports24h,
+      funnel_signup_to_first_gift_7d: {
+        new_users: newUserIds.length,
+        with_first_gift: funnelFirstGift,
+        rate: funnelConversionRate,
+      },
     },
     trend_30d: trend30d,
     content_types: contentTypes,

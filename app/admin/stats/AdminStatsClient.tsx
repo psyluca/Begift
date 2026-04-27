@@ -24,6 +24,21 @@ interface StatsData {
     gifts_created: number;
     gifts_opened: number;
   };
+  activity_24h?: {
+    gifts_created: number;
+    gifts_opened: number;
+    new_users: number;
+    gifts_created_vs_yesterday_pct: number | null;
+  };
+  health?: {
+    reports_open: number;
+    reports_24h: number;
+    funnel_signup_to_first_gift_7d: {
+      new_users: number;
+      with_first_gift: number;
+      rate: number;
+    };
+  };
   trend_30d: { date: string; created: number; opened: number; new_users: number }[];
   content_types: { type: string; count: number }[];
   tiers: { tier: string; count: number }[];
@@ -91,6 +106,11 @@ export default function AdminStatsClient() {
         <p style={{ fontSize: 13, color: MUTED, margin: "0 0 28px" }}>
           Numeri chiave del prodotto — aggiornati real-time.
         </p>
+
+        {/* ── Pannello Salute lancio (post 2026-04-27) ──────────── */}
+        {(data.health || data.activity_24h) && (
+          <LaunchHealthPanel data={data} />
+        )}
 
         {/* ── Big number cards — totali ────────────────────────── */}
         <SectionTitle>Totali</SectionTitle>
@@ -413,5 +433,107 @@ function ForbiddenDiagnostic() {
         </a>
       </div>
     </main>
+  );
+}
+
+
+/**
+ * LaunchHealthPanel — pannello in cima alla dashboard pensato per
+ * monitorare la prima settimana di lancio. Tre cose a colpo d'occhio:
+ *
+ *  1. **Reports DSA pendenti** — se > 0, banner rosso. Devono essere
+ *     gestiti: un destinatario ha segnalato un contenuto e va valutato.
+ *  2. **Attività 24h** — gift creati oggi vs ieri (con delta %),
+ *     nuovi utenti, gift aperti. Indicatore di trend giornaliero.
+ *  3. **Funnel signup → primo gift (7gg)** — % di nuovi utenti che
+ *     ha creato almeno un gift. Misura l'onboarding: sotto 30% =
+ *     l'utente arriva ma non capisce cosa fare. Sopra 60% = ottimo.
+ */
+function LaunchHealthPanel({ data }: { data: StatsData }) {
+  const a24 = data.activity_24h;
+  const h = data.health;
+  const reportsAlert = (h?.reports_open ?? 0) > 0;
+  const funnel = h?.funnel_signup_to_first_gift_7d;
+  const funnelPct = funnel ? Math.round(funnel.rate * 100) : 0;
+  const funnelColor = funnelPct >= 60 ? OK_GREEN : funnelPct >= 30 ? "#D08F2A" : "#B71C1C";
+  const deltaPct = a24?.gifts_created_vs_yesterday_pct ?? null;
+  const deltaText = deltaPct === null
+    ? "—"
+    : deltaPct === 999
+    ? "🆕"
+    : `${deltaPct >= 0 ? "+" : ""}${deltaPct}%`;
+  const deltaColor = deltaPct === null ? MUTED : deltaPct >= 0 ? OK_GREEN : "#B71C1C";
+
+  return (
+    <div style={{ marginBottom: 32 }}>
+      <SectionTitle>🚀 Salute lancio</SectionTitle>
+
+      {/* Banner reports DSA pendenti — molto visibile se > 0 */}
+      {reportsAlert && (
+        <div style={{
+          background: "#FFEDED",
+          border: "1.5px solid #B71C1C",
+          borderRadius: 12,
+          padding: "12px 16px",
+          marginBottom: 12,
+          color: "#5D0000",
+          fontSize: 13,
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+        }}>
+          <span style={{ fontSize: 18 }}>⚠️</span>
+          <div style={{ flex: 1 }}>
+            <strong>{h?.reports_open} segnalazion{h?.reports_open === 1 ? "e" : "i"} aperta{h?.reports_open === 1 ? "" : "/e"}</strong>
+            {" "}da gestire — clicca per andare al pannello reports.
+          </div>
+          <a href="/admin/reports" style={{ color: "#B71C1C", fontWeight: 700, textDecoration: "underline", fontSize: 13 }}>
+            Apri →
+          </a>
+        </div>
+      )}
+
+      <Grid>
+        {a24 && (
+          <>
+            <StatCard
+              label="Regali oggi"
+              value={a24.gifts_created}
+              emoji="🎁"
+              subtitle={`vs ieri ${deltaText}`}
+              color={deltaColor}
+            />
+            <StatCard label="Aperture oggi" value={a24.gifts_opened} emoji="📬"/>
+            <StatCard label="Nuovi utenti oggi" value={a24.new_users} emoji="👋"/>
+          </>
+        )}
+        {!reportsAlert && h && (
+          <StatCard
+            label="Reports aperti"
+            value={h.reports_open}
+            emoji="✅"
+            color={OK_GREEN}
+            subtitle="nessuna segnalazione pendente"
+          />
+        )}
+        {h?.reports_24h !== undefined && (
+          <StatCard
+            label="Reports oggi"
+            value={h.reports_24h}
+            emoji="📨"
+            subtitle="ricevuti nelle ultime 24h"
+          />
+        )}
+        {funnel && funnel.new_users > 0 && (
+          <StatCard
+            label="Conversione 7gg"
+            value={`${funnelPct}%`}
+            emoji="🎯"
+            color={funnelColor}
+            subtitle={`${funnel.with_first_gift}/${funnel.new_users} nuovi → primo gift`}
+          />
+        )}
+      </Grid>
+    </div>
   );
 }
