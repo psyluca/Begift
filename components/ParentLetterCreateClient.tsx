@@ -112,6 +112,13 @@ export function ParentLetterCreateClient({ config }: Props) {
   const [memory, setMemory] = useState("");
   const [photoUrl, setPhotoUrl] = useState("");
   const [photoUploading, setPhotoUploading] = useState(false);
+  // Tempo trascorso dall'inizio dell'upload foto, in secondi.
+  // Aggiornato ogni 250ms da un setInterval. Mostriamo "Caricamento da 4s…"
+  // per evitare la sensazione di "freeze" su connessioni lente. Supabase
+  // SDK non espone progress events nativi, quindi questo e' il miglior
+  // feedback senza riscrivere l'upload con XHR.
+  const [photoUploadElapsed, setPhotoUploadElapsed] = useState(0);
+  const [wordInputFocused, setWordInputFocused] = useState(false);
   const [lesson, setLesson] = useState("");
   const [songUrl, setSongUrl] = useState("");
   // Metadata della canzone selezionata via SongPicker. Riempito dal
@@ -191,11 +198,17 @@ export function ParentLetterCreateClient({ config }: Props) {
   const [wordSuggestionIdx, setWordSuggestionIdx] = useState(0);
   useEffect(() => {
     if (step !== 1 || word) return;
+    // Pause se l'utente ha focus sull'input — sta pensando o per
+    // scrivere, distrarlo con placeholder che cambiano e' fastidioso.
+    if (wordInputFocused) return;
+    // 4500ms (era 2200): da feedback test, 2.2s era troppo veloce per
+    // leggere e decidere. 4.5s da' tempo di considerare la parola
+    // suggerita prima che cambi.
     const t = setInterval(() => {
       setWordSuggestionIdx((i) => (i + 1) % config.wordSuggestions.length);
-    }, 2200);
+    }, 4500);
     return () => clearInterval(t);
-  }, [step, word, config.wordSuggestions.length]);
+  }, [step, word, wordInputFocused, config.wordSuggestions.length]);
 
   const STEPS = config.stepTitles;
   const totalSteps = STEPS.length;
@@ -229,6 +242,11 @@ export function ParentLetterCreateClient({ config }: Props) {
 
   const handlePhoto = async (file: File) => {
     setPhotoUploading(true);
+    setPhotoUploadElapsed(0);
+    const started = Date.now();
+    const tick = setInterval(() => {
+      setPhotoUploadElapsed(Math.floor((Date.now() - started) / 1000));
+    }, 250);
     try {
       const url = await upload(file, "gift-media");
       if (url) setPhotoUrl(url);
@@ -236,7 +254,9 @@ export function ParentLetterCreateClient({ config }: Props) {
       console.error("[parent-letter] photo upload failed", e);
       setError("Errore nell'upload della foto. Riprova.");
     } finally {
+      clearInterval(tick);
       setPhotoUploading(false);
+      setPhotoUploadElapsed(0);
     }
   };
 
@@ -468,6 +488,8 @@ export function ParentLetterCreateClient({ config }: Props) {
                 placeholder={config.wordSuggestions[wordSuggestionIdx]}
                 value={word}
                 onChange={(e) => setWord(e.target.value)}
+                onFocus={() => setWordInputFocused(true)}
+                onBlur={() => setWordInputFocused(false)}
                 maxLength={20}
                 autoFocus
                 style={{
@@ -524,29 +546,63 @@ export function ParentLetterCreateClient({ config }: Props) {
           {step === 3 && (
             <>
               {!photoUrl ? (
-                <label style={{
-                  display: "block",
-                  border: `2px dashed ${BORDER}`,
-                  borderRadius: 14,
-                  padding: "32px 20px",
-                  textAlign: "center",
-                  background: LIGHT,
-                  cursor: "pointer",
-                }}>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => e.target.files?.[0] && handlePhoto(e.target.files[0])}
-                    style={{ display: "none" }}
-                  />
-                  <div style={{ fontSize: 36, marginBottom: 10 }} aria-hidden>📷</div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: DEEP, marginBottom: 4 }}>
-                    {photoUploading ? "Caricamento…" : "Tocca per scegliere una foto"}
+                photoUploading ? (
+                  <div style={{
+                    display: "block",
+                    border: `2px dashed ${config.paletteAccent}`,
+                    borderRadius: 14,
+                    padding: "36px 20px",
+                    textAlign: "center",
+                    background: LIGHT,
+                  }}>
+                    <style>{`@keyframes plUploadSpin { to { transform: rotate(360deg); } }`}</style>
+                    {/* Spinner CSS animato. Supabase SDK non espone progress
+                        nativo quindi non possiamo mostrare percentuale,
+                        ma diamo feedback "non e' freezato". */}
+                    <div style={{
+                      width: 44, height: 44,
+                      border: `3px solid ${BORDER}`,
+                      borderTopColor: config.paletteAccent,
+                      borderRadius: "50%",
+                      margin: "0 auto 14px",
+                      animation: "plUploadSpin 0.9s linear infinite",
+                    }} aria-hidden/>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: DEEP, marginBottom: 4 }}>
+                      Caricamento foto{photoUploadElapsed >= 3 ? ` · ${photoUploadElapsed}s` : "…"}
+                    </div>
+                    <div style={{ fontSize: 12, color: MUTED, lineHeight: 1.5 }}>
+                      {photoUploadElapsed < 5
+                        ? "Sto preparando la foto."
+                        : photoUploadElapsed < 15
+                        ? "Su connessione lenta puo' richiedere un po' — non chiudere la pagina."
+                        : "Sembra molto lento. Se non parte fra qualche secondo, prova con una foto piu' leggera o ricarica."}
+                    </div>
                   </div>
-                  <div style={{ fontSize: 12, color: MUTED }}>
-                    Una foto vostra. Diventerà una polaroid leggermente ruotata.
-                  </div>
-                </label>
+                ) : (
+                  <label style={{
+                    display: "block",
+                    border: `2px dashed ${BORDER}`,
+                    borderRadius: 14,
+                    padding: "32px 20px",
+                    textAlign: "center",
+                    background: LIGHT,
+                    cursor: "pointer",
+                  }}>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => e.target.files?.[0] && handlePhoto(e.target.files[0])}
+                      style={{ display: "none" }}
+                    />
+                    <div style={{ fontSize: 36, marginBottom: 10 }} aria-hidden>📷</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: DEEP, marginBottom: 4 }}>
+                      Tocca per scegliere una foto
+                    </div>
+                    <div style={{ fontSize: 12, color: MUTED }}>
+                      Una foto vostra. Diventerà una polaroid leggermente ruotata.
+                    </div>
+                  </label>
+                )
               ) : (
                 <div style={{ textAlign: "center" }}>
                   <div style={{
