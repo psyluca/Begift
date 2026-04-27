@@ -31,6 +31,7 @@
 
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { sendPushToUser } from "@/lib/webPush";
+import { sendGiftOpenedEmail } from "@/lib/email";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
@@ -113,9 +114,17 @@ export async function POST(req: NextRequest) {
           },
           "gift_opened"
         ).catch((e) => console.error("[gift-opens] push failed", e));
+        // Email fallback (Resend): best-effort, non blocca. Le
+        // preferenze (notify_email + notify_gift_opened) sono
+        // controllate dentro sendGiftOpenedEmail.
+        sendGiftOpenedEmail(g.creator_id, {
+          recipientName: recipient,
+          giftId,
+          openCount: 1,
+        }).catch((e) => console.error("[gift-opens] email failed", e));
       }
     } catch (e) {
-      console.error("[gift-opens] push setup failed", e);
+      console.error("[gift-opens] push/email setup failed", e);
     }
   }
 

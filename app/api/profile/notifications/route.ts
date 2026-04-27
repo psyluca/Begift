@@ -11,7 +11,7 @@
 import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
-const ALLOWED_KEYS = ["notify_gift_received", "notify_gift_opened", "notify_reaction"] as const;
+const ALLOWED_KEYS = ["notify_gift_received", "notify_gift_opened", "notify_reaction", "notify_email"] as const;
 
 export async function PATCH(req: NextRequest) {
   let userId: string | null = null;
@@ -46,16 +46,49 @@ export async function PATCH(req: NextRequest) {
   }
 
   const admin = createSupabaseAdmin();
-  const { data, error } = await admin
-    .from("profiles")
-    .update(update)
-    .eq("id", userId)
-    .select("notify_gift_received, notify_gift_opened, notify_reaction")
-    .single();
-
-  if (error) {
-    console.error("[profile/notifications] update error", error);
-    return NextResponse.json({ error: "server" }, { status: 500 });
+  // Doppio update: prima i campi base (sempre presenti), poi quelli
+  // della migration 017 in modo robusto. Cosi' se la 017 non e'
+  // ancora stata eseguita su un ambiente, i toggle base continuano a
+  // funzionare e notify_email viene semplicemente ignorato.
+  const baseUpdate: Record<string, boolean> = {};
+  let extraUpdate: Record<string, boolean> | null = null;
+  for (const k of Object.keys(update) as (keyof typeof update)[]) {
+    if (k === "notify_email") {
+      extraUpdate = { ...(extraUpdate ?? {}), notify_email: update[k] };
+    } else {
+      baseUpdate[k] = update[k];
+    }
   }
-  return NextResponse.json({ ok: true, ...data });
+
+  let baseResult: Record<string, boolean> = {};
+  if (Object.keys(baseUpdate).length > 0) {
+    const { data, error } = await admin
+      .from("profiles")
+      .update(baseUpdate)
+      .eq("id", userId)
+      .select("notify_gift_received, notify_gift_opened, notify_reaction")
+      .single();
+    if (error) {
+      console.error("[profile/notifications] base update error", error);
+      return NextResponse.json({ error: "server" }, { status: 500 });
+    }
+    baseResult = data as Record<string, boolean>;
+  }
+
+  let extraResult: Record<string, boolean> = {};
+  if (extraUpdate) {
+    try {
+      const { data, error } = await admin
+        .from("profiles")
+        .update(extraUpdate)
+        .eq("id", userId)
+        .select("notify_email")
+        .single();
+      if (!error && data) extraResult = data as Record<string, boolean>;
+    } catch (e) {
+      console.warn("[profile/notifications] notify_email skipped (migration 017?)", e);
+    }
+  }
+
+  return NextResponse.json({ ok: true, ...baseResult, ...extraResult });
 }

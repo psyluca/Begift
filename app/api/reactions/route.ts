@@ -2,6 +2,7 @@ import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server
 import { NextRequest, NextResponse } from "next/server";
 import type { CreateReactionBody } from "@/types";
 import { sendPushToUser } from "@/lib/webPush";
+import { sendReactionEmail } from "@/lib/email";
 
 // POST /api/reactions — inserisce una reazione (nessuna auth richiesta)
 export async function POST(req: NextRequest) {
@@ -63,9 +64,23 @@ export async function POST(req: NextRequest) {
         giftId: body.giftId,
         tag: `begift-reaction-${body.giftId}`,
       }, "reaction").catch((e) => console.error("[reactions] push failed", e));
+      // Email fallback (Resend): best-effort. Le preferenze
+      // (notify_email + notify_reaction) sono controllate dentro
+      // sendReactionEmail. Preview solo per emoji/text per non
+      // includere URL di foto/video nei body email.
+      const previewText =
+        body.type === "emoji" ? body.emoji ?? "" :
+        body.type === "text"  ? body.text  ?? "" :
+        undefined;
+      sendReactionEmail(creatorId, {
+        recipientName: senderName,
+        giftId: body.giftId,
+        reactionType: body.type as "emoji" | "text" | "photo" | "video",
+        preview: previewText,
+      }).catch((e) => console.error("[reactions] email failed", e));
     }
   } catch (e) {
-    console.error("[reactions] push setup failed", e);
+    console.error("[reactions] push/email setup failed", e);
   }
 
   return NextResponse.json(data);
