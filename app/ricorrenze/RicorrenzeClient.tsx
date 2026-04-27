@@ -51,13 +51,23 @@ const OCCASION_TYPES: { value: string; emoji: string; labelIt: string; color: st
 // Quick-add suggestions per stato vuoto: pre-compilano nome + tipo,
 // l'utente sceglie solo la data. Pensati per le persone piu' comuni
 // nella vita di un utente medio italiano (ottimizzati per il target).
-const QUICK_ADDS: { name: string; type: string; emoji: string }[] = [
-  { name: "Mamma",            type: "birthday", emoji: "💐" },
-  { name: "Papà",             type: "birthday", emoji: "👨" },
+//
+// Note di design 2026-04-27:
+// - "Mamma/papà": tile combinata. Default name="Mamma" (Festa Mamma e'
+//   il target imminente); chi voleva papa' edita 4 caratteri.
+// - "Figlia/o": copre genitori che vogliono ricordarsi compleanni dei
+//   figli — caso d'uso ad alta retention.
+// - Ordine femminile-prima nelle label binarie (richiesta esplicita di
+//   Luca, applicabile sempre).
+// - `label` opzionale: se presente, sostituisce `name` nel rendering UI
+//   ma `name` resta quello pre-compilato nel form.
+const QUICK_ADDS: { name: string; type: string; emoji: string; label?: string }[] = [
+  { name: "Mamma",            type: "birthday", emoji: "👪", label: "Mamma/papà" },
+  { name: "Figlia/o",         type: "birthday", emoji: "👶" },
   { name: "Partner",          type: "birthday", emoji: "❤️" },
-  { name: "Fratello/sorella", type: "birthday", emoji: "🧒" },
-  { name: "Zio/zia",          type: "birthday", emoji: "👨‍🦳" },
-  { name: "Cugino/a",         type: "birthday", emoji: "👫" },
+  { name: "Sorella/fratello", type: "birthday", emoji: "🧒" },
+  { name: "Zia/zio",          type: "birthday", emoji: "👨‍🦳" },
+  { name: "Cugina/o",         type: "birthday", emoji: "👫" },
 ];
 
 /** Calcola quanti giorni mancano alla prossima occorrenza di MM/GG.
@@ -379,7 +389,7 @@ export default function RicorrenzeClient() {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))", gap: 8, maxWidth: 420, margin: "0 auto" }}>
               {QUICK_ADDS.map((qa) => (
                 <button
-                  key={qa.name}
+                  key={qa.label ?? qa.name}
                   onClick={() => handleQuickAdd(qa)}
                   style={{
                     background: "#fff",
@@ -392,7 +402,7 @@ export default function RicorrenzeClient() {
                   }}
                 >
                   <span style={{ fontSize: 20 }}>{qa.emoji}</span>
-                  <span>{qa.name}</span>
+                  <span>{qa.label ?? qa.name}</span>
                 </button>
               ))}
             </div>
