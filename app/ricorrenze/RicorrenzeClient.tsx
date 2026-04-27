@@ -52,10 +52,12 @@ const OCCASION_TYPES: { value: string; emoji: string; labelIt: string; color: st
 // l'utente sceglie solo la data. Pensati per le persone piu' comuni
 // nella vita di un utente medio italiano (ottimizzati per il target).
 const QUICK_ADDS: { name: string; type: string; emoji: string }[] = [
-  { name: "Mamma",        type: "birthday", emoji: "💐" },
-  { name: "Papà",         type: "birthday", emoji: "👨" },
-  { name: "Partner",      type: "birthday", emoji: "❤️" },
+  { name: "Mamma",            type: "birthday", emoji: "💐" },
+  { name: "Papà",             type: "birthday", emoji: "👨" },
+  { name: "Partner",          type: "birthday", emoji: "❤️" },
   { name: "Fratello/sorella", type: "birthday", emoji: "🧒" },
+  { name: "Zio/zia",          type: "birthday", emoji: "👨‍🦳" },
+  { name: "Cugino/a",         type: "birthday", emoji: "👫" },
 ];
 
 /** Calcola quanti giorni mancano alla prossima occorrenza di MM/GG.
