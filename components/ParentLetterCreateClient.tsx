@@ -15,6 +15,7 @@ import { fetchAuthed } from "@/lib/clientAuth";
 import { useUpload } from "@/hooks/useUpload";
 import { track } from "@/lib/analytics";
 import type { ParentTemplateConfig } from "@/lib/parent-templates";
+import { SongPicker } from "@/components/SongPicker";
 
 const ACCENT = "#D4537E";
 const DEEP = "#1a1a1a";
@@ -314,14 +315,19 @@ export function ParentLetterCreateClient({ config }: Props) {
 
           {step === 5 && (
             <>
-              <Input
-                placeholder="https://open.spotify.com/track/…"
+              {/* Step canzone — riga 318 originaria sostituita 2026-04-27.
+                  La mail di campagna prometteva "basta scrivere il nome,
+                  la cerchiamo noi": adesso e' vero, SongPicker chiama
+                  /api/spotify/search e mostra risultati cliccabili. Per
+                  chi ha gia' un URL, c'e' il link "Preferisci incollare
+                  un URL?" che apre l'input libero classico. Quando
+                  Spotify non e' configurato (env mancanti, errore 503)
+                  il componente fa graceful fallback a input URL. */}
+              <SongPicker
                 value={songUrl}
-                onChange={(e) => setSongUrl(e.target.value)}
-                autoFocus
-                inputMode="url"
+                onChange={setSongUrl}
+                hint="Cerca la canzone per titolo o artista — la trovi e basta. Diventerà un player dentro il regalo."
               />
-              <Hint>Link Spotify, YouTube o Apple Music. La canzone diventerà un player dentro il regalo.</Hint>
             </>
           )}
 

@@ -28,7 +28,11 @@ const CSP = [
   "style-src 'self' 'unsafe-inline'",
   // img-src include i.ytimg.com per thumbnails YouTube nei link gift.
   "img-src 'self' data: blob: https://*.supabase.co https://lh3.googleusercontent.com https://i.ytimg.com https://*.ytimg.com https://i.scdn.co",
-  "media-src 'self' blob: https://*.supabase.co",
+  // media-src include p.scdn.co per i preview audio 30s di Spotify
+  // (SongPicker → /api/spotify/search ritorna previewUrl che punta a
+  // p.scdn.co/mp3-preview/...). Senza, il tag <audio> verrebbe bloccato
+  // dal CSP e gli utenti vedrebbero un player muto.
+  "media-src 'self' blob: https://*.supabase.co https://p.scdn.co",
   "font-src 'self' data:",
   // connect-src include plausible.io per il POST /api/event degli eventi custom.
   "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://plausible.io",
