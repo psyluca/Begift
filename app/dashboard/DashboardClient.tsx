@@ -13,6 +13,7 @@ import { InviteFriendWidget } from "@/components/InviteFriendWidget";
 import { RemindersWidget } from "@/components/RemindersWidget";
 import { MonthlySuggestionsWidget } from "@/components/MonthlySuggestionsWidget";
 import { OneYearAgoWidget } from "@/components/OneYearAgoWidget";
+import { SeasonalBanner } from "@/components/SeasonalBanner";
 
 const ACCENT = "#D4537E", DEEP = "#1a1a1a", MUTED = "#888", LIGHT = "#f7f5f2";
 
@@ -586,11 +587,44 @@ export default function DashboardClient({ user: initialUser, initialSentGifts, i
       <div key={tab} className="tbi" style={{maxWidth:640,margin:"0 auto",padding:"12px 20px 100px",display:"flex",flexDirection:"column",gap:9}}>
 
         {tab==="sent"&&(gifts.length===0?(
-          <div style={{textAlign:"center",padding:"48px 24px",color:MUTED}}>
-            <div style={{fontSize:52,marginBottom:14}}>🎁</div>
-            <p style={{fontWeight:700,color:DEEP,fontSize:15,margin:"0 0 6px"}}>{t("dashboard.no_sent")}</p>
-            <p style={{fontSize:13,color:MUTED,margin:"0 0 16px"}}>{t("dashboard.no_sent_subtitle")}</p>
-            <a href="/create" style={{background:ACCENT,color:"#fff",borderRadius:40,padding:"12px 28px",fontSize:14,fontWeight:600,textDecoration:"none",display:"inline-block"}}>{t("dashboard.create_gift")}</a>
+          <div style={{padding:"24px 0 16px"}}>
+            {/* Banner stagionale (Festa Mamma/Papa') prima della
+                empty state — copertura prioritaria per chi e' nella
+                finestra dell'occasione. Si auto-nasconde fuori finestra. */}
+            <SeasonalBanner variant="spacious" />
+
+            <div style={{textAlign:"center",padding:"32px 24px 12px",color:MUTED}}>
+              <div style={{fontSize:52,marginBottom:14}}>🎁</div>
+              <p style={{fontWeight:700,color:DEEP,fontSize:15,margin:"0 0 6px"}}>{t("dashboard.no_sent")}</p>
+              <p style={{fontSize:13,color:MUTED,margin:"0 0 18px"}}>{t("dashboard.no_sent_subtitle")}</p>
+              <a href="/create" style={{background:ACCENT,color:"#fff",borderRadius:40,padding:"12px 28px",fontSize:14,fontWeight:600,textDecoration:"none",display:"inline-block"}}>{t("dashboard.create_gift")}</a>
+            </div>
+
+            {/* Quick-start: 3 idee concrete invece di un foglio bianco.
+                Ognuna porta a /create con la query "occasion" pre-impostata
+                cosi' l'utente parte gia' col tono giusto. Oltre a Festa
+                Mamma (priorita' temporale), proponiamo "compleanno" e
+                "grazie" come evergreen ad alta attivazione. */}
+            <p style={{textAlign:"center",fontSize:11,fontWeight:700,color:MUTED,textTransform:"uppercase",letterSpacing:"0.08em",margin:"24px 0 10px"}}>
+              o parti da un'idea
+            </p>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))",gap:8,maxWidth:480,margin:"0 auto"}}>
+              <a href="/festa-mamma" style={{background:"#fff",border:"1px solid #eadfd5",borderRadius:14,padding:"14px 12px",textDecoration:"none",textAlign:"center",color:DEEP,display:"block"}}>
+                <div style={{fontSize:24,marginBottom:4}}>💐</div>
+                <div style={{fontSize:13,fontWeight:700,marginBottom:2}}>Festa della Mamma</div>
+                <div style={{fontSize:11,color:MUTED}}>Lettera che cresce</div>
+              </a>
+              <a href="/create?occasion=birthday" style={{background:"#fff",border:"1px solid #eadfd5",borderRadius:14,padding:"14px 12px",textDecoration:"none",textAlign:"center",color:DEEP,display:"block"}}>
+                <div style={{fontSize:24,marginBottom:4}}>🎂</div>
+                <div style={{fontSize:13,fontWeight:700,marginBottom:2}}>Compleanno</div>
+                <div style={{fontSize:11,color:MUTED}}>Sorpresa con foto</div>
+              </a>
+              <a href="/create?occasion=thanks" style={{background:"#fff",border:"1px solid #eadfd5",borderRadius:14,padding:"14px 12px",textDecoration:"none",textAlign:"center",color:DEEP,display:"block"}}>
+                <div style={{fontSize:24,marginBottom:4}}>💝</div>
+                <div style={{fontSize:13,fontWeight:700,marginBottom:2}}>Un grazie</div>
+                <div style={{fontSize:11,color:MUTED}}>Improvviso, sentito</div>
+              </a>
+            </div>
           </div>
         ):gifts.map(g=><GiftCard key={g.id} gift={g} isSent={true}/>))}
 

@@ -242,62 +242,111 @@ export default function HomePage() {
           gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
           gap: 14,
         }}>
-          {[
-            { occ: "birthday",    emoji: "🎂", paper: "#E8C84A", ribbon: "#D85A5A" },
-            { occ: "anniversary", emoji: "💍", paper: "#E8A0A0", ribbon: "#E8C84A" },
-            { occ: "birth",       emoji: "👶", paper: "#F5C6C6", ribbon: "#F8F5ED" },
-            { occ: "graduation",  emoji: "🎓", paper: "#1A3A6B", ribbon: "#E8C84A" },
-            // Onomastico: ricorrenza italiana, carta lavanda + nastro
-            // oro per festa sobria distinta dal compleanno chiassoso.
-            { occ: "name_day",    emoji: "🎊", paper: "#C9B6E8", ribbon: "#E8C84A" },
-            // "everyday" = template per un pensiero quotidiano, non
-            // legato a un'occasione formale. Allineato al nuovo claim
-            // della home ("Un regalo ogni volta che pensi a qualcuno").
-            { occ: "everyday",    emoji: "💌", paper: "#F5E8D5", ribbon: "#D4537E" },
-          ].map((ex) => (
-            <Link
-              key={ex.occ}
-              href={`/create?occasion=${ex.occ}`}
-              style={{
-                background: "#fff", borderRadius: 18,
-                padding: "20px 16px 18px", textAlign: "center",
-                textDecoration: "none", color: "inherit",
-                border: "1px solid #ede8e0",
-                transition: "transform .14s, box-shadow .14s",
-                display: "block",
-              }}
-            >
-              <div style={{
-                width: 62, height: 62, borderRadius: 12,
-                background: `linear-gradient(135deg, ${ex.paper}, ${ex.paper}dd)`,
-                margin: "0 auto 12px",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                position: "relative",
-                boxShadow: "0 4px 12px rgba(0,0,0,.08)",
-              }}>
-                {/* Nastro orizzontale */}
+          {(() => {
+            // Tile dinamica per occasioni stagionali in finestra di
+            // notice. Identica logica del SeasonalBanner ma renderizzata
+            // come tile con priorita' visiva (badge urgenza). Fuori
+            // finestra la tile non compare e si vedono solo gli
+            // evergreen sotto.
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const seasonal = [
+              { occ: "mothers_day", month: 5, day: 11, label: "Festa della Mamma", emoji: "💐", paper: "#F4DCD8", ribbon: "#D4537E", href: "/festa-mamma", noticeWindow: 28 },
+              { occ: "fathers_day", month: 3, day: 19, label: "Festa del Papà",   emoji: "🌳", paper: "#E8DCC4", ribbon: "#5C7A4A", href: "/festa-papa",  noticeWindow: 28 },
+            ];
+            const active = seasonal.find((s) => {
+              const target = new Date(now.getFullYear(), s.month - 1, s.day);
+              const days = Math.round((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+              return days >= 0 && days <= s.noticeWindow;
+            });
+            const evergreen = [
+              { occ: "birthday",    emoji: "🎂", paper: "#E8C84A", ribbon: "#D85A5A" },
+              { occ: "anniversary", emoji: "💍", paper: "#E8A0A0", ribbon: "#E8C84A" },
+              { occ: "birth",       emoji: "👶", paper: "#F5C6C6", ribbon: "#F8F5ED" },
+              { occ: "graduation",  emoji: "🎓", paper: "#1A3A6B", ribbon: "#E8C84A" },
+              { occ: "name_day",    emoji: "🎊", paper: "#C9B6E8", ribbon: "#E8C84A" },
+              { occ: "everyday",    emoji: "💌", paper: "#F5E8D5", ribbon: "#D4537E" },
+            ];
+
+            const tiles: { href: string; emoji: string; paper: string; ribbon: string; label: string; isSeasonal?: boolean; daysLeft?: number }[] = [];
+            if (active) {
+              const target = new Date(now.getFullYear(), active.month - 1, active.day);
+              const days = Math.round((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+              tiles.push({
+                href: active.href,
+                emoji: active.emoji,
+                paper: active.paper,
+                ribbon: active.ribbon,
+                label: active.label,
+                isSeasonal: true,
+                daysLeft: days,
+              });
+            }
+            for (const ex of evergreen) {
+              tiles.push({
+                href: `/create?occasion=${ex.occ}`,
+                emoji: ex.emoji,
+                paper: ex.paper,
+                ribbon: ex.ribbon,
+                label: t(`home.example_${ex.occ}`),
+              });
+            }
+
+            return tiles.map((tile, idx) => (
+              <Link
+                key={`${tile.label}-${idx}`}
+                href={tile.href}
+                style={{
+                  background: "#fff", borderRadius: 18,
+                  padding: "20px 16px 18px", textAlign: "center",
+                  textDecoration: "none", color: "inherit",
+                  border: tile.isSeasonal ? `2px solid ${ACCENT}` : "1px solid #ede8e0",
+                  transition: "transform .14s, box-shadow .14s",
+                  display: "block",
+                  position: "relative",
+                  boxShadow: tile.isSeasonal ? "0 6px 22px rgba(212,83,126,.18)" : undefined,
+                }}
+              >
+                {/* Badge urgenza solo sulla tile stagionale */}
+                {tile.isSeasonal && (
+                  <div style={{
+                    position: "absolute", top: 10, right: 10,
+                    background: ACCENT, color: "#fff",
+                    fontSize: 9, fontWeight: 800, textTransform: "uppercase",
+                    letterSpacing: "0.05em", borderRadius: 20, padding: "2px 7px",
+                  }}>
+                    {tile.daysLeft === 0 ? "Oggi!" : tile.daysLeft === 1 ? "Domani" : `Tra ${tile.daysLeft}gg`}
+                  </div>
+                )}
                 <div style={{
-                  position: "absolute", left: 0, right: 0, top: "50%",
-                  height: 8, background: ex.ribbon,
-                  transform: "translateY(-50%)",
-                }}/>
-                {/* Nastro verticale */}
-                <div style={{
-                  position: "absolute", top: 0, bottom: 0, left: "50%",
-                  width: 8, background: ex.ribbon,
-                  transform: "translateX(-50%)",
-                }}/>
-                {/* Fiocchetto emoji sopra */}
-                <span style={{ position: "relative", zIndex: 1, fontSize: 26 }}>{ex.emoji}</span>
-              </div>
-              <div style={{ fontWeight: 700, fontSize: 14, color: DEEP, marginBottom: 4 }}>
-                {t(`home.example_${ex.occ}`)}
-              </div>
-              <div style={{ fontSize: 12, color: ACCENT, fontWeight: 600 }}>
-                {t("home.example_cta")}
-              </div>
-            </Link>
-          ))}
+                  width: 62, height: 62, borderRadius: 12,
+                  background: `linear-gradient(135deg, ${tile.paper}, ${tile.paper}dd)`,
+                  margin: "0 auto 12px",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  position: "relative",
+                  boxShadow: "0 4px 12px rgba(0,0,0,.08)",
+                }}>
+                  <div style={{
+                    position: "absolute", left: 0, right: 0, top: "50%",
+                    height: 8, background: tile.ribbon,
+                    transform: "translateY(-50%)",
+                  }}/>
+                  <div style={{
+                    position: "absolute", top: 0, bottom: 0, left: "50%",
+                    width: 8, background: tile.ribbon,
+                    transform: "translateX(-50%)",
+                  }}/>
+                  <span style={{ position: "relative", zIndex: 1, fontSize: 26 }}>{tile.emoji}</span>
+                </div>
+                <div style={{ fontWeight: 700, fontSize: 14, color: DEEP, marginBottom: 4 }}>
+                  {tile.label}
+                </div>
+                <div style={{ fontSize: 12, color: ACCENT, fontWeight: 600 }}>
+                  {t("home.example_cta")}
+                </div>
+              </Link>
+            ));
+          })()}
         </div>
       </section>
 
