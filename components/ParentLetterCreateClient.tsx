@@ -28,6 +28,70 @@ interface Props {
   config: ParentTemplateConfig;
 }
 
+/** Versione del formato draft localStorage. Se in futuro cambia
+ *  la shape del template (es. nuovi step, rinomina campi), incrementa
+ *  questo numero per invalidare draft vecchi e non confondere utenti. */
+const DRAFT_VERSION = 1;
+
+interface DraftPayload {
+  v: number;
+  step: number;
+  recipientName: string;
+  senderAlias: string;
+  word: string;
+  memory: string;
+  photoUrl: string;
+  lesson: string;
+  songUrl: string;
+  voucherUrl: string;
+  /** Timestamp ultimo save, per mostrare "salvato 3 minuti fa". */
+  savedAt: number;
+}
+
+function draftKey(templateKey: string): string {
+  return `parent_letter_draft_${templateKey}`;
+}
+
+function loadDraft(templateKey: string): DraftPayload | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(draftKey(templateKey));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as DraftPayload;
+    if (parsed.v !== DRAFT_VERSION) return null;
+    // Skip draft "vuoti" (nessun campo significativo riempito)
+    const hasContent = parsed.recipientName || parsed.word || parsed.memory || parsed.photoUrl;
+    if (!hasContent) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function saveDraft(templateKey: string, data: Omit<DraftPayload, "v" | "savedAt">) {
+  if (typeof window === "undefined") return;
+  try {
+    const payload: DraftPayload = { ...data, v: DRAFT_VERSION, savedAt: Date.now() };
+    localStorage.setItem(draftKey(templateKey), JSON.stringify(payload));
+  } catch { /* quota exceeded o storage bloccato — skip */ }
+}
+
+function clearDraft(templateKey: string) {
+  if (typeof window === "undefined") return;
+  try { localStorage.removeItem(draftKey(templateKey)); } catch { /* ignore */ }
+}
+
+function relativeTimeIt(savedAt: number): string {
+  const diff = Date.now() - savedAt;
+  const min = Math.floor(diff / 60_000);
+  if (min < 1) return "qualche secondo fa";
+  if (min < 60) return `${min} minut${min === 1 ? "o" : "i"} fa`;
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return `${hr} or${hr === 1 ? "a" : "e"} fa`;
+  const days = Math.floor(hr / 24);
+  return `${days} giorn${days === 1 ? "o" : "i"} fa`;
+}
+
 export function ParentLetterCreateClient({ config }: Props) {
   const router = useRouter();
   const { upload } = useUpload();
@@ -44,6 +108,65 @@ export function ParentLetterCreateClient({ config }: Props) {
   const [lesson, setLesson] = useState("");
   const [songUrl, setSongUrl] = useState("");
   const [voucherUrl, setVoucherUrl] = useState("");
+
+  // Draft persistence: il banner "Riprendi" appare al mount se trovo
+  // un draft con contenuto. Resta visibile finche' l'utente non sceglie
+  // (Riprendi / Ricomincia). Se sceglie Riprendi, ripopolo gli state.
+  // Se Ricomincia, pulisco localStorage e il banner sparisce.
+  const [pendingDraft, setPendingDraft] = useState<DraftPayload | null>(null);
+  // Flag che indica se l'utente ha gia' deciso cosa fare col draft.
+  // Finche' false, blocchiamo l'auto-save (altrimenti risalveremmo
+  // sovrascrivendo subito il draft caricato che ancora deve essere
+  // visualizzato dall'utente).
+  const [draftDecided, setDraftDecided] = useState(false);
+
+  useEffect(() => {
+    const draft = loadDraft(config.key);
+    if (draft) {
+      setPendingDraft(draft);
+    } else {
+      setDraftDecided(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Auto-save su ogni cambio significativo, debounced 600ms per non
+  // sfondare di scritture localStorage durante la digitazione.
+  useEffect(() => {
+    if (!draftDecided) return;
+    if (submitting) return;
+    // Skip save se l'utente non ha ancora messo niente (draft vuoto =
+    // niente da ripristinare → evita pollution di localStorage).
+    if (!recipientName && !word && !memory && !photoUrl) return;
+    const t = setTimeout(() => {
+      saveDraft(config.key, {
+        step, recipientName, senderAlias, word, memory,
+        photoUrl, lesson, songUrl, voucherUrl,
+      });
+    }, 600);
+    return () => clearTimeout(t);
+  }, [draftDecided, submitting, step, recipientName, senderAlias, word, memory, photoUrl, lesson, songUrl, voucherUrl, config.key]);
+
+  const resumeDraft = () => {
+    if (!pendingDraft) return;
+    setStep(pendingDraft.step);
+    setRecipientName(pendingDraft.recipientName);
+    setSenderAlias(pendingDraft.senderAlias);
+    setWord(pendingDraft.word);
+    setMemory(pendingDraft.memory);
+    setPhotoUrl(pendingDraft.photoUrl);
+    setLesson(pendingDraft.lesson);
+    setSongUrl(pendingDraft.songUrl);
+    setVoucherUrl(pendingDraft.voucherUrl);
+    setPendingDraft(null);
+    setDraftDecided(true);
+  };
+
+  const discardDraft = () => {
+    clearDraft(config.key);
+    setPendingDraft(null);
+    setDraftDecided(true);
+  };
 
   const [wordSuggestionIdx, setWordSuggestionIdx] = useState(0);
   useEffect(() => {
@@ -145,6 +268,10 @@ export function ParentLetterCreateClient({ config }: Props) {
         content_type: "template",
         template: config.templateType,
       });
+      // Submit ok → il draft non serve piu', pulisco. Se l'utente
+      // tornera' a /festa-mamma/crea per fare un secondo regalo,
+      // ripartira' da zero (no banner ingombrante).
+      clearDraft(config.key);
       router.push(`${data.url || `/gift/${data.id}`}?from=create`);
     } catch (e) {
       console.error("[parent-letter] submit failed", e);
@@ -157,6 +284,55 @@ export function ParentLetterCreateClient({ config }: Props) {
   return (
     <main style={{ minHeight: "100vh", background: `linear-gradient(180deg, ${config.paletteBg} 0%, #fff 240px)`, fontFamily: "system-ui, sans-serif" }}>
       <div style={{ maxWidth: 540, margin: "0 auto", padding: "32px 20px 80px" }}>
+        {/* Banner "Riprendi" — appare se trovo un draft salvato in
+            localStorage da una sessione precedente. Resta finche'
+            l'utente non sceglie. Salva la friction di "ho ricaricato
+            e ho perso tutto". */}
+        {pendingDraft && (
+          <div style={{
+            background: "#fff",
+            border: `1.5px solid ${config.paletteAccent}`,
+            borderRadius: 14,
+            padding: "14px 16px",
+            marginBottom: 18,
+            boxShadow: "0 4px 14px rgba(0,0,0,.06)",
+          }}>
+            <div style={{ fontSize: 14, fontWeight: 800, color: DEEP, marginBottom: 4 }}>
+              📝 Hai un regalo iniziato
+            </div>
+            <div style={{ fontSize: 12.5, color: MUTED, marginBottom: 12, lineHeight: 1.5 }}>
+              Salvato {relativeTimeIt(pendingDraft.savedAt)}
+              {pendingDraft.recipientName && <> · per <strong style={{ color: DEEP }}>{pendingDraft.recipientName}</strong></>}
+              {pendingDraft.step > 0 && <> · arrivato al passo {pendingDraft.step + 1} di {totalSteps}</>}
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button
+                onClick={resumeDraft}
+                style={{
+                  flex: 1,
+                  background: config.paletteAccent,
+                  color: "#fff", border: "none", borderRadius: 30,
+                  padding: "10px 16px", fontSize: 13, fontWeight: 700,
+                  cursor: "pointer", fontFamily: "inherit",
+                }}
+              >
+                ↻ Riprendi
+              </button>
+              <button
+                onClick={discardDraft}
+                style={{
+                  background: "transparent",
+                  color: MUTED, border: `1.5px solid ${BORDER}`, borderRadius: 30,
+                  padding: "10px 16px", fontSize: 13, fontWeight: 600,
+                  cursor: "pointer", fontFamily: "inherit",
+                }}
+              >
+                Ricomincia
+              </button>
+            </div>
+          </div>
+        )}
+
         <div style={{ display: "flex", gap: 4, marginBottom: 24 }}>
           {Array.from({ length: totalSteps }).map((_, i) => (
             <div
