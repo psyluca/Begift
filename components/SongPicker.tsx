@@ -25,7 +25,7 @@ const DEEP = "#1a1a1a";
 const MUTED = "#888";
 const BORDER = "#e0dbd5";
 
-interface SpotifyTrack {
+export interface SpotifyTrack {
   id: string;
   name: string;
   artists: string;
@@ -39,12 +39,23 @@ interface SpotifyTrack {
 interface Props {
   /** URL canzone selezionata (Spotify, YouTube, Apple Music, ecc.). */
   value: string;
+  /** Callback chiamato sempre dopo selezione/rimozione: per default
+   *  passa lo spotifyUrl. Se serve la track completa (es. previewUrl
+   *  per usare l'mp3 30s come packaging sound), passa anche
+   *  onPickTrack. */
   onChange: (url: string) => void;
+  /** Callback opzionale con la track completa, chiamato dopo onChange
+   *  quando l'utente clicca un risultato. Non viene chiamato in
+   *  modalita' URL libero. */
+  onPickTrack?: (track: SpotifyTrack) => void;
+  /** Filtro opzionale: se true, mostra SOLO le tracks che hanno
+   *  previewUrl (utile per packaging sound dove serve l'mp3). */
+  requirePreview?: boolean;
   /** Hint sotto al campo. Default: "Cerca per titolo o artista". */
   hint?: string;
 }
 
-export function SongPicker({ value, onChange, hint }: Props) {
+export function SongPicker({ value, onChange, onPickTrack, requirePreview, hint }: Props) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SpotifyTrack[] | null>(null);
   const [loading, setLoading] = useState(false);
@@ -78,7 +89,10 @@ export function SongPicker({ value, onChange, hint }: Props) {
           return;
         }
         const data = await res.json();
-        setResults((data.tracks ?? []) as SpotifyTrack[]);
+        const tracks = (data.tracks ?? []) as SpotifyTrack[];
+        // Se il chiamante richiede previewUrl (modalita' packaging sound),
+        // filtriamo le tracks che ne sono prive (~10-15% in IT).
+        setResults(requirePreview ? tracks.filter((t) => !!t.previewUrl) : tracks);
       } catch {
         setResults([]);
       } finally {
@@ -96,6 +110,7 @@ export function SongPicker({ value, onChange, hint }: Props) {
   const handlePick = (t: SpotifyTrack) => {
     setSelected(t);
     onChange(t.spotifyUrl);
+    onPickTrack?.(t);
     setQuery("");
     setResults(null);
   };
