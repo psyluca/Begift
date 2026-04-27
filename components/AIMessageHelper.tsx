@@ -219,11 +219,41 @@ function AIMessageModal({ recipientName, senderName, locale, onClose, onPick }: 
             ×
           </button>
         </div>
-        <p style={{ fontSize: 12, color: MUTED, margin: "0 0 18px", lineHeight: 1.5 }}>
+        <p style={{ fontSize: 12, color: MUTED, margin: "0 0 14px", lineHeight: 1.5 }}>
           {suggestions
             ? t("ai_helper.done_intro", { name: recipientName })
             : t("ai_helper.intro", { name: recipientName })}
         </p>
+
+        {/* Disclosure AI obbligatoria ex art. 50 EU AI Act + GDPR
+            (gap 7.5 LEGAL_REVIEW). Mostrata PRIMA che l'utente
+            inserisca dati nel campo "Contesto", perche' contentHint
+            puo' contenere informazioni personali del destinatario
+            che vengono trasmesse a Claude (Anthropic, USA, tier
+            zero-retention). Tono informativo, non ansiogeno. */}
+        {!suggestions && (
+          <div style={{
+            background: "#f9f5f1",
+            border: `1px solid ${BORDER}`,
+            borderRadius: 10,
+            padding: "10px 12px",
+            marginBottom: 16,
+            display: "flex",
+            gap: 8,
+            alignItems: "flex-start",
+          }}>
+            <span aria-hidden style={{ fontSize: 14, lineHeight: 1.4, flexShrink: 0 }}>ℹ️</span>
+            <div style={{ fontSize: 11.5, color: MUTED, lineHeight: 1.5 }}>
+              I dati che inserisci vengono elaborati da{" "}
+              <strong style={{ color: DEEP, fontWeight: 600 }}>Claude (Anthropic, USA)</strong>{" "}
+              su tier zero-retention: non vengono salvati né usati per addestrare modelli.
+              Evita comunque di scrivere informazioni sensibili sul destinatario.{" "}
+              <a href="/privacy" target="_blank" rel="noopener" style={{ color: ACCENT, textDecoration: "underline" }}>
+                Privacy
+              </a>
+            </div>
+          </div>
+        )}
 
         {/* Tone picker */}
         {!suggestions && (
