@@ -1085,9 +1085,13 @@ export default function GiftOpeningClient({ gift }: { gift: Gift }) {
       {fromCreate && (
         <div style={{ background:"#fff8e1", borderBottom:"1px solid #ffe082", padding:"12px 20px", display:"flex", alignItems:"center", justifyContent:"space-between", gap:12 }}>
           <span style={{ fontSize:13, color:"#5d4037", fontWeight:600 }}>{t("gift.preview_banner")}</span>
-          <button onClick={() => window.close()} style={{ background:"#5d4037", color:"#fff", border:"none", borderRadius:20, padding:"8px 16px", fontSize:12, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap" }}>
+          {/* Bug fix 2026-04-27: window.close() e' bloccato dal browser
+              per tab non aperti via window.open() — il bottone non
+              rispondeva. Sostituito con link a /dashboard, stesso
+              pattern del banner previewMode sotto. */}
+          <a href="/dashboard" style={{ background:"#5d4037", color:"#fff", border:"none", borderRadius:20, padding:"8px 16px", fontSize:12, fontWeight:700, textDecoration:"none", whiteSpace:"nowrap", display:"inline-block" }}>
             {t("gift.close_preview")}
-          </button>
+          </a>
         </div>
       )}
       {previewMode && !fromCreate && (
