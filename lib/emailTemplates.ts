@@ -282,10 +282,10 @@ export function surveyInviteTemplate(p: SurveyInviteParams): RenderedEmail {
   return {
     subject,
     html: shell({
-      preheader: "5 minuti per dirmi com'è andata. Le tue risposte vanno direttamente al fondatore.",
+      preheader: "3 minuti per dirmi com'è andata. Le tue risposte vanno direttamente al fondatore.",
       headline,
       bodyHtml: body,
-      ctaLabel: "Compila il sondaggio (5 min)",
+      ctaLabel: "Compila il sondaggio (3 min)",
       ctaUrl: p.surveyUrl,
       footerNote: "Hai ricevuto questa email perchè hai appena creato un regalo su BeGift. Mandiamo poche email all'anno — se non vuoi piu' riceverle, gestiscile dalle tue impostazioni.",
     }),

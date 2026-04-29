@@ -23,7 +23,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Sondaggio post-gift — BeGift",
-  description: "5 minuti per dirmi com'è andata. Le tue risposte vanno direttamente a Luca, founder di BeGift.",
+  description: "3 minuti per dirmi com'è andata. Le tue risposte vanno direttamente a Luca, founder di BeGift.",
   robots: { index: false, follow: false },
 };
 
