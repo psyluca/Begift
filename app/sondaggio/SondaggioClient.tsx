@@ -211,7 +211,7 @@ export default function SondaggioClient({ giftIdFromQuery, userIdFromQuery }: Pr
           </h1>
           {section === 0 && (
             <p style={{ fontSize: 13.5, color: MUTED, marginTop: 8, lineHeight: 1.55 }}>
-              Sono Luca, founder di BeGift. Le tue risposte arrivano direttamente a me — 3 minuti, e mi servono per decidere come BeGift si evolve nei prossimi mesi.
+              Sono Luca, founder di BeGift. Le tue risposte arrivano direttamente a me — max 3 minuti, e mi servono per decidere come BeGift si evolve nei prossimi mesi.
             </p>
           )}
         </div>

@@ -263,8 +263,8 @@ export function festaMammaAnnounceTemplate(p: FestaMammaAnnounceParams): Rendere
 export function surveyInviteTemplate(p: SurveyInviteParams): RenderedEmail {
   const name = p.name?.trim() || "ciao";
   const recipient = p.recipientName?.trim();
-  const subject = "Hai 3 minuti? Aiutami a migliorare BeGift";
-  const headline = `Ciao ${name}, ti chiedo 3 minuti`;
+  const subject = "Hai max 3 minuti? Aiutami a migliorare BeGift";
+  const headline = `Ciao ${name}, ti chiedo max 3 minuti`;
   const recipientLine = recipient
     ? `<p style="margin:0 0 14px;"><strong>${escapeHtml(recipient)}</strong> ha appena aperto il regalo che hai creato. Mentre l'esperienza è fresca, ti chiedo pochi minuti per dirmi com'è andata.</p>`
     : `<p style="margin:0 0 14px;">Hai appena creato e inviato un regalo su BeGift. Mentre l'esperienza è fresca, ti chiedo pochi minuti per dirmi com'è andata.</p>`;
@@ -282,10 +282,10 @@ export function surveyInviteTemplate(p: SurveyInviteParams): RenderedEmail {
   return {
     subject,
     html: shell({
-      preheader: "3 minuti per dirmi com'è andata. Le tue risposte vanno direttamente al fondatore.",
+      preheader: "Max 3 minuti per dirmi com'è andata. Le tue risposte vanno direttamente al fondatore.",
       headline,
       bodyHtml: body,
-      ctaLabel: "Compila il sondaggio (3 min)",
+      ctaLabel: "Compila il sondaggio (max 3 min)",
       ctaUrl: p.surveyUrl,
       footerNote: "Hai ricevuto questa email perchè hai appena creato un regalo su BeGift. Mandiamo poche email all'anno — se non vuoi piu' riceverle, gestiscile dalle tue impostazioni.",
     }),
