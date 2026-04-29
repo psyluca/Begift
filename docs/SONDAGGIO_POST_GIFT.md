@@ -207,22 +207,29 @@ Solo per gli utenti che hanno accettato la domanda 18. Massimo 10 minuti di chia
 
 ---
 
-## Implementazione tecnica — STATO
+## Implementazione tecnica — STATO (aggiornato 28-04-2026)
 
-✅ **Backend già implementato (commit del 28-04-2026):**
+✅ **Sondaggio NATIVO BeGift — Tally rimpiazzato.** Dopo aver scoperto che Tally richiede piano Pro per i webhook (29$/mese) e che Zapier free tier limita a 100 task/mese, abbiamo riscritto il sondaggio come **form Next.js interno**. Vantaggi: zero dipendenze esterne, brand coerente, hidden fields automatici dalla session.
+
+✅ **Componenti implementati:**
 - Migration 019: tabella `survey_responses` + flag `profiles.survey_invite_sent_at`
+- Pagina `/sondaggio` con wizard a 5 sezioni (UX qualitativa, modello business + Van Westendorp, mail-forward, NPS, demografico)
+- Pagina `/sondaggio/grazie` con thank-you message
 - Email template `surveyInviteTemplate` in `lib/emailTemplates.ts`
 - Helper `sendSurveyInvite` in `lib/email.ts` (idempotente per utente)
-- Cron `/api/cron/survey-invites` (daily 10:00 UTC = 12:00 CET)
-- Endpoint webhook `/api/survey/submit` per ricevere risposte Tally
+- Cron `/api/cron/survey-invites` (daily 10:00 UTC = 12:00 CET) — di default linka a `/sondaggio`, override possibile con `SURVEY_TALLY_URL` env var
+- Endpoint `/api/survey/submit` accetta sia payload INTERNAL (form nativo) sia legacy Tally (per fallback A/B test futuri)
 - `vercel.json` aggiornato con il nuovo cron
 
-⏳ **Cose che restano da fare a mano (Luca, ~30 min):**
+✅ **Sezione 4 — Cosa NON serve più fare:** non c'è bisogno di creare form Tally, configurare webhook, settare env var SURVEY_TALLY_URL. Il sondaggio funziona "out of the box" appena fai push.
+
+⏳ **Cose che restano da fare (Luca, ~5 min):**
 
 ### 1. Esegui migration 019 su Supabase
 SQL Editor → New Query → incolla il contenuto di `supabase/migrations/019_survey_responses.sql` → Run.
+*(Già fatto se hai eseguito la migration ieri.)*
 
-### 2. Crea il form su Tally (gratuito)
+### 2. (Opzionale, niente da fare) Form Tally rimpiazzato
 1. Vai su [tally.so](https://tally.so), crea account
 2. **New form → Start from scratch**
 3. Aggiungi le 18 domande dalla sezione "Struttura del sondaggio" (sopra). Per ogni domanda:

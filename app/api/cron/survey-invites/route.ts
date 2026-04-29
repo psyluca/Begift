@@ -17,12 +17,11 @@
  *  - Ma non chiediamo subito (evita di interrompere il momento "wow"
  *    della prima apertura, che e' del destinatario non del creator)
  *
- * URL del sondaggio: SURVEY_TALLY_URL env var (es.
- * "https://tally.so/r/AbCdEf"). Il client appenderà userId/giftId
- * come query string per associare le risposte. Se l'env var non e'
- * settata, il cron skip silenziosamente — "feature flag implicito"
- * che permette di deployare il backend senza ancora aver creato il
- * form Tally.
+ * URL del sondaggio: di default usa il form NATIVO BeGift a
+ * /sondaggio (richiesta del 28-04-2026: sostituiti Tally + Zapier
+ * con un form interno per evitare dipendenze a piano Pro / terze
+ * parti). Override: SURVEY_TALLY_URL env var, se settata punta a
+ * un form esterno (es. Tally) — utile per A/B test futuri.
  *
  * Auth: stesso schema CRON_SECRET di altri cron.
  */
@@ -34,6 +33,10 @@ import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { sendSurveyInvite } from "@/lib/email";
 import { NextRequest, NextResponse } from "next/server";
 
+function getAppUrl(): string {
+  return process.env.NEXT_PUBLIC_APP_URL || "https://begift.app";
+}
+
 export async function GET(req: NextRequest) {
   const cronSecret = process.env.CRON_SECRET;
   if (cronSecret) {
@@ -43,10 +46,9 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  const surveyBaseUrl = process.env.SURVEY_TALLY_URL;
-  if (!surveyBaseUrl) {
-    return NextResponse.json({ skipped: "no_survey_url_env", note: "Set SURVEY_TALLY_URL on Vercel to activate the cron." });
-  }
+  // URL base del sondaggio: priorita' a env var Tally se settata,
+  // altrimenti default al form nativo BeGift /sondaggio.
+  const surveyBaseUrl = process.env.SURVEY_TALLY_URL || `${getAppUrl()}/sondaggio`;
 
   const admin = createSupabaseAdmin();
   const now = Date.now();
