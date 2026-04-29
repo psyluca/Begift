@@ -113,6 +113,9 @@ export default function AdminStatsClient() {
           <a href="/admin/announce" style={{ fontSize: 12, fontWeight: 700, color: ACCENT, background: "#fff", border: `1px solid #e8e4de`, borderRadius: 999, padding: "6px 14px", textDecoration: "none" }}>
             📣 Campagne email
           </a>
+          <a href="/admin/survey" style={{ fontSize: 12, fontWeight: 700, color: ACCENT, background: "#fff", border: `1px solid #e8e4de`, borderRadius: 999, padding: "6px 14px", textDecoration: "none" }}>
+            📋 Sondaggio
+          </a>
         </div>
 
         {/* ── Pannello Salute lancio (post 2026-04-27) ──────────── */}
