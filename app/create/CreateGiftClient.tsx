@@ -686,9 +686,16 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
         </div>
       )}
 
+      {/* InAppSend (search utenti registrati) sospeso 2026-04-28 per
+          privacy hardening pre-lancio. La search restituiva email +
+          display_name di chiunque, senza filtro "cerchia". Riabilita
+          quando avremo un sistema di connessioni / opt-in trovabilita'.
+          Vedi app/api/users/route.ts per dettaglio. */}
+      {/*
       <div style={{maxWidth:480,width:"100%",marginBottom:20}}>
         <InAppSend giftId={result.id}/>
       </div>
+      */}
       {/* CTA anteprima centrale — usa lo stesso background soft della
           card social-proof landing (rosa pastello), non più pieno nero.
           "Dashboard" rimosso: è già nella BottomNav. */}
