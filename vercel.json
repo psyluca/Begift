@@ -7,6 +7,10 @@
     {
       "path": "/api/cron/reopen-notifications",
       "schedule": "0 11 * * *"
+    },
+    {
+      "path": "/api/cron/survey-invites",
+      "schedule": "0 10 * * *"
     }
   ]
 }

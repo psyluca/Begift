@@ -207,29 +207,56 @@ Solo per gli utenti che hanno accettato la domanda 18. Massimo 10 minuti di chia
 
 ---
 
-## Implementazione tecnica
+## Implementazione tecnica — STATO
 
-### Setup Tally
-1. Crea form su [tally.so](https://tally.so) con le 18 domande
-2. Configura logica condizionale (es. domanda 12 visibile solo se 11 ≠ "non avevo pensato")
-3. Tema: usa colori brand BeGift (accent #D4537E)
-4. Esporta link pubblico
+✅ **Backend già implementato (commit del 28-04-2026):**
+- Migration 019: tabella `survey_responses` + flag `profiles.survey_invite_sent_at`
+- Email template `surveyInviteTemplate` in `lib/emailTemplates.ts`
+- Helper `sendSurveyInvite` in `lib/email.ts` (idempotente per utente)
+- Cron `/api/cron/survey-invites` (daily 10:00 UTC = 12:00 CET)
+- Endpoint webhook `/api/survey/submit` per ricevere risposte Tally
+- `vercel.json` aggiornato con il nuovo cron
 
-### Trigger automatico
-Aggiungi a `app/api/cron/...` un nuovo cron job (Vercel Cron daily 09:00):
-- Query: `gifts JOIN gift_opens` dove `opened_at` è tra 24h e 48h fa, e creator ha `notify_email=true`
-- Per ognuno: chiamata `sendSurveyEmail(creatorId, giftId)` (nuovo template in `lib/emailTemplates.ts`)
-- Marchia in `profiles.survey_sent_at` per evitare duplicati
+⏳ **Cose che restano da fare a mano (Luca, ~30 min):**
+
+### 1. Esegui migration 019 su Supabase
+SQL Editor → New Query → incolla il contenuto di `supabase/migrations/019_survey_responses.sql` → Run.
+
+### 2. Crea il form su Tally (gratuito)
+1. Vai su [tally.so](https://tally.so), crea account
+2. **New form → Start from scratch**
+3. Aggiungi le 18 domande dalla sezione "Struttura del sondaggio" (sopra). Per ogni domanda:
+   - Multiple choice → "Multiple choice"
+   - Testo libero → "Long text" (max 200 char per le brevi)
+   - Scala 1-10 NPS → "Linear scale" 0-10
+   - Van Westendorp prezzi → "Number" (€) o "Short text"
+4. **Settings → Hidden Fields** → aggiungi due hidden fields: `userId` e `giftId`. Sono cruciali: il cron li passa come query string nel link email, e così la risposta viene associata al gift originale.
+5. **Settings → Theme** → colori brand: accent `#D4537E`, sfondo `#fafaf7`
+6. **Settings → Integrations / Webhooks** → aggiungi webhook:
+   - URL: `https://begift.app/api/survey/submit`
+   - Method: POST
+   - Trigger: On form submission
+7. **Publish** → ottieni l'URL pubblico, es. `https://tally.so/r/AbCdEf`
+8. Copia il **Form ID** (la parte dopo `/r/`, es. `AbCdEf`).
+
+### 3. Setta env var su Vercel
+Settings → Environment Variables → aggiungi due:
+- `SURVEY_TALLY_URL` = `https://tally.so/r/AbCdEf` (URL pubblico del form)
+- `TALLY_FORM_ID` = `AbCdEf` (per validare il webhook)
+
+### 4. Redeploy
+Forza redeploy su Vercel così il cron ricarica le env var.
+
+### 5. Test
+- Crea un finto gift, fallo aprire
+- Aspetta 24-48h (oppure invoca manualmente `/api/cron/survey-invites` con CRON_SECRET)
+- Verifica che ti arrivi la mail con CTA al sondaggio
+- Compila il form
+- Verifica su Supabase che ci sia la riga in `survey_responses` con il payload completo
 
 ### Tracking
-- Plausible: evento custom `survey_completed` con properties `nps`, `wtp_optimal`
-- Tally → webhook → endpoint BeGift → salva risposte in tabella `survey_responses` per analisi rapida
-
-### Tempo dev stimato
-- Cron + email template + tabella DB: ~3 ore
-- Test end-to-end: ~1 ora
-- Tally setup: ~1 ora
-- **Totale: mezza giornata**
+- Plausible: evento custom `survey_completed` (configura in Tally come pixel post-submit, opzionale)
+- Tabella `survey_responses` → query SQL diretta su Supabase per analisi quotidiana
 
 ---
 

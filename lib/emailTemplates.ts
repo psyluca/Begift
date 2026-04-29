@@ -53,6 +53,18 @@ export interface FestaMammaAnnounceParams {
   daysLeft: number;
 }
 
+export interface SurveyInviteParams {
+  /** Display name o username, fallback "ciao". */
+  name?: string;
+  /** URL Tally (o altra piattaforma) del sondaggio.
+   *  Tipicamente popolato con userId e giftId come hidden fields per
+   *  associare la risposta in survey_responses. */
+  surveyUrl: string;
+  /** Nome del destinatario del regalo che ha innescato l'invito.
+   *  Usato per personalizzare il copy ("Maria ha aperto..."). */
+  recipientName?: string;
+}
+
 interface RenderedEmail {
   subject: string;
   html: string;
@@ -245,6 +257,39 @@ export function festaMammaAnnounceTemplate(p: FestaMammaAnnounceParams): Rendere
       footerNote: "Hai ricevuto questa email perchè sei tra i primi utenti BeGift. Mandiamo poche email all'anno — niente newsletter, solo annunci concreti.",
     }),
     text: `${headline}\n\nC'è un template dedicato che ti accompagna in 5 domande — esce una "Lettera che cresce" piuttosto bella, con foto e canzone se ti va.\n\nTempo: 3 minuti. Si fa anche dal cellulare.\n\nCrea: ${appUrl()}/festa-mamma`,
+  };
+}
+
+export function surveyInviteTemplate(p: SurveyInviteParams): RenderedEmail {
+  const name = p.name?.trim() || "ciao";
+  const recipient = p.recipientName?.trim();
+  const subject = "Hai 3 minuti? Aiutami a migliorare BeGift";
+  const headline = `Ciao ${name}, ti chiedo 3 minuti`;
+  const recipientLine = recipient
+    ? `<p style="margin:0 0 14px;"><strong>${escapeHtml(recipient)}</strong> ha appena aperto il regalo che hai creato. Mentre l'esperienza è fresca, ti chiedo un pezzo del tuo tempo per dirmi com'è andata.</p>`
+    : `<p style="margin:0 0 14px;">Hai appena creato e inviato un regalo su BeGift. Mentre l'esperienza è fresca, ti chiedo un pezzo del tuo tempo per dirmi com'è andata.</p>`;
+  const body = `
+    ${recipientLine}
+    <p style="margin:0 0 14px;">Sono Luca, il fondatore. Le risposte vanno a me direttamente e mi servono per decidere come BeGift si evolve nei prossimi mesi: cosa tenere, cosa aggiungere, cosa eliminare.</p>
+    <p style="margin:0 0 8px;font-weight:700;">Tre cose te le chiedo in particolare:</p>
+    <ul style="margin:0 0 16px 18px;padding:0;line-height:1.7;">
+      <li>Cosa ti è piaciuto e cosa ti ha frustrato</li>
+      <li>Se la persona a cui hai mandato il regalo ti ha detto qualcosa</li>
+      <li>Se BeGift è una cosa per cui valga la pena pagare (anche poco)</li>
+    </ul>
+    <p style="margin:0 0 6px;color:#888;font-size:13px;">5 minuti, anonimo se vuoi. Grazie davvero — ogni risposta in questa fase vale dieci volte una risposta dopo.</p>
+  `;
+  return {
+    subject,
+    html: shell({
+      preheader: "5 minuti per dirmi com'è andata. Le tue risposte vanno direttamente al fondatore.",
+      headline,
+      bodyHtml: body,
+      ctaLabel: "Compila il sondaggio (5 min)",
+      ctaUrl: p.surveyUrl,
+      footerNote: "Hai ricevuto questa email perchè hai appena creato un regalo su BeGift. Mandiamo poche email all'anno — se non vuoi piu' riceverle, gestiscile dalle tue impostazioni.",
+    }),
+    text: `${headline}\n\n${stripHtml(recipientLine + body)}\n\nSondaggio: ${p.surveyUrl}`,
   };
 }
 

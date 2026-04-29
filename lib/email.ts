@@ -32,10 +32,12 @@ import {
   reactionTemplate,
   welcomeTemplate,
   festaMammaAnnounceTemplate,
+  surveyInviteTemplate,
   type GiftOpenedParams,
   type ReactionParams,
   type WelcomeParams,
   type FestaMammaAnnounceParams,
+  type SurveyInviteParams,
 } from "@/lib/emailTemplates";
 
 const RESEND_ENDPOINT = "https://api.resend.com/emails";
@@ -231,6 +233,51 @@ export async function sendFestaMammaAnnounce(userId: string, params: FestaMammaA
     tags: [
       { name: "type", value: "campaign" },
       { name: "campaign", value: FESTA_MAMMA_CAMPAIGN_ID },
+    ],
+  });
+  if (!result.ok) {
+    if (result.error === "no_api_key") return { sent: false, reason: "no_api_key" };
+    return { sent: false, reason: "send_failed" };
+  }
+  return { sent: true };
+}
+
+/**
+ * Invia invito al sondaggio post-gift. Idempotente per utente:
+ * controlla profiles.survey_invite_sent_at, lock atomico via
+ * UPDATE WHERE IS NULL. Una sola survey per utente per sempre
+ * (almeno per la versione attuale 'post_gift_v1' del sondaggio).
+ *
+ * Ritorna { sent, reason } per il chiamante (cron) per stats.
+ */
+export async function sendSurveyInvite(userId: string, params: SurveyInviteParams): Promise<CampaignSendResult> {
+  const profile = await loadRecipient(userId);
+  if (!profile) return { sent: false, reason: "no_email" };
+  if (!profile.notify_email) return { sent: false, reason: "opted_out" };
+
+  // Lock atomico: UPDATE solo se survey_invite_sent_at IS NULL
+  const admin = createSupabaseAdmin();
+  const { data: claimed, error: claimErr } = await admin
+    .from("profiles")
+    .update({ survey_invite_sent_at: new Date().toISOString() })
+    .eq("id", userId)
+    .is("survey_invite_sent_at", null)
+    .select("id")
+    .maybeSingle();
+  if (claimErr || !claimed) {
+    return { sent: false, reason: "already_sent" };
+  }
+
+  const tpl = surveyInviteTemplate(params);
+  const result = await postResend({
+    from: resolveFrom(),
+    to: profile.email,
+    subject: tpl.subject,
+    html: tpl.html,
+    text: tpl.text,
+    tags: [
+      { name: "type", value: "survey" },
+      { name: "survey", value: "post_gift_v1" },
     ],
   });
   if (!result.ok) {
