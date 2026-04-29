@@ -266,18 +266,18 @@ export function surveyInviteTemplate(p: SurveyInviteParams): RenderedEmail {
   const subject = "Hai 3 minuti? Aiutami a migliorare BeGift";
   const headline = `Ciao ${name}, ti chiedo 3 minuti`;
   const recipientLine = recipient
-    ? `<p style="margin:0 0 14px;"><strong>${escapeHtml(recipient)}</strong> ha appena aperto il regalo che hai creato. Mentre l'esperienza è fresca, ti chiedo un pezzo del tuo tempo per dirmi com'è andata.</p>`
-    : `<p style="margin:0 0 14px;">Hai appena creato e inviato un regalo su BeGift. Mentre l'esperienza è fresca, ti chiedo un pezzo del tuo tempo per dirmi com'è andata.</p>`;
+    ? `<p style="margin:0 0 14px;"><strong>${escapeHtml(recipient)}</strong> ha appena aperto il regalo che hai creato. Mentre l'esperienza è fresca, ti chiedo pochi minuti per dirmi com'è andata.</p>`
+    : `<p style="margin:0 0 14px;">Hai appena creato e inviato un regalo su BeGift. Mentre l'esperienza è fresca, ti chiedo pochi minuti per dirmi com'è andata.</p>`;
   const body = `
     ${recipientLine}
     <p style="margin:0 0 14px;">Sono Luca, il fondatore. Le risposte vanno a me direttamente e mi servono per decidere come BeGift si evolve nei prossimi mesi: cosa tenere, cosa aggiungere, cosa eliminare.</p>
     <p style="margin:0 0 8px;font-weight:700;">Tre cose te le chiedo in particolare:</p>
     <ul style="margin:0 0 16px 18px;padding:0;line-height:1.7;">
-      <li>Cosa ti è piaciuto e cosa ti ha frustrato</li>
+      <li>Cosa ti è piaciuto e cosa non ti è piaciuto</li>
       <li>Se la persona a cui hai mandato il regalo ti ha detto qualcosa</li>
       <li>Se BeGift è una cosa per cui valga la pena pagare (anche poco)</li>
     </ul>
-    <p style="margin:0 0 6px;color:#888;font-size:13px;">5 minuti, anonimo se vuoi. Grazie davvero — ogni risposta in questa fase vale dieci volte una risposta dopo.</p>
+    <p style="margin:0 0 6px;color:#888;font-size:13px;">Grazie davvero — ogni risposta in questa fase vale dieci volte una risposta dopo.</p>
   `;
   return {
     subject,
