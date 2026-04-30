@@ -37,38 +37,42 @@ copia-incolla diretto. Sostituisci `{nome}` dove serve.
 > regali digitali — foto, messaggi, una canzone — in una busta animata
 > che la persona apre tipo regalo vero.
 >
-> È in beta da pochi giorni e domenica 11 c'è la Festa della Mamma. Se
-> ti va di darle un'occhiata e dirmi cosa ne pensi, mi farebbe enorme
-> piacere: 👉 https://begift.app
+> Domenica 11 è la Festa della Mamma e c'è un **template dedicato**:
+> ti chiede 5 domande affettive sulla tua mamma e tira fuori una
+> "Lettera che cresce" con foto e canzone. Tre minuti.
+>
+> Se ti va di provarlo per tua madre e dirmi cosa ne pensi, mi farebbe
+> enorme piacere: 👉 https://begift.app/festa-mamma
 >
 > Niente fretta, e niente registrazione strana. Funziona da telefono.
 
 **Variante più asciutta** se preferisci meno parole:
 
-> {nome}, ho costruito un'app per regalare a distanza — una specie di
-> "busta digitale" che si apre come un pacchetto. La sto facendo testare
-> ora per la Festa della Mamma. Se hai 2 minuti: https://begift.app —
-> dimmi solo se ti torna l'idea.
+> {nome}, ho costruito un'app per regalare a distanza. Per la Festa della
+> Mamma c'è un template che chiede 5 domande sulla tua mamma e ti tira
+> fuori una specie di lettera con foto + canzone, in 3 minuti. Te la
+> consiglio: https://begift.app/festa-mamma — dimmi solo se ti torna l'idea.
 
 ### 2.2 — Wave 1 — Familiari (zii, cugini, parenti)
 
-> Ciao {nome}, breve cosa: ho fatto un'app, **BeGift**. Permette di mandare
-> una sorta di pacchetto digitale alla mamma per la Festa — con una sua
-> foto, una canzone, un messaggio scritto bene. Lo apre come fosse un
-> vero regalo.
+> Ciao {nome}, breve cosa: ho fatto un'app, **BeGift**. Per la Festa della
+> Mamma c'è un template che ti accompagna — 5 domande emotive sulla tua
+> mamma, una foto, una canzone. Esce una "Lettera che cresce" che lei
+> riceve come regalo vero da scartare.
 >
 > Domenica 11 è la Festa della Mamma. Se ti va di provarla guarda qui:
-> https://begift.app — sono curioso di sapere se ti torna utile.
+> 👉 https://begift.app/festa-mamma — sono curioso di sapere se ti torna utile.
 
 ### 2.3 — Wave 2 — Amici "secondari" (gente con cui scambi 1 msg al mese)
 
 > Ciao {nome},
 > non ti scrivo da un po' — volevo dirti che ho lanciato in beta una mia
-> app, BeGift. È un modo nuovo di fare un regalo a distanza: scegli
-> contenuto (foto, video, messaggio, una canzone), lo metti in una
-> "busta" animata, mandi il link, lo apre con l'effetto sorpresa.
+> app, **BeGift**. È un modo nuovo di fare un regalo a distanza, e per la
+> Festa della Mamma ho costruito un **template dedicato**: 5 domande sulla
+> tua mamma, una foto, una canzone, e BeGift le confeziona in una "Lettera
+> che cresce" che lei apre come fosse un vero regalo. Tre minuti.
 >
-> Giusto in tempo per la Festa della Mamma: https://begift.app
+> 👉 https://begift.app/festa-mamma
 >
 > Se ti va guardalo, e se ti va davvero passalo. Grazie!
 
@@ -78,11 +82,13 @@ Tono diverso: nei gruppi il messaggio personale "Ciao {nome}" stona.
 Vai più asciutto, leggermente "showroom":
 
 > Ragazzi, una cosa che ho costruito negli ultimi mesi: **BeGift**, app
-> per regali digitali (foto, video, messaggi, canzoni dentro una busta
-> animata che il destinatario apre come un pacchetto vero).
+> per regali digitali. Per la Festa della Mamma c'è un **template
+> dedicato** che vi accompagna in 5 domande affettive (la sua foto, una
+> canzone che vi unisce, un ricordo) e tira fuori una specie di lettera
+> da regalo, da scartare.
 >
 > Domenica è la Festa della Mamma — la sto testando proprio adesso in
-> beta pubblica e mi servirebbe il vostro feedback: https://begift.app
+> beta pubblica e mi servirebbe il vostro feedback: 👉 https://begift.app/festa-mamma
 >
 > Se la usate per le vostre mamme me lo fate sapere? Ogni segnalazione
 > mi aiuta tantissimo prima del lancio "vero".
@@ -91,39 +97,47 @@ Vai più asciutto, leggermente "showroom":
 
 A chi ha già visto i messaggi precedenti **senza rispondere**:
 
-> {nome}, sabato sera quick reminder: domani è la Festa della Mamma e
-> BeGift gira bene. Se non l'hai visto, prova a usarlo per tua madre —
-> 3 minuti, esce una cosa carina: https://begift.app/festa-mamma
+> {nome}, sabato sera quick reminder: domani è la Festa della Mamma. Se
+> non hai ancora visto BeGift, il template Mamma esce in 3 minuti — 5
+> domande sulla tua mamma, una foto, una canzone, lei apre tipo regalo:
+> 👉 https://begift.app/festa-mamma
 >
 > Se preferisci di no, no problem. Ma volevo non fartelo perdere.
 
 A gruppi WhatsApp dove c'è già stata reazione positiva:
 
 > 📌 Domani è Festa della Mamma — ricordo a chi voleva provare BeGift
-> che il template Mamma è quello dedicato (qui il link diretto:
-> https://begift.app/festa-mamma). Buon lancio a chi mi sta seguendo!
+> che c'è il **template dedicato**: 5 domande emotive, una foto, una
+> canzone, in 3 minuti esce una Lettera che si apre come regalo. Link
+> diretto: 👉 https://begift.app/festa-mamma. Buon lancio a chi mi sta
+> seguendo!
 
 ---
 
 ## 3. Email di backup (per chi non ha WhatsApp)
 
-**Oggetto:** Una cosa che ho costruito — BeGift
+**Oggetto:** Un regalo per la Festa della Mamma — l'app che ho costruito
 
 > Ciao {nome},
 >
-> ti scrivo perché negli ultimi mesi ho sviluppato un'app, BeGift. È un
-> modo nuovo di fare regali digitali: scegli un contenuto (foto, video,
-> una canzone, un messaggio scritto bene) e BeGift lo "impacchetta" in
-> una busta animata che il destinatario apre come fosse un regalo vero.
+> ti scrivo perché negli ultimi mesi ho sviluppato un'app, **BeGift**: un
+> modo nuovo di fare regali digitali, dove il contenuto (foto, video,
+> messaggi, canzoni) viene "impacchettato" in una busta animata che il
+> destinatario apre come fosse un regalo vero.
 >
-> Sono in beta pubblica da pochi giorni e domenica 11 maggio è la Festa
-> della Mamma — l'occasione per cui l'ho costruito. Se hai 2 minuti, ti
-> sarei grato se ci dessi un'occhiata e mi dicessi cosa ne pensi:
+> Domenica 11 maggio è la Festa della Mamma e per l'occasione ho costruito
+> un **template dedicato**: ti accompagna in 5 domande affettive sulla tua
+> mamma, ti chiede una foto e una canzone, e tira fuori una "Lettera che
+> cresce" che lei apre come un regalo da scartare.
 >
-> 👉 https://begift.app
+> Tre minuti, da telefono o computer. Niente installazione, gratis durante
+> la beta.
 >
-> Funziona da telefono o da computer, niente installazione. È gratis
-> durante la beta.
+> 👉 https://begift.app/festa-mamma
+>
+> Se hai due minuti per provarla per tua madre e dirmi cosa ne pensi, ti
+> sarei davvero grato. Le segnalazioni in queste settimane fanno la
+> differenza per il lancio "vero".
 >
 > Grazie per il tempo,
 > Luca
