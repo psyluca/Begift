@@ -41,6 +41,7 @@ interface StatsData {
   };
   trend_30d: { date: string; created: number; opened: number; new_users: number }[];
   content_types: { type: string; count: number }[];
+  templates?: { template: string; total: number; last_7d: number; today: number }[];
   tiers: { tier: string; count: number }[];
   top_creators: { id: string; email: string | null; username: string | null; count: number }[];
 }
@@ -148,6 +149,37 @@ export default function AdminStatsClient() {
         <SectionTitle>Trend 30 giorni</SectionTitle>
         <TrendChart data={data.trend_30d}/>
 
+        {/* ── Templates breakdown (Festa Mamma vs Papà vs standard) ── */}
+        {data.templates && data.templates.length > 0 && (
+          <>
+            <SectionTitle>Templates utilizzati</SectionTitle>
+            <div style={{ background: "#fff", borderRadius: 14, overflow: "hidden", border: "1px solid #e8e4de" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                <thead>
+                  <tr style={{ background: "#fafaf7", color: MUTED, fontSize: 11, textTransform: "uppercase", letterSpacing: ".05em" }}>
+                    <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 700 }}>Template</th>
+                    <th style={{ padding: "10px 14px", textAlign: "right", fontWeight: 700 }}>Totale</th>
+                    <th style={{ padding: "10px 14px", textAlign: "right", fontWeight: 700 }}>Ultimi 7gg</th>
+                    <th style={{ padding: "10px 14px", textAlign: "right", fontWeight: 700 }}>Oggi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.templates.map((t) => (
+                    <tr key={t.template} style={{ borderTop: "1px solid #e8e4de" }}>
+                      <td style={{ padding: "10px 14px", color: DEEP, fontWeight: 600 }}>
+                        {prettyTemplate(t.template)}
+                      </td>
+                      <td style={{ padding: "10px 14px", textAlign: "right", color: DEEP }}>{t.total}</td>
+                      <td style={{ padding: "10px 14px", textAlign: "right", color: t.last_7d > 0 ? ACCENT : MUTED, fontWeight: t.last_7d > 0 ? 700 : 400 }}>{t.last_7d}</td>
+                      <td style={{ padding: "10px 14px", textAlign: "right", color: t.today > 0 ? OK_GREEN : MUTED, fontWeight: t.today > 0 ? 700 : 400 }}>{t.today}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+
         {/* ── Distribuzioni ────────────────────────────────────── */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 20 }}>
           <div>
@@ -196,6 +228,16 @@ export default function AdminStatsClient() {
 }
 
 // ─── Small helpers ─────────────────────────────────────────────
+
+/** Mappa technical template_type → label leggibile per il pannello admin. */
+function prettyTemplate(t: string): string {
+  switch (t) {
+    case "mothers_day_letter": return "💐 Festa della Mamma";
+    case "fathers_day_letter": return "🌳 Festa del Papà";
+    case "standard":           return "📦 Senza template (standard)";
+    default:                   return t;
+  }
+}
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (

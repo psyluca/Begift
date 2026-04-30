@@ -167,6 +167,38 @@ export async function GET(req: NextRequest) {
     .map(([type, count]) => ({ type, count }))
     .sort((a, b) => b.count - a.count);
 
+  // ── Breakdown template_type (Festa Mamma vs Festa Papà vs standard) ─
+  // Mostra a colpo d'occhio quanti regali sono stati creati con i
+  // template speciali (mothers_day_letter, fathers_day_letter) vs
+  // quelli senza template. Utile durante il lancio Festa Mamma per
+  // capire se gli utenti vanno al template o al flow generico.
+  let templates: { template: string; total: number; last_7d: number; today: number }[] = [];
+  try {
+    const { data: tplData } = await admin
+      .from("gifts")
+      .select("template_type, created_at");
+    if (tplData) {
+      const map = new Map<string, { total: number; last_7d: number; today: number }>();
+      const now = Date.now();
+      const _d7 = now - 7 * 24 * 60 * 60 * 1000;
+      const _d1 = now - 24 * 60 * 60 * 1000;
+      (tplData as { template_type: string | null; created_at: string }[]).forEach((g) => {
+        const key = g.template_type || "standard";
+        const ts = new Date(g.created_at).getTime();
+        const slot = map.get(key) || { total: 0, last_7d: 0, today: 0 };
+        slot.total += 1;
+        if (ts >= _d7) slot.last_7d += 1;
+        if (ts >= _d1) slot.today += 1;
+        map.set(key, slot);
+      });
+      templates = Array.from(map.entries())
+        .map(([template, v]) => ({ template, ...v }))
+        .sort((a, b) => b.total - a.total);
+    }
+  } catch {
+    // Colonna template_type non presente (migration 013 non eseguita) — ignora
+  }
+
   // ── Breakdown tier (se colonna esiste) ─────────────────────────
   let tiers: { tier: string; count: number }[] = [];
   try {
@@ -313,6 +345,7 @@ export async function GET(req: NextRequest) {
     },
     trend_30d: trend30d,
     content_types: contentTypes,
+    templates,
     tiers,
     top_creators: topCreators,
   });
