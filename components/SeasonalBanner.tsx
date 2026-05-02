@@ -17,6 +17,7 @@
  */
 
 import Link from "next/link";
+import { useI18n } from "@/lib/i18n";
 
 interface BannerConfig {
   /** ID per dismiss persistente (futuro). */
@@ -31,12 +32,11 @@ interface BannerConfig {
   paletteBg: string;
   paletteAccent: string;
   paletteText: string;
-  /** Microcopy. */
-  headline: string;
-  subline: string;
+  /** Chiavi i18n per microcopy (risolte via t() al render). */
+  headlineKey: string;
+  sublineKey: string;
   /** Destinazione. */
   href: string;
-  ctaLabel: string;
 }
 
 const BANNERS: BannerConfig[] = [
@@ -49,10 +49,9 @@ const BANNERS: BannerConfig[] = [
     paletteBg: "linear-gradient(135deg, #F4DCD8 0%, #FFF3EA 100%)",
     paletteAccent: "#D4A340",
     paletteText: "#1a1a1a",
-    headline: "Festa della Mamma in arrivo",
-    subline: "Crea la Lettera che cresce: 5 domande emotive, una foto, una canzone. Pronto in 3 minuti.",
+    headlineKey: "seasonal_banner.mothers_day_headline",
+    sublineKey: "seasonal_banner.mothers_day_subline",
     href: "/festa-mamma",
-    ctaLabel: "Crea il regalo →",
   },
   {
     id: "fathers_day_2026_it",
@@ -63,10 +62,9 @@ const BANNERS: BannerConfig[] = [
     paletteBg: "linear-gradient(135deg, #E8DCC4 0%, #F5EBD8 100%)",
     paletteAccent: "#5C7A4A",
     paletteText: "#1a1a1a",
-    headline: "Festa del Papà in arrivo",
-    subline: "Una Lettera che cresce per papà: 5 domande, una foto, una canzone. Pronta in 3 minuti.",
+    headlineKey: "seasonal_banner.fathers_day_headline",
+    sublineKey: "seasonal_banner.fathers_day_subline",
     href: "/festa-papa",
-    ctaLabel: "Crea il regalo →",
   },
 ];
 
@@ -81,6 +79,7 @@ function daysUntilEvent(month: number, day: number): number {
 }
 
 export function SeasonalBanner({ variant = "compact" }: { variant?: "compact" | "spacious" }) {
+  const { t } = useI18n();
   // Trova un banner attivo (oggi nella finestra: tra noticeWindow giorni prima
   // e fino al giorno dell'evento incluso). Solo il primo che matcha viene
   // mostrato — se ce ne fossero due overlap (raro), priorita' al primo della
@@ -93,9 +92,9 @@ export function SeasonalBanner({ variant = "compact" }: { variant?: "compact" | 
 
   const daysLeft = daysUntilEvent(active.month, active.day);
   const urgencyText =
-    daysLeft === 0 ? "Oggi!" :
-    daysLeft === 1 ? "Domani" :
-    `Tra ${daysLeft} giorni`;
+    daysLeft === 0 ? t("seasonal_banner.today") :
+    daysLeft === 1 ? t("seasonal_banner.tomorrow") :
+    t("seasonal_banner.in_n_days", { n: String(daysLeft) });
 
   const padding = variant === "spacious" ? "20px 22px" : "14px 16px";
   const headlineSize = variant === "spacious" ? "clamp(18px, 5vw, 22px)" : "clamp(15px, 4.4vw, 17px)";
@@ -144,7 +143,7 @@ export function SeasonalBanner({ variant = "compact" }: { variant?: "compact" | 
             lineHeight: 1.25,
             margin: "0 0 4px",
           }}>
-            {active.headline}
+            {t(active.headlineKey)}
           </div>
           <div style={{
             fontSize: sublineSize,
@@ -153,7 +152,7 @@ export function SeasonalBanner({ variant = "compact" }: { variant?: "compact" | 
             lineHeight: 1.5,
             marginBottom: 8,
           }}>
-            {active.subline}
+            {t(active.sublineKey)}
           </div>
           <div style={{
             display: "inline-block",
@@ -161,7 +160,7 @@ export function SeasonalBanner({ variant = "compact" }: { variant?: "compact" | 
             fontWeight: 700,
             color: active.paletteAccent,
           }}>
-            {active.ctaLabel}
+            {t("seasonal_banner.cta_create")}
           </div>
         </div>
       </div>

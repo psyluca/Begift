@@ -117,7 +117,7 @@ export default function SettingsHubClient() {
   };
 
   const deleteReminder = async (id: string) => {
-    if (!confirm(t("settings_profile.loading") ? "Eliminare questa ricorrenza?" : "Delete?")) return;
+    if (!confirm(t("settings_hub.delete_reminder_confirm"))) return;
     try {
       const res = await fetchAuthed(`/api/reminders?id=${encodeURIComponent(id)}`, { method: "DELETE" });
       if (res.ok) setReminders((prev) => prev.filter((r) => r.id !== id));
@@ -128,9 +128,9 @@ export default function SettingsHubClient() {
     return (
       <main style={{ minHeight: "100vh", background: LIGHT, fontFamily: "system-ui, sans-serif", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24, textAlign: "center" }}>
         <div style={{ fontSize: 44, marginBottom: 12 }}>⚙️</div>
-        <h1 style={{ fontSize: 22, fontWeight: 800, color: DEEP, margin: "0 0 10px" }}>Accedi per gestire le impostazioni</h1>
+        <h1 style={{ fontSize: 22, fontWeight: 800, color: DEEP, margin: "0 0 10px" }}>{t("settings_hub.needs_login_title")}</h1>
         <a href="/auth/login?next=/settings" style={{ background: ACCENT, color: "#fff", borderRadius: 40, padding: "13px 28px", fontSize: 14, fontWeight: 700, textDecoration: "none", marginTop: 12 }}>
-          Accedi
+          {t("settings_hub.needs_login_cta")}
         </a>
       </main>
     );
@@ -140,23 +140,23 @@ export default function SettingsHubClient() {
     <main style={{ minHeight: "100vh", background: LIGHT, fontFamily: "system-ui, sans-serif" }}>
       <div style={{ maxWidth: 620, margin: "0 auto", padding: "28px 20px 80px" }}>
         <h1 style={{ fontSize: 28, fontWeight: 800, color: DEEP, margin: "0 0 6px", letterSpacing: "-.5px" }}>
-          ⚙️ Impostazioni
+          {t("settings_hub.title")}
         </h1>
         <p style={{ fontSize: 14, color: MUTED, margin: "0 0 22px" }}>
-          Gestisci profilo, notifiche, ricorrenze e preferenze.
+          {t("settings_hub.subtitle")}
         </p>
 
         {/* ── PROFILO ──────────────────────────────────── */}
-        <Section title="👤 Profilo" id="profile">
+        <Section title={t("settings_hub.section_profile")} id="profile">
           {loading && !profile ? (
-            <div style={{ color: MUTED, fontSize: 13, padding: "6px 0" }}>Caricamento…</div>
+            <div style={{ color: MUTED, fontSize: 13, padding: "6px 0" }}>{t("settings_hub.loading")}</div>
           ) : profile ? (
             <>
               <Row
-                label="Nome utente"
-                value={profile.username ? `@${profile.username}` : <em style={{ color: MUTED }}>non impostato</em>}
+                label={t("settings_hub.row_username")}
+                value={profile.username ? `@${profile.username}` : <em style={{ color: MUTED }}>{t("settings_hub.row_username_unset")}</em>}
               />
-              <Row label="Email" value={<span style={{ fontSize: 12 }}>{profile.email}</span>} />
+              <Row label={t("settings_hub.row_email")} value={<span style={{ fontSize: 12 }}>{profile.email}</span>} />
               <Link href="/settings/profile" style={{
                 display: "block", textAlign: "center",
                 marginTop: 10, padding: "10px",
@@ -164,53 +164,53 @@ export default function SettingsHubClient() {
                 border: `1.5px solid ${ACCENT}`, borderRadius: 40,
                 fontSize: 13, fontWeight: 700, textDecoration: "none",
               }}>
-                Cambia nome utente
+                {t("settings_hub.change_username")}
               </Link>
             </>
           ) : null}
         </Section>
 
         {/* ── NOTIFICHE ────────────────────────────────── */}
-        <Section title="🔔 Notifiche" id="notifications">
+        <Section title={t("settings_hub.section_notifications")} id="notifications">
           {pushPermission === "unsupported" ? (
             <div style={{ fontSize: 13, color: MUTED, padding: "8px 0", lineHeight: 1.5 }}>
-              Il tuo browser non supporta le notifiche push.
+              {t("settings_hub.push_unsupported")}
             </div>
           ) : pushPermission === "denied" ? (
             <div style={{ fontSize: 13, color: ERR_RED, padding: "8px 0", lineHeight: 1.5 }}>
-              Le notifiche sono bloccate. Abilitale dalle impostazioni del browser per BeGift.
+              {t("settings_hub.push_denied")}
             </div>
           ) : pushPermission === "default" ? (
             <div style={{ padding: "6px 0" }}>
               <p style={{ fontSize: 13, color: MUTED, margin: "0 0 8px", lineHeight: 1.5 }}>
-                Non hai ancora dato il permesso alle notifiche push. Attivale per ricevere un avviso quando arriva qualcosa di importante.
+                {t("settings_hub.push_default_intro")}
               </p>
               <p style={{ fontSize: 11, color: MUTED, margin: "0 0 12px", lineHeight: 1.5, opacity: 0.85 }}>
-                Usiamo le notifiche solo per avvisarti di regali ricevuti, aperture dei tuoi regali e reazioni. Puoi revocare il consenso in qualsiasi momento dalle impostazioni del browser o da questa pagina. Dettagli nella{" "}
-                <a href="/privacy" style={{ color: ACCENT, textDecoration: "none" }}>Privacy Policy</a>.
+                {t("settings_hub.push_privacy_note")}
+                <a href="/privacy" style={{ color: ACCENT, textDecoration: "none" }}>{t("settings_hub.push_privacy_link")}</a>
+                {t("settings_hub.push_privacy_note_end")}
               </p>
-              <EnablePushButton onEnabled={() => setPushPermission("granted")} />
+              <EnablePushButton onEnabled={() => setPushPermission("granted")} t={t} />
             </div>
           ) : profile ? (
             <>
               <ToggleRow
-                label="Quando ricevo un regalo"
+                label={t("settings_hub.toggle_gift_received")}
                 checked={profile.notify_gift_received}
                 onToggle={() => toggleNotification("notify_gift_received", profile.notify_gift_received)}
               />
               <ToggleRow
-                label="Quando il mio regalo viene aperto"
+                label={t("settings_hub.toggle_gift_opened")}
                 checked={profile.notify_gift_opened}
                 onToggle={() => toggleNotification("notify_gift_opened", profile.notify_gift_opened)}
               />
               <ToggleRow
-                label="Quando qualcuno reagisce al mio regalo"
+                label={t("settings_hub.toggle_reaction")}
                 checked={profile.notify_reaction}
                 onToggle={() => toggleNotification("notify_reaction", profile.notify_reaction)}
               />
-              <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${BORDER}`, fontSize: 11, color: MUTED }}>
-                Permesso browser: <strong style={{ color: OK_GREEN }}>attivo</strong>
-              </div>
+              <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${BORDER}`, fontSize: 11, color: MUTED }}
+                   dangerouslySetInnerHTML={{ __html: t("settings_hub.browser_perm_active").replace("<strong>", `<strong style="color:${OK_GREEN}">`) }} />
             </>
           ) : null}
           <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 8 }}>
@@ -221,7 +221,7 @@ export default function SettingsHubClient() {
               border: `1.5px solid ${ACCENT}`, borderRadius: 40,
               fontSize: 13, fontWeight: 700, textDecoration: "none",
             }}>
-              📥 Storico notifiche
+              {t("settings_hub.history_notif_cta")}
             </Link>
             <Link href="/settings/notifiche-test" style={{
               display: "block", textAlign: "center",
@@ -230,18 +230,18 @@ export default function SettingsHubClient() {
               border: `1.5px solid ${BORDER}`, borderRadius: 40,
               fontSize: 13, fontWeight: 600, textDecoration: "none",
             }}>
-              🧪 Test notifiche
+              {t("settings_hub.test_notif_cta")}
             </Link>
           </div>
         </Section>
 
         {/* ── RICORRENZE ───────────────────────────────── */}
-        <Section title="🎂 Ricorrenze" id="reminders">
+        <Section title={t("settings_hub.section_reminders")} id="reminders">
           {loading ? (
-            <div style={{ color: MUTED, fontSize: 13, padding: "6px 0" }}>Caricamento…</div>
+            <div style={{ color: MUTED, fontSize: 13, padding: "6px 0" }}>{t("settings_hub.loading")}</div>
           ) : reminders.length === 0 ? (
             <p style={{ fontSize: 13, color: MUTED, margin: "4px 0 12px", lineHeight: 1.5 }}>
-              Aggiungi compleanni e anniversari per ricevere un promemoria quando si avvicinano.
+              {t("settings_hub.reminders_empty")}
             </p>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 12 }}>
@@ -258,12 +258,12 @@ export default function SettingsHubClient() {
                     <div style={{ flex: 1, fontSize: 13 }}>
                       <strong style={{ color: DEEP }}>{r.recipient_name}</strong>
                       <span style={{ color: MUTED, fontSize: 11, marginLeft: 6 }}>
-                        · {dd}/{mm} · avviso {r.notify_days_before}gg prima
+                        {t("settings_hub.reminder_meta_format", { date: `${dd}/${mm}`, days: String(r.notify_days_before) })}
                       </span>
                     </div>
                     <button
                       onClick={() => deleteReminder(r.id)}
-                      aria-label="Elimina"
+                      aria-label={t("settings_hub.delete_aria")}
                       style={{
                         background: "transparent", border: "none",
                         fontSize: 14, color: "#E24B4A", cursor: "pointer",
@@ -284,27 +284,27 @@ export default function SettingsHubClient() {
             border: `1.5px solid ${ACCENT}`, borderRadius: 40,
             fontSize: 13, fontWeight: 700, textDecoration: "none",
           }}>
-            + Aggiungi ricorrenza
+            {t("settings_hub.add_reminder_cta")}
           </Link>
         </Section>
 
         {/* ── LINGUA ───────────────────────────────────── */}
-        <Section title="🌍 Lingua" id="language">
+        <Section title={t("settings_hub.section_language")} id="language">
           <div style={{ padding: "4px 0" }}>
             <LangSwitcher />
           </div>
         </Section>
 
         {/* ── INSTALLAZIONE ───────────────────────────── */}
-        <Section title="📲 Installazione" id="install">
+        <Section title={t("settings_hub.section_install")} id="install">
           {isStandalone ? (
             <div style={{ fontSize: 13, color: OK_GREEN, fontWeight: 600 }}>
-              ✓ BeGift è installata sul tuo dispositivo
+              {t("settings_hub.install_done")}
             </div>
           ) : (
             <div>
               <p style={{ fontSize: 13, color: MUTED, margin: "0 0 10px", lineHeight: 1.5 }}>
-                Installa BeGift come app sul tuo dispositivo per un'esperienza più veloce e ricevere notifiche.
+                {t("settings_hub.install_intro")}
               </p>
               <Link href="/install" style={{
                 display: "block", textAlign: "center",
@@ -313,61 +313,60 @@ export default function SettingsHubClient() {
                 border: `1.5px solid ${ACCENT}`, borderRadius: 40,
                 fontSize: 13, fontWeight: 700, textDecoration: "none",
               }}>
-                Come installare →
+                {t("settings_hub.install_cta")}
               </Link>
             </div>
           )}
         </Section>
 
         {/* ── CONTATTI ─────────────────────────────────── */}
-        <Section title="✉️ Contatti" id="contacts">
+        <Section title={t("settings_hub.section_contacts")} id="contacts">
           <Row
-            label="Supporto"
+            label={t("settings_hub.row_support")}
             value={<a href="mailto:support@begift.app" style={{ color: ACCENT, textDecoration: "none", fontSize: 12 }}>support@begift.app</a>}
           />
           <Row
-            label="Info generali"
+            label={t("settings_hub.row_info")}
             value={<a href="mailto:info@begift.app" style={{ color: ACCENT, textDecoration: "none", fontSize: 12 }}>info@begift.app</a>}
           />
           <Row
-            label="Segnalazioni abusi"
+            label={t("settings_hub.row_abuse")}
             value={<a href="mailto:abuse@begift.app" style={{ color: ACCENT, textDecoration: "none", fontSize: 12 }}>abuse@begift.app</a>}
           />
         </Section>
 
         {/* ── LEGALE ───────────────────────────────────── */}
-        <Section title="📄 Legale" id="legal">
+        <Section title={t("settings_hub.section_legal")} id="legal">
           <Row
-            label={<Link href="/terms" style={{ color: DEEP, textDecoration: "none" }}>Condizioni d&apos;uso</Link>}
+            label={<Link href="/terms" style={{ color: DEEP, textDecoration: "none" }}>{t("settings_hub.row_terms")}</Link>}
             value={<span style={{ color: MUTED }}>›</span>}
           />
           <Row
-            label={<Link href="/privacy" style={{ color: DEEP, textDecoration: "none" }}>Privacy Policy</Link>}
+            label={<Link href="/privacy" style={{ color: DEEP, textDecoration: "none" }}>{t("settings_hub.row_privacy")}</Link>}
             value={<span style={{ color: MUTED }}>›</span>}
           />
           <Row
-            label={<Link href="/security" style={{ color: DEEP, textDecoration: "none" }}>Sicurezza / Vulnerability disclosure</Link>}
+            label={<Link href="/security" style={{ color: DEEP, textDecoration: "none" }}>{t("settings_hub.row_security")}</Link>}
             value={<span style={{ color: MUTED }}>›</span>}
           />
           <Row
-            label={<ExportDataButton />}
+            label={<ExportDataButton t={t} />}
             value={null}
           />
         </Section>
 
         {/* ── ELIMINAZIONE ACCOUNT ───────────────────────── */}
-        <Section title="🗑️ Elimina account" id="delete-account">
-          <p style={{ fontSize: 13, color: MUTED, margin: "0 0 12px", lineHeight: 1.5 }}>
-            Puoi eliminare il tuo account in qualsiasi momento (diritto all&apos;oblio, GDPR art. 17). Verranno cancellati tutti i tuoi regali, ricorrenze, preferenze e dati personali. <strong>L&apos;operazione è irreversibile.</strong>
-          </p>
-          <DeleteAccountButton />
+        <Section title={t("settings_hub.section_delete")} id="delete-account">
+          <p style={{ fontSize: 13, color: MUTED, margin: "0 0 12px", lineHeight: 1.5 }}
+             dangerouslySetInnerHTML={{ __html: t("settings_hub.delete_intro") }} />
+          <DeleteAccountButton t={t} />
         </Section>
 
         {/* ── LOGOUT ───────────────────────────────────── */}
         <div style={{ marginTop: 20, textAlign: "center" }}>
           <button
             onClick={() => {
-              if (confirm("Vuoi davvero uscire?")) signOut();
+              if (confirm(t("settings_hub.logout_confirm"))) signOut();
             }}
             style={{
               background: "transparent",
@@ -381,7 +380,7 @@ export default function SettingsHubClient() {
               fontFamily: "inherit",
             }}
           >
-            Esci dal tuo account
+            {t("settings_hub.logout_cta")}
           </button>
         </div>
       </div>
@@ -449,7 +448,9 @@ function ToggleRow({ label, checked, onToggle }: { label: string; checked: boole
   );
 }
 
-function EnablePushButton({ onEnabled }: { onEnabled: () => void }) {
+type TFn = (k: string, p?: Record<string, string>) => string;
+
+function EnablePushButton({ onEnabled, t }: { onEnabled: () => void; t: TFn }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -460,13 +461,13 @@ function EnablePushButton({ onEnabled }: { onEnabled: () => void }) {
       const registration = await navigator.serviceWorker.register("/sw.js");
       const perm = await Notification.requestPermission();
       if (perm !== "granted") {
-        if (perm === "denied") setError("Permesso negato");
+        if (perm === "denied") setError(t("settings_hub.enable_push_err_denied"));
         setLoading(false);
         return;
       }
       const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
       if (!vapidKey) {
-        setError("Configurazione push non completata");
+        setError(t("settings_hub.enable_push_err_config"));
         setLoading(false);
         return;
       }
@@ -482,7 +483,7 @@ function EnablePushButton({ onEnabled }: { onEnabled: () => void }) {
       onEnabled();
     } catch (e) {
       console.error("[enable push] failed", e);
-      setError("Errore. Riprova.");
+      setError(t("settings_hub.enable_push_err_generic"));
     } finally {
       setLoading(false);
     }
@@ -503,7 +504,7 @@ function EnablePushButton({ onEnabled }: { onEnabled: () => void }) {
           fontFamily: "inherit",
         }}
       >
-        {loading ? "Attendi…" : "Attiva notifiche"}
+        {loading ? t("settings_hub.enable_push_loading") : t("settings_hub.enable_push_cta")}
       </button>
       {error && <p style={{ fontSize: 12, color: ERR_RED, margin: "8px 0 0" }}>{error}</p>}
     </div>
@@ -519,14 +520,15 @@ function EnablePushButton({ onEnabled }: { onEnabled: () => void }) {
  *   4. Redirect a "/" dopo successo
  * Tutto il backend cascade cancella automaticamente via FK ON DELETE.
  */
-function DeleteAccountButton() {
+function DeleteAccountButton({ t }: { t: TFn }) {
   const [deleting, setDeleting] = useState(false);
 
   const confirm2 = async () => {
-    if (!confirm("Vuoi davvero eliminare il tuo account? Questa operazione è irreversibile e cancella tutti i tuoi dati.")) return;
-    const typed = prompt("Per conferma, scrivi ELIMINA (tutto maiuscolo):");
-    if (typed !== "ELIMINA") {
-      alert("Eliminazione annullata (testo non corrispondente).");
+    if (!confirm(t("settings_hub.delete_confirm_1"))) return;
+    const expected = t("settings_hub.delete_confirm_2_keyword");
+    const typed = prompt(t("settings_hub.delete_confirm_2_prompt"));
+    if (typed !== expected) {
+      alert(t("settings_hub.delete_cancelled"));
       return;
     }
     setDeleting(true);
@@ -537,17 +539,17 @@ function DeleteAccountButton() {
         body: JSON.stringify({ confirm: true }),
       });
       if (res.ok) {
-        alert("Account eliminato. Sarai reindirizzato alla home.");
+        alert(t("settings_hub.delete_success"));
         try {
           localStorage.clear();
         } catch { /* ignore */ }
         window.location.href = "/";
       } else {
-        alert("Errore nell'eliminazione. Riprova o contatta privacy@begift.app.");
+        alert(t("settings_hub.delete_failed"));
       }
     } catch (e) {
       console.error("[delete account] failed", e);
-      alert("Errore di rete. Riprova.");
+      alert(t("settings_hub.delete_network_error"));
     } finally {
       setDeleting(false);
     }
@@ -571,7 +573,7 @@ function DeleteAccountButton() {
         fontFamily: "inherit",
       }}
     >
-      {deleting ? "Elaborazione…" : "Elimina definitivamente il mio account"}
+      {deleting ? t("settings_hub.delete_btn_processing") : t("settings_hub.delete_btn_label")}
     </button>
   );
 }
@@ -585,7 +587,7 @@ function DeleteAccountButton() {
  * Nota: il bundle contiene i dati dell'utente in formato JSON leggibile
  * da macchina. Gli URL ai media sono pubblici ma non indicizzati.
  */
-function ExportDataButton() {
+function ExportDataButton({ t }: { t: TFn }) {
   const [busy, setBusy] = useState(false);
 
   const start = async () => {
@@ -595,7 +597,7 @@ function ExportDataButton() {
       // il che richiede fetch + blob + download programmatico.
       const res = await fetchAuthed("/api/profile/export");
       if (!res.ok) {
-        alert("Errore nell'export. Riprova o contatta privacy@begift.app.");
+        alert(t("settings_hub.export_failed"));
         return;
       }
       const blob = await res.blob();
@@ -609,7 +611,7 @@ function ExportDataButton() {
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch (e) {
       console.error("[export] failed", e);
-      alert("Errore di rete.");
+      alert(t("settings_hub.export_network_error"));
     } finally {
       setBusy(false);
     }
@@ -631,7 +633,7 @@ function ExportDataButton() {
         cursor: busy ? "wait" : "pointer",
       }}
     >
-      {busy ? "Preparazione export…" : "Esporta i miei dati (GDPR art. 20)"}
+      {busy ? t("settings_hub.export_busy") : t("settings_hub.export_label")}
     </button>
   );
 }
