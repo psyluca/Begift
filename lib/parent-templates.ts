@@ -138,3 +138,45 @@ export function templateByType(t: string | null | undefined): ParentTemplateConf
   if (t === "fathers_day_letter") return FATHER_TEMPLATE;
   return null;
 }
+
+/**
+ * Versione localizzata del config: stesse palette/slug/path del config
+ * statico, ma con i campi testuali risolti via t() per la lingua attuale.
+ *
+ * Uso:
+ *   const { t } = useI18n();
+ *   const cfg = localizeParentConfig(MOTHER_TEMPLATE, t);
+ *   // cfg.parentNoun → "mom" (en) o "mamma" (it)
+ *   // cfg.stepTitles → ["Who is the gift for?", ...] in lingua corrente
+ */
+export type TFn = (key: string, params?: Record<string, string>) => string;
+
+export function localizeParentConfig(base: ParentTemplateConfig, t: TFn): ParentTemplateConfig {
+  const ns = `parent_templates.${base.key}`;
+  const stepTitles: string[] = [];
+  for (let i = 0; i < base.stepTitles.length; i++) {
+    stepTitles.push(t(`${ns}.step_title_${i}`));
+  }
+  const wordSuggestionsRaw = t(`${ns}.wordSuggestions`);
+  const wordSuggestions = wordSuggestionsRaw && wordSuggestionsRaw !== `${ns}.wordSuggestions`
+    ? wordSuggestionsRaw.split(",").map((s) => s.trim()).filter(Boolean)
+    : base.wordSuggestions;
+  return {
+    ...base,
+    parentNoun: t(`${ns}.parentNoun`),
+    pronoun: t(`${ns}.pronoun`),
+    wordSuggestions,
+    memoryPlaceholder: t(`${ns}.memoryPlaceholder`),
+    lessonPlaceholder: t(`${ns}.lessonPlaceholder`),
+    stepTitles,
+    revealCaptions: {
+      memoryHeader: t(`${ns}.memoryHeader`),
+      lessonHeader: t(`${ns}.lessonHeader`),
+      songHeader: t(`${ns}.songHeader`),
+      voucherCta: t(`${ns}.voucherCta`),
+      voucherSubtitle: t(`${ns}.voucherSubtitle`),
+      farewellLine: t(`${ns}.farewellLine`),
+      senderFallback: t(`${ns}.senderFallback`),
+    },
+  };
+}

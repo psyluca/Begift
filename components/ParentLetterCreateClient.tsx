@@ -14,8 +14,9 @@ import { useRouter } from "next/navigation";
 import { fetchAuthed } from "@/lib/clientAuth";
 import { useUpload } from "@/hooks/useUpload";
 import { track } from "@/lib/analytics";
-import type { ParentTemplateConfig } from "@/lib/parent-templates";
+import { type ParentTemplateConfig, localizeParentConfig } from "@/lib/parent-templates";
 import { SongPicker, type SpotifyTrack } from "@/components/SongPicker";
+import { useI18n } from "@/lib/i18n";
 
 const ACCENT = "#D4537E";
 const DEEP = "#1a1a1a";
@@ -88,19 +89,24 @@ function clearDraft(templateKey: string) {
   try { localStorage.removeItem(draftKey(templateKey)); } catch { /* ignore */ }
 }
 
-function relativeTimeIt(savedAt: number): string {
-  const diff = Date.now() - savedAt;
-  const min = Math.floor(diff / 60_000);
-  if (min < 1) return "qualche secondo fa";
-  if (min < 60) return `${min} minut${min === 1 ? "o" : "i"} fa`;
-  const hr = Math.floor(min / 60);
-  if (hr < 24) return `${hr} or${hr === 1 ? "a" : "e"} fa`;
-  const days = Math.floor(hr / 24);
-  return `${days} giorn${days === 1 ? "o" : "i"} fa`;
+function buildRelativeTime(t: (k: string, p?: Record<string, string>) => string) {
+  return (savedAt: number): string => {
+    const diff = Date.now() - savedAt;
+    const min = Math.floor(diff / 60_000);
+    if (min < 1) return t("parent_letter.rt_seconds_ago");
+    if (min < 60) return t(min === 1 ? "parent_letter.rt_minutes_one" : "parent_letter.rt_minutes_other", { n: String(min) });
+    const hr = Math.floor(min / 60);
+    if (hr < 24) return t(hr === 1 ? "parent_letter.rt_hours_one" : "parent_letter.rt_hours_other", { n: String(hr) });
+    const days = Math.floor(hr / 24);
+    return t(days === 1 ? "parent_letter.rt_days_one" : "parent_letter.rt_days_other", { n: String(days) });
+  };
 }
 
-export function ParentLetterCreateClient({ config }: Props) {
+export function ParentLetterCreateClient({ config: rawConfig }: Props) {
   const router = useRouter();
+  const { t } = useI18n();
+  const config = localizeParentConfig(rawConfig, t);
+  const relativeTime = buildRelativeTime(t);
   const { upload } = useUpload();
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
@@ -252,7 +258,7 @@ export function ParentLetterCreateClient({ config }: Props) {
       if (url) setPhotoUrl(url);
     } catch (e) {
       console.error("[parent-letter] photo upload failed", e);
-      setError("Errore nell'upload della foto. Riprova.");
+      setError(t("parent_letter.err_photo_upload"));
     } finally {
       clearInterval(tick);
       setPhotoUploading(false);
@@ -319,7 +325,7 @@ export function ParentLetterCreateClient({ config }: Props) {
       // Kill switch operativo (env var BEGIFT_DISABLE_CREATE=on su Vercel)
       if (res.status === 503) {
         const friendly = (data as { message?: string }).message
-          || "BeGift e' in manutenzione. Riprova fra qualche minuto.";
+          || t("parent_letter.err_maintenance");
         setError(friendly);
         return;
       }
@@ -327,14 +333,14 @@ export function ParentLetterCreateClient({ config }: Props) {
       // Rate limit raggiunto (20 gift/giorno)
       if (res.status === 429) {
         const friendly = (data as { message?: string }).message
-          || "Hai raggiunto il limite di 20 regali al giorno. Riprova domani.";
+          || t("parent_letter.err_rate_limit");
         setError(friendly);
         return;
       }
 
       const detail = (data as { error?: string; message?: string }).error
         || (data as { message?: string }).message
-        || `Errore HTTP ${res.status}`;
+        || t("parent_letter.err_http", { status: String(res.status) });
       console.error("[parent-letter] submit failed", res.status, data);
 
       // Heuristica: se l'errore matcha "template_type/template_data
@@ -360,22 +366,22 @@ export function ParentLetterCreateClient({ config }: Props) {
           });
           clearDraft(config.key);
           // Avviso non blocking: il regalo parte ma senza rendering speciale
-          alert("Regalo creato. Nota: il rendering speciale del template potrebbe non essere disponibile su questo ambiente — il destinatario vedra' un regalo standard.");
+          alert(t("parent_letter.fallback_warning"));
           router.push(`${retryData.url || `/gift/${retryData.id}`}?from=create`);
           return;
         }
         const retryDetail = (retryData as { error?: string; message?: string }).error
           || (retryData as { message?: string }).message
           || `HTTP ${retry.status}`;
-        setError(`Errore nella creazione: ${retryDetail}`);
+        setError(t("parent_letter.err_create", { detail: retryDetail }));
         return;
       }
 
-      setError(`Errore nella creazione: ${detail}`);
+      setError(t("parent_letter.err_create", { detail }));
     } catch (e) {
       console.error("[parent-letter] submit exception", e);
-      const msg = e instanceof Error ? e.message : "errore di rete";
-      setError(`Errore di rete: ${msg}. Verifica la connessione e riprova.`);
+      const msg = e instanceof Error ? e.message : t("parent_letter.err_network_default");
+      setError(t("parent_letter.err_network", { msg }));
     } finally {
       setSubmitting(false);
     }
@@ -398,12 +404,12 @@ export function ParentLetterCreateClient({ config }: Props) {
             boxShadow: "0 4px 14px rgba(0,0,0,.06)",
           }}>
             <div style={{ fontSize: 14, fontWeight: 800, color: DEEP, marginBottom: 4 }}>
-              📝 Hai un regalo iniziato
+              {t("parent_letter.draft_resume_title")}
             </div>
             <div style={{ fontSize: 12.5, color: MUTED, marginBottom: 12, lineHeight: 1.5 }}>
-              Salvato {relativeTimeIt(pendingDraft.savedAt)}
-              {pendingDraft.recipientName && <> · per <strong style={{ color: DEEP }}>{pendingDraft.recipientName}</strong></>}
-              {pendingDraft.step > 0 && <> · arrivato al passo {pendingDraft.step + 1} di {totalSteps}</>}
+              {t("parent_letter.draft_saved_at", { time: relativeTime(pendingDraft.savedAt) })}
+              {pendingDraft.recipientName && <> · {t("parent_letter.draft_for")} <strong style={{ color: DEEP }}>{pendingDraft.recipientName}</strong></>}
+              {pendingDraft.step > 0 && <> · {t("parent_letter.draft_step_progress", { current: String(pendingDraft.step + 1), total: String(totalSteps) })}</>}
             </div>
             <div style={{ display: "flex", gap: 8 }}>
               <button
@@ -416,7 +422,7 @@ export function ParentLetterCreateClient({ config }: Props) {
                   cursor: "pointer", fontFamily: "inherit",
                 }}
               >
-                ↻ Riprendi
+                {t("parent_letter.draft_resume")}
               </button>
               <button
                 onClick={discardDraft}
@@ -427,7 +433,7 @@ export function ParentLetterCreateClient({ config }: Props) {
                   cursor: "pointer", fontFamily: "inherit",
                 }}
               >
-                Ricomincia
+                {t("parent_letter.draft_discard")}
               </button>
             </div>
           </div>
@@ -450,7 +456,7 @@ export function ParentLetterCreateClient({ config }: Props) {
 
         <div style={{ marginBottom: 24 }}>
           <div style={{ fontSize: 12, color: MUTED, fontWeight: 600, marginBottom: 6 }}>
-            Passo {step + 1} di {totalSteps}
+            {t("parent_letter.step_progress", { current: String(step + 1), total: String(totalSteps) })}
           </div>
           <h1 style={{ fontSize: 26, fontWeight: 900, color: DEEP, margin: 0, letterSpacing: "-.5px", lineHeight: 1.2 }}>
             {STEPS[step]}
@@ -460,24 +466,24 @@ export function ParentLetterCreateClient({ config }: Props) {
         <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 16, padding: 22, marginBottom: 18, minHeight: 200 }}>
           {step === 0 && (
             <>
-              <Label>Nome di {config.parentNoun}</Label>
+              <Label>{t("parent_letter.step0_label_name", { parent: config.parentNoun })}</Label>
               <Input
-                placeholder={config.key === "mother" ? "Es. Maria, Mamma, La mia mamma…" : "Es. Marco, Papà, Il mio papà…"}
+                placeholder={config.key === "mother" ? t("parent_letter.step0_ph_mother") : t("parent_letter.step0_ph_father")}
                 value={recipientName}
                 onChange={(e) => setRecipientName(e.target.value)}
                 maxLength={40}
                 autoFocus
               />
-              <Hint>Apparirà nella dedica del regalo. Puoi usare anche soprannomi.</Hint>
+              <Hint>{t("parent_letter.step0_hint_name")}</Hint>
               <div style={{ marginTop: 18 }}>
-                <Label>Da chi (opzionale)</Label>
+                <Label>{t("parent_letter.step0_label_sender")}</Label>
                 <Input
-                  placeholder={config.key === "mother" ? "Es. Marta, La tua bambina…" : "Es. Marco, Tuo figlio…"}
+                  placeholder={config.key === "mother" ? t("parent_letter.step0_ph_sender_mother") : t("parent_letter.step0_ph_sender_father")}
                   value={senderAlias}
                   onChange={(e) => setSenderAlias(e.target.value)}
                   maxLength={40}
                 />
-                <Hint>Se lo lasci vuoto useremo il tuo username.</Hint>
+                <Hint>{t("parent_letter.step0_hint_sender")}</Hint>
               </div>
             </>
           )}
@@ -503,7 +509,7 @@ export function ParentLetterCreateClient({ config }: Props) {
                 }}
               />
               <Hint center>
-                Una sola parola. Diventerà il titolo grande del regalo aperto.
+                {t("parent_letter.step1_hint")}
               </Hint>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", marginTop: 16 }}>
                 {config.wordSuggestions.slice(0, 6).map((w) => (
@@ -538,7 +544,7 @@ export function ParentLetterCreateClient({ config }: Props) {
                 rows={5}
                 autoFocus
               />
-              <Hint>Non serve sia un ricordo importante. Anche solo un odore, una frase, un pomeriggio.</Hint>
+              <Hint>{t("parent_letter.step2_hint")}</Hint>
               <CharCount value={memory.length} max={400} />
             </>
           )}
@@ -568,14 +574,14 @@ export function ParentLetterCreateClient({ config }: Props) {
                       animation: "plUploadSpin 0.9s linear infinite",
                     }} aria-hidden/>
                     <div style={{ fontSize: 14, fontWeight: 700, color: DEEP, marginBottom: 4 }}>
-                      Caricamento foto{photoUploadElapsed >= 3 ? ` · ${photoUploadElapsed}s` : "…"}
+                      {t("parent_letter.step3_uploading")}{photoUploadElapsed >= 3 ? ` · ${photoUploadElapsed}s` : "…"}
                     </div>
                     <div style={{ fontSize: 12, color: MUTED, lineHeight: 1.5 }}>
                       {photoUploadElapsed < 5
-                        ? "Sto preparando la foto."
+                        ? t("parent_letter.step3_upload_short")
                         : photoUploadElapsed < 15
-                        ? "Su connessione lenta puo' richiedere un po' — non chiudere la pagina."
-                        : "Sembra molto lento. Se non parte fra qualche secondo, prova con una foto piu' leggera o ricarica."}
+                        ? t("parent_letter.step3_upload_medium")
+                        : t("parent_letter.step3_upload_slow")}
                     </div>
                   </div>
                 ) : (
@@ -596,10 +602,10 @@ export function ParentLetterCreateClient({ config }: Props) {
                     />
                     <div style={{ fontSize: 36, marginBottom: 10 }} aria-hidden>📷</div>
                     <div style={{ fontSize: 14, fontWeight: 700, color: DEEP, marginBottom: 4 }}>
-                      Tocca per scegliere una foto
+                      {t("parent_letter.step3_choose")}
                     </div>
                     <div style={{ fontSize: 12, color: MUTED }}>
-                      Una foto vostra. Diventerà una polaroid leggermente ruotata.
+                      {t("parent_letter.step3_choose_hint")}
                     </div>
                   </label>
                 )
@@ -617,7 +623,7 @@ export function ParentLetterCreateClient({ config }: Props) {
                   </div>
                   <div style={{ marginTop: 14 }}>
                     <button onClick={() => setPhotoUrl("")} style={{ background: "transparent", border: "none", color: MUTED, fontSize: 13, cursor: "pointer", textDecoration: "underline" }}>
-                      Cambia foto
+                      {t("parent_letter.step3_change_photo")}
                     </button>
                   </div>
                 </div>
@@ -635,7 +641,7 @@ export function ParentLetterCreateClient({ config }: Props) {
                 rows={4}
                 autoFocus
               />
-              <Hint>Cosa hai imparato da {config.pronoun} {config.parentNoun} senza che te lo dicesse esplicitamente. Una sola frase.</Hint>
+              <Hint>{t("parent_letter.step4_hint", { pronoun: config.pronoun, parent: config.parentNoun })}</Hint>
               <CharCount value={lesson.length} max={300} />
             </>
           )}
@@ -664,7 +670,7 @@ export function ParentLetterCreateClient({ config }: Props) {
                     imageUrl: t.imageUrl,
                   });
                 }}
-                hint="Cerca la canzone per titolo o artista — la trovi e basta. Diventerà un player dentro il regalo."
+                hint={t("parent_letter.step5_song_hint")}
               />
             </>
           )}
@@ -672,15 +678,15 @@ export function ParentLetterCreateClient({ config }: Props) {
           {step === 6 && (
             <>
               <Input
-                placeholder="https://… o carica un PDF"
+                placeholder={t("parent_letter.step6_voucher_ph")}
                 value={voucherUrl}
                 onChange={(e) => setVoucherUrl(e.target.value)}
                 autoFocus
                 inputMode="url"
               />
-              <Hint>Cena, esperienza, biglietti. Trasforma il regalo emotivo in qualcosa anche di pratico.</Hint>
+              <Hint>{t("parent_letter.step6_voucher_hint")}</Hint>
               <p style={{ fontSize: 12, color: MUTED, marginTop: 16, fontStyle: "italic" }}>
-                Puoi anche saltare questo passo: il regalo emozionale funziona benissimo da solo.
+                {t("parent_letter.step6_voucher_skip")}
               </p>
             </>
           )}
@@ -697,6 +703,7 @@ export function ParentLetterCreateClient({ config }: Props) {
               voucherUrl={voucherUrl}
               accent={config.paletteAccent}
               bg={config.paletteBg}
+              t={t}
             />
           )}
         </div>
@@ -710,7 +717,7 @@ export function ParentLetterCreateClient({ config }: Props) {
         <div style={{ display: "flex", gap: 10 }}>
           {step > 0 && (
             <button onClick={prev} style={{ flex: "0 0 auto", background: "transparent", color: MUTED, border: `1.5px solid ${BORDER}`, borderRadius: 40, padding: "12px 20px", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-              ← Indietro
+              {t("parent_letter.btn_back")}
             </button>
           )}
           {step < totalSteps - 1 ? (
@@ -726,7 +733,7 @@ export function ParentLetterCreateClient({ config }: Props) {
                 fontFamily: "inherit",
               }}
             >
-              {stepIsEmpty ? "Salta →" : "Avanti →"}
+              {stepIsEmpty ? t("parent_letter.btn_skip") : t("parent_letter.btn_next")}
             </button>
           ) : (
             <button
@@ -743,7 +750,7 @@ export function ParentLetterCreateClient({ config }: Props) {
                 fontFamily: "inherit",
               }}
             >
-              {submitting ? "Creazione…" : `${config.emoji} Crea il regalo`}
+              {submitting ? t("parent_letter.btn_creating") : t("parent_letter.btn_create", { emoji: config.emoji })}
             </button>
           )}
         </div>
@@ -798,18 +805,19 @@ function Textarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
   );
 }
 function Preview({
-  recipient, word, memory, photoUrl, lesson, songUrl, songMeta, voucherUrl, accent, bg,
+  recipient, word, memory, photoUrl, lesson, songUrl, songMeta, voucherUrl, accent, bg, t,
 }: {
   recipient: string; word: string; memory: string;
   photoUrl: string; lesson: string; songUrl: string;
   songMeta: SongMeta | null;
   voucherUrl: string;
   accent: string; bg: string;
+  t: (k: string, p?: Record<string, string>) => string;
 }) {
   return (
     <div>
       <div style={{ fontSize: 13, color: MUTED, marginBottom: 16, lineHeight: 1.5 }}>
-        Anteprima di quello che vedrà <b style={{ color: DEEP }}>{recipient || "lui/lei"}</b>:
+        {t("parent_letter.preview_intro")} <b style={{ color: DEEP }}>{recipient || t("parent_letter.preview_intro_default")}</b>:
       </div>
       <div style={{ background: bg, borderRadius: 16, padding: 20, textAlign: "center" }}>
         {word && (
@@ -837,7 +845,7 @@ function Preview({
         )}
         {lesson && (
           <p style={{ fontSize: 12, color: MUTED, lineHeight: 1.5, margin: "10px 0 0" }}>
-            <i>Quello che mi hai insegnato:</i><br/>{lesson}
+            <i>{t("parent_letter.preview_lesson_label")}</i><br/>{lesson}
           </p>
         )}
         {songUrl && (
@@ -864,10 +872,10 @@ function Preview({
               </span>
             </div>
           ) : (
-            <div style={{ marginTop: 14, fontSize: 11, color: MUTED }}>♪ Una canzone allegata</div>
+            <div style={{ marginTop: 14, fontSize: 11, color: MUTED }}>{t("parent_letter.preview_song_default")}</div>
           )
         )}
-        {voucherUrl && <div style={{ marginTop: 6, fontSize: 11, color: MUTED }}>🎁 Voucher allegato</div>}
+        {voucherUrl && <div style={{ marginTop: 6, fontSize: 11, color: MUTED }}>{t("parent_letter.preview_voucher_default")}</div>}
       </div>
     </div>
   );

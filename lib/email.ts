@@ -114,18 +114,41 @@ interface RecipientProfile {
   notify_email: boolean;
   notify_gift_opened: boolean;
   notify_reaction: boolean;
+  preferred_locale: "it" | "en" | "ja" | "zh";
 }
 
 async function loadRecipient(userId: string): Promise<RecipientProfile | null> {
   const admin = createSupabaseAdmin();
-  const { data, error } = await admin
+  // Best-effort: se la migration 020 (preferred_locale) non è ancora
+  // stata eseguita, la SELECT con la colonna fallisce. Ritentiamo allora
+  // senza la colonna e usiamo "it" come fallback. Stesso pattern usato
+  // per welcome_email_sent_at in api/profile/me.
+  let data: Partial<RecipientProfile> | null = null;
+  const { data: full, error } = await admin
     .from("profiles")
-    .select("id, email, notify_email, notify_gift_opened, notify_reaction")
+    .select("id, email, notify_email, notify_gift_opened, notify_reaction, preferred_locale")
     .eq("id", userId)
     .single();
-  if (error || !data) return null;
-  if (!data.email) return null;
-  return data as RecipientProfile;
+  if (error) {
+    const { data: legacy, error: legacyErr } = await admin
+      .from("profiles")
+      .select("id, email, notify_email, notify_gift_opened, notify_reaction")
+      .eq("id", userId)
+      .single();
+    if (legacyErr || !legacy) return null;
+    data = legacy as Partial<RecipientProfile>;
+  } else {
+    data = full as Partial<RecipientProfile>;
+  }
+  if (!data || !data.email) return null;
+  return {
+    id: data.id!,
+    email: data.email!,
+    notify_email: data.notify_email ?? true,
+    notify_gift_opened: data.notify_gift_opened ?? true,
+    notify_reaction: data.notify_reaction ?? true,
+    preferred_locale: (data.preferred_locale ?? "it") as RecipientProfile["preferred_locale"],
+  };
 }
 
 // ── API pubbliche per i 3 eventi ───────────────────────────────────
@@ -139,7 +162,7 @@ export async function sendGiftOpenedEmail(creatorId: string, params: GiftOpenedP
   const profile = await loadRecipient(creatorId);
   if (!profile) return;
   if (!profile.notify_email || !profile.notify_gift_opened) return;
-  const tpl = giftOpenedTemplate(params);
+  const tpl = giftOpenedTemplate(params, profile.preferred_locale);
   await postResend({
     from: resolveFrom(),
     to: profile.email,
@@ -159,7 +182,7 @@ export async function sendReactionEmail(creatorId: string, params: ReactionParam
   const profile = await loadRecipient(creatorId);
   if (!profile) return;
   if (!profile.notify_email || !profile.notify_reaction) return;
-  const tpl = reactionTemplate(params);
+  const tpl = reactionTemplate(params, profile.preferred_locale);
   await postResend({
     from: resolveFrom(),
     to: profile.email,
@@ -223,7 +246,7 @@ export async function sendFestaMammaAnnounce(userId: string, params: FestaMammaA
     return { sent: false, reason: "send_failed" };
   }
 
-  const tpl = festaMammaAnnounceTemplate(params);
+  const tpl = festaMammaAnnounceTemplate(params, profile.preferred_locale);
   const result = await postResend({
     from: resolveFrom(),
     to: profile.email,
@@ -268,7 +291,7 @@ export async function sendSurveyInvite(userId: string, params: SurveyInviteParam
     return { sent: false, reason: "already_sent" };
   }
 
-  const tpl = surveyInviteTemplate(params);
+  const tpl = surveyInviteTemplate(params, profile.preferred_locale);
   const result = await postResend({
     from: resolveFrom(),
     to: profile.email,
@@ -298,7 +321,7 @@ export async function sendWelcomeEmail(userId: string, params: WelcomeParams): P
   const profile = await loadRecipient(userId);
   if (!profile) return;
   if (!profile.notify_email) return;
-  const tpl = welcomeTemplate(params);
+  const tpl = welcomeTemplate(params, profile.preferred_locale);
   await postResend({
     from: resolveFrom(),
     to: profile.email,

@@ -15,6 +15,7 @@
 import { useEffect, useState } from "react";
 import { fetchAuthed } from "@/lib/clientAuth";
 import { track } from "@/lib/analytics";
+import { useI18n } from "@/lib/i18n";
 
 const ACCENT = "#D4537E";
 const DEEP = "#1a1a1a";
@@ -34,15 +35,16 @@ interface Reminder {
   last_notified_at: string | null;
 }
 
-const OCCASION_TYPES: { value: string; emoji: string; labelIt: string }[] = [
-  { value: "birthday",    emoji: "🎂", labelIt: "Compleanno" },
-  { value: "anniversary", emoji: "💍", labelIt: "Anniversario" },
-  { value: "name_day",    emoji: "🎊", labelIt: "Onomastico" },
-  { value: "graduation",  emoji: "🎓", labelIt: "Laurea" },
-  { value: "other",       emoji: "✨", labelIt: "Altra ricorrenza" },
+const OCCASION_TYPE_DEFS: { value: string; emoji: string; key: string }[] = [
+  { value: "birthday",    emoji: "🎂", key: "type_birthday" },
+  { value: "anniversary", emoji: "💍", key: "type_anniversary" },
+  { value: "name_day",    emoji: "🎊", key: "type_name_day" },
+  { value: "graduation",  emoji: "🎓", key: "type_graduation" },
+  { value: "other",       emoji: "✨", key: "type_other" },
 ];
 
 export default function SettingsRemindersClient() {
+  const { t } = useI18n();
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -66,25 +68,25 @@ export default function SettingsRemindersClient() {
         return;
       }
       if (!res.ok) {
-        setError("Errore nel caricamento");
+        setError(t("settings_reminders.error_load"));
         return;
       }
       setReminders(await res.json());
     } catch (e) {
       console.error("[reminders] load failed", e);
-      setError("Errore di rete");
+      setError(t("settings_reminders.error_network"));
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
 
   const addReminder = async () => {
     if (!name.trim() || !dateStr) return;
     const parsed = new Date(dateStr);
     if (isNaN(parsed.getTime())) {
-      setError("Data non valida");
+      setError(t("settings_reminders.error_invalid_date"));
       return;
     }
     setSubmitting(true);
@@ -107,7 +109,7 @@ export default function SettingsRemindersClient() {
         return;
       }
       if (!res.ok) {
-        setError("Errore nel salvataggio");
+        setError(t("settings_reminders.error_save"));
         return;
       }
       track("reminder_added", { occasion_type: type, source: "settings" });
@@ -119,14 +121,14 @@ export default function SettingsRemindersClient() {
       await load();
     } catch (e) {
       console.error("[reminders] add failed", e);
-      setError("Errore di rete");
+      setError(t("settings_reminders.error_network"));
     } finally {
       setSubmitting(false);
     }
   };
 
   const deleteReminder = async (id: string) => {
-    if (!confirm("Eliminare questa ricorrenza?")) return;
+    if (!confirm(t("settings_reminders.delete_confirm"))) return;
     try {
       const res = await fetchAuthed(`/api/reminders?id=${encodeURIComponent(id)}`, {
         method: "DELETE",
@@ -137,8 +139,22 @@ export default function SettingsRemindersClient() {
     }
   };
 
-  const occasionMeta = (value: string) =>
-    OCCASION_TYPES.find((o) => o.value === value) ?? OCCASION_TYPES[OCCASION_TYPES.length - 1];
+  const occasionLabel = (value: string) => {
+    const def = OCCASION_TYPE_DEFS.find((o) => o.value === value) ?? OCCASION_TYPE_DEFS[OCCASION_TYPE_DEFS.length - 1];
+    return { emoji: def.emoji, label: t(`settings_reminders.${def.key}`) };
+  };
+
+  const daysLabelFor = (n: number) => {
+    if (n === 0) return t("settings_reminders.row_notify_same_day");
+    if (n === 1) return t("settings_reminders.row_notify_one_day");
+    return t("settings_reminders.row_notify_n_days", { n: String(n) });
+  };
+
+  const formNotifyLabel = () => {
+    if (daysBefore === 0) return t("settings_reminders.notify_label_same_day");
+    if (daysBefore === 1) return t("settings_reminders.notify_label_day_before");
+    return t("settings_reminders.notify_label_days_before", { n: String(daysBefore) });
+  };
 
   const INP: React.CSSProperties = {
     width: "100%",
@@ -157,12 +173,12 @@ export default function SettingsRemindersClient() {
     return (
       <main style={{ minHeight: "100vh", background: LIGHT, fontFamily: "system-ui, sans-serif", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24, textAlign: "center" }}>
         <div style={{ fontSize: 44, marginBottom: 12 }}>🔔</div>
-        <h1 style={{ fontSize: 22, fontWeight: 800, color: DEEP, margin: "0 0 10px" }}>Accedi per gestire le tue ricorrenze</h1>
+        <h1 style={{ fontSize: 22, fontWeight: 800, color: DEEP, margin: "0 0 10px" }}>{t("settings_reminders.needs_login_title")}</h1>
         <p style={{ fontSize: 14, color: MUTED, marginBottom: 24, lineHeight: 1.55, maxWidth: 340 }}>
-          Ti avviseremo con una notifica quando sta arrivando un compleanno importante.
+          {t("settings_reminders.needs_login_subtitle")}
         </p>
         <a href="/auth/login?next=/settings/reminders" style={{ background: ACCENT, color: "#fff", borderRadius: 40, padding: "13px 28px", fontSize: 14, fontWeight: 700, textDecoration: "none" }}>
-          Accedi
+          {t("settings_reminders.login_cta")}
         </a>
       </main>
     );
@@ -172,26 +188,25 @@ export default function SettingsRemindersClient() {
     <main style={{ minHeight: "100vh", background: LIGHT, fontFamily: "system-ui, sans-serif" }}>
       <div style={{ maxWidth: 620, margin: "0 auto", padding: "32px 24px 80px" }}>
         <a href="/dashboard" style={{ color: MUTED, fontSize: 13, textDecoration: "none", display: "inline-block", marginBottom: 12 }}>
-          ← Dashboard
+          {t("settings_reminders.back_dashboard")}
         </a>
         <h1 style={{ fontSize: 26, fontWeight: 800, color: DEEP, margin: "0 0 6px" }}>
-          🔔 Ricorrenze
+          {t("settings_reminders.title")}
         </h1>
-        <p style={{ fontSize: 14, color: MUTED, margin: "0 0 24px", lineHeight: 1.5 }}>
-          Aggiungi compleanni e anniversari delle persone importanti. Ti avviseremo con una notifica <strong>N giorni prima</strong> così hai tempo di preparare un regalo.
-        </p>
+        <p style={{ fontSize: 14, color: MUTED, margin: "0 0 24px", lineHeight: 1.5 }}
+           dangerouslySetInnerHTML={{ __html: t("settings_reminders.description") }} />
 
         {/* ── Add form ─────────────────────────────────── */}
         <div style={{ background: "#fff", borderRadius: 16, padding: 20, boxShadow: "0 2px 12px rgba(0,0,0,.04)", marginBottom: 24 }}>
           <h2 style={{ fontSize: 14, fontWeight: 800, color: DEEP, margin: "0 0 12px", textTransform: "uppercase", letterSpacing: ".06em" }}>
-            Nuova ricorrenza
+            {t("settings_reminders.new_section_title")}
           </h2>
 
           <label style={{ display: "block", marginBottom: 10 }}>
-            <div style={{ fontSize: 12, color: MUTED, marginBottom: 4, fontWeight: 600 }}>Chi?</div>
+            <div style={{ fontSize: 12, color: MUTED, marginBottom: 4, fontWeight: 600 }}>{t("settings_reminders.field_who")}</div>
             <input
               style={INP}
-              placeholder="Marta, Papà, Mamma…"
+              placeholder={t("settings_reminders.ph_who")}
               value={name}
               onChange={(e) => setName(e.target.value)}
               autoCapitalize="words"
@@ -199,7 +214,7 @@ export default function SettingsRemindersClient() {
           </label>
 
           <label style={{ display: "block", marginBottom: 10 }}>
-            <div style={{ fontSize: 12, color: MUTED, marginBottom: 4, fontWeight: 600 }}>Data della ricorrenza</div>
+            <div style={{ fontSize: 12, color: MUTED, marginBottom: 4, fontWeight: 600 }}>{t("settings_reminders.field_date")}</div>
             <input
               type="date"
               style={INP}
@@ -209,9 +224,9 @@ export default function SettingsRemindersClient() {
           </label>
 
           <label style={{ display: "block", marginBottom: 10 }}>
-            <div style={{ fontSize: 12, color: MUTED, marginBottom: 6, fontWeight: 600 }}>Tipo</div>
+            <div style={{ fontSize: 12, color: MUTED, marginBottom: 6, fontWeight: 600 }}>{t("settings_reminders.field_type")}</div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))", gap: 6 }}>
-              {OCCASION_TYPES.map((o) => {
+              {OCCASION_TYPE_DEFS.map((o) => {
                 const active = type === o.value;
                 return (
                   <button
@@ -236,7 +251,7 @@ export default function SettingsRemindersClient() {
                     }}
                   >
                     <span style={{ fontSize: 18 }}>{o.emoji}</span>
-                    <span>{o.labelIt}</span>
+                    <span>{t(`settings_reminders.${o.key}`)}</span>
                   </button>
                 );
               })}
@@ -245,7 +260,7 @@ export default function SettingsRemindersClient() {
 
           <label style={{ display: "block", marginBottom: 14 }}>
             <div style={{ fontSize: 12, color: MUTED, marginBottom: 4, fontWeight: 600 }}>
-              Avvisami <strong>{daysBefore === 0 ? "lo stesso giorno" : daysBefore === 1 ? "il giorno prima" : `${daysBefore} giorni prima`}</strong>
+              {t("settings_reminders.notify_prefix")} <strong>{formNotifyLabel()}</strong>
             </div>
             <input
               type="range"
@@ -278,31 +293,26 @@ export default function SettingsRemindersClient() {
               fontFamily: "inherit",
             }}
           >
-            {submitting ? "Aggiungo…" : "+ Aggiungi ricorrenza"}
+            {submitting ? t("settings_reminders.submit_adding") : t("settings_reminders.submit_add")}
           </button>
         </div>
 
         {/* ── Lista ────────────────────────────────────── */}
         <h2 style={{ fontSize: 14, fontWeight: 800, color: DEEP, margin: "0 0 10px", textTransform: "uppercase", letterSpacing: ".06em" }}>
-          Le tue ricorrenze
+          {t("settings_reminders.list_title")}
         </h2>
         {loading ? (
-          <div style={{ color: MUTED, fontSize: 14, padding: 16 }}>Caricamento…</div>
+          <div style={{ color: MUTED, fontSize: 14, padding: 16 }}>{t("settings_reminders.loading")}</div>
         ) : reminders.length === 0 ? (
           <div style={{ color: MUTED, fontSize: 14, padding: "14px 0", textAlign: "center" }}>
-            Ancora nessuna ricorrenza. Aggiungine una sopra per non dimenticare mai più un compleanno.
+            {t("settings_reminders.empty")}
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {reminders.map((r) => {
-              const meta = occasionMeta(r.occasion_type);
+              const meta = occasionLabel(r.occasion_type);
               const dd = String(r.day).padStart(2, "0");
               const mm = String(r.month).padStart(2, "0");
-              const daysLabel = r.notify_days_before === 0
-                ? "lo stesso giorno"
-                : r.notify_days_before === 1
-                ? "1 giorno prima"
-                : `${r.notify_days_before} giorni prima`;
               return (
                 <div
                   key={r.id}
@@ -322,12 +332,16 @@ export default function SettingsRemindersClient() {
                       {r.recipient_name}
                     </div>
                     <div style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>
-                      {meta.labelIt} · {dd}/{mm} · avviso {daysLabel}
+                      {t("settings_reminders.row_meta_format", {
+                        type: meta.label,
+                        date: `${dd}/${mm}`,
+                        days: daysLabelFor(r.notify_days_before),
+                      })}
                     </div>
                   </div>
                   <button
                     onClick={() => deleteReminder(r.id)}
-                    aria-label="Elimina"
+                    aria-label={t("settings_reminders.delete_aria")}
                     style={{
                       background: "transparent",
                       border: `1.5px solid #ffd0d0`,

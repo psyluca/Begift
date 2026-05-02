@@ -7,7 +7,7 @@ import GiftChat from "@/components/GiftChat";
 import { ReportGiftButton } from "@/components/ReportGiftButton";
 import { track } from "@/lib/analytics";
 import { ParentLetterReveal, type ParentLetterData } from "@/components/ParentLetterReveal";
-import { templateByType } from "@/lib/parent-templates";
+import { templateByType, localizeParentConfig } from "@/lib/parent-templates";
 import { MultiPhotoGallery } from "@/components/MultiPhotoGallery";
 import { downloadMedia } from "@/lib/downloadMedia";
 import { RecipientNotice } from "@/components/RecipientNotice";
@@ -303,7 +303,7 @@ function GiftContent({ gift }: { gift: Gift }) {
         data={templateData}
         recipientName={gift.recipient_name}
         senderName={(gift as { sender_alias?: string | null }).sender_alias ?? null}
-        config={parentConfig}
+        config={localizeParentConfig(parentConfig, t)}
       />
     );
   }

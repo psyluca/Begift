@@ -21,6 +21,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useI18n } from "@/lib/i18n";
 
 const ACCENT = "#D4537E";
 const DEEP = "#1a1a1a";
@@ -65,6 +66,7 @@ interface Props {
 
 export default function SondaggioClient({ giftIdFromQuery, userIdFromQuery }: Props) {
   const router = useRouter();
+  const { t } = useI18n();
   const [section, setSection] = useState(0); // 0..4
   const [answers, setAnswers] = useState<Answers>({});
   const [submitting, setSubmitting] = useState(false);
@@ -140,11 +142,11 @@ export default function SondaggioClient({ giftIdFromQuery, userIdFromQuery }: Pr
   };
 
   const sectionTitles = [
-    "La tua esperienza",
-    "Modello di business",
-    "Una nuova idea",
-    "Ti va di tornare?",
-    "Su di te (opzionale)",
+    t("survey.section_title_1"),
+    t("survey.section_title_2"),
+    t("survey.section_title_3"),
+    t("survey.section_title_4"),
+    t("survey.section_title_5"),
   ];
   const totalSections = sectionTitles.length;
 
@@ -172,7 +174,7 @@ export default function SondaggioClient({ giftIdFromQuery, userIdFromQuery }: Pr
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        setSubmitError((data as { error?: string }).error || `Errore ${res.status}`);
+        setSubmitError((data as { error?: string }).error || t("survey.error_generic", { status: String(res.status) }));
         return;
       }
       // Pulisco il draft e vado alla pagina di ringraziamento
@@ -180,7 +182,7 @@ export default function SondaggioClient({ giftIdFromQuery, userIdFromQuery }: Pr
       router.push("/sondaggio/grazie");
     } catch (e) {
       console.error("[sondaggio] submit error", e);
-      setSubmitError("Errore di rete. Verifica la connessione e riprova.");
+      setSubmitError(t("survey.error_network"));
     } finally {
       setSubmitting(false);
     }
@@ -204,25 +206,25 @@ export default function SondaggioClient({ giftIdFromQuery, userIdFromQuery }: Pr
         {/* Header */}
         <div style={{ marginBottom: 18 }}>
           <div style={{ fontSize: 12, color: MUTED, fontWeight: 600, marginBottom: 6 }}>
-            Sezione {section + 1} di {totalSections}
+            {t("survey.section_label", { current: String(section + 1), total: String(totalSections) })}
           </div>
           <h1 style={{ fontSize: 24, fontWeight: 900, color: DEEP, margin: 0, letterSpacing: "-.4px", lineHeight: 1.2 }}>
             {sectionTitles[section]}
           </h1>
           {section === 0 && (
             <p style={{ fontSize: 13.5, color: MUTED, marginTop: 8, lineHeight: 1.55 }}>
-              Sono Luca, founder di BeGift. Le tue risposte arrivano direttamente a me — max 3 minuti, e mi servono per decidere come BeGift si evolve nei prossimi mesi.
+              {t("survey.intro")}
             </p>
           )}
         </div>
 
         {/* Sezioni */}
         <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 16, padding: 22 }}>
-          {section === 0 && <Section1 answers={answers} update={update} />}
-          {section === 1 && <Section2 answers={answers} update={update} toggleMulti={toggleMulti} />}
-          {section === 2 && <Section3 answers={answers} update={update} toggleMulti={toggleMulti} />}
-          {section === 3 && <Section4 answers={answers} update={update} />}
-          {section === 4 && <Section5 answers={answers} update={update} />}
+          {section === 0 && <Section1 answers={answers} update={update} t={t} />}
+          {section === 1 && <Section2 answers={answers} update={update} toggleMulti={toggleMulti} t={t} />}
+          {section === 2 && <Section3 answers={answers} update={update} toggleMulti={toggleMulti} t={t} />}
+          {section === 3 && <Section4 answers={answers} update={update} t={t} />}
+          {section === 4 && <Section5 answers={answers} update={update} t={t} />}
         </div>
 
         {submitError && (
@@ -239,7 +241,7 @@ export default function SondaggioClient({ giftIdFromQuery, userIdFromQuery }: Pr
               border: `1.5px solid ${BORDER}`, borderRadius: 40,
               padding: "12px 20px", fontSize: 14, fontWeight: 600,
               cursor: "pointer", fontFamily: "inherit",
-            }}>← Indietro</button>
+            }}>{t("survey.back")}</button>
           )}
           {section < totalSections - 1 ? (
             <button onClick={next} disabled={!sectionValid(section)} style={{
@@ -249,19 +251,19 @@ export default function SondaggioClient({ giftIdFromQuery, userIdFromQuery }: Pr
               padding: "13px 24px", fontSize: 15, fontWeight: 800,
               cursor: sectionValid(section) ? "pointer" : "not-allowed",
               fontFamily: "inherit",
-            }}>Avanti →</button>
+            }}>{t("survey.next")}</button>
           ) : (
             <button onClick={submit} disabled={submitting} style={{
               flex: 1, background: ACCENT, color: "#fff", border: "none",
               borderRadius: 40, padding: "13px 24px", fontSize: 15, fontWeight: 800,
               cursor: submitting ? "wait" : "pointer", opacity: submitting ? 0.7 : 1,
               boxShadow: "0 8px 22px rgba(212,83,126,.35)", fontFamily: "inherit",
-            }}>{submitting ? "Invio..." : "Invia sondaggio →"}</button>
+            }}>{submitting ? t("survey.submitting") : t("survey.submit")}</button>
           )}
         </div>
 
         <p style={{ fontSize: 11, color: MUTED, textAlign: "center", marginTop: 18, lineHeight: 1.6 }}>
-          🔒 Le risposte sono usate solo per migliorare BeGift. Email opzionale solo se vuoi un follow-up.
+          {t("survey.footer_privacy")}
         </p>
       </div>
     </main>
@@ -272,186 +274,207 @@ export default function SondaggioClient({ giftIdFromQuery, userIdFromQuery }: Pr
 // Sezioni
 // ════════════════════════════════════════════════════════════════════
 
-function Section1({ answers, update }: { answers: Answers; update: <K extends keyof Answers>(k: K, v: Answers[K]) => void }) {
+type T = (key: string, params?: Record<string, string>) => string;
+
+function Section1({ answers, update, t }: { answers: Answers; update: <K extends keyof Answers>(k: K, v: Answers[K]) => void; t: T }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-      <Q label="Per chi era il regalo?" required>
+      <Q label={t("survey.q_recipient_type")} required>
         <Radio name="recipient_type" value={answers.recipient_type} options={[
-          "Mamma","Papà","Partner","Sorella/fratello","Figlia/o","Amica/amico","Zia/zio o cugina/o","Altra persona",
+          { value: t("survey.recipient_mom"),         label: t("survey.recipient_mom") },
+          { value: t("survey.recipient_dad"),         label: t("survey.recipient_dad") },
+          { value: t("survey.recipient_partner"),     label: t("survey.recipient_partner") },
+          { value: t("survey.recipient_sibling"),     label: t("survey.recipient_sibling") },
+          { value: t("survey.recipient_child"),       label: t("survey.recipient_child") },
+          { value: t("survey.recipient_friend"),      label: t("survey.recipient_friend") },
+          { value: t("survey.recipient_aunt_cousin"), label: t("survey.recipient_aunt_cousin") },
+          { value: t("survey.recipient_other"),       label: t("survey.recipient_other") },
         ]} onChange={(v) => update("recipient_type", v)} />
       </Q>
 
-      <Q label="Per quale occasione?" required>
+      <Q label={t("survey.q_occasion")} required>
         <Radio name="occasion" value={answers.occasion} options={[
-          "Festa della Mamma","Compleanno","Anniversario","Un grazie","Un pensiero senza occasione precisa","Altro",
+          { value: t("survey.occasion_mothers_day"), label: t("survey.occasion_mothers_day") },
+          { value: t("survey.occasion_birthday"),    label: t("survey.occasion_birthday") },
+          { value: t("survey.occasion_anniversary"), label: t("survey.occasion_anniversary") },
+          { value: t("survey.occasion_thanks"),      label: t("survey.occasion_thanks") },
+          { value: t("survey.occasion_no_reason"),   label: t("survey.occasion_no_reason") },
+          { value: t("survey.occasion_other"),       label: t("survey.occasion_other") },
         ]} onChange={(v) => update("occasion", v)} />
       </Q>
 
-      <Q label="Quanto ti è piaciuta l'esperienza di creare il regalo?" required>
-        <Scale value={answers.experience_rating} min={1} max={5} leftLabel="Per niente" rightLabel="Tantissimo" onChange={(v) => update("experience_rating", v)} />
+      <Q label={t("survey.q_experience_rating")} required>
+        <Scale value={answers.experience_rating} min={1} max={5} leftLabel={t("survey.scale_not_at_all")} rightLabel={t("survey.scale_a_lot")} onChange={(v) => update("experience_rating", v)} />
       </Q>
 
-      <Q label="Cos'è la prima cosa che ti è piaciuta?">
-        <LongText value={answers.liked_most} maxLength={200} placeholder="Anche solo una frase..." onChange={(v) => update("liked_most", v)} />
+      <Q label={t("survey.q_liked_most")}>
+        <LongText value={answers.liked_most} maxLength={200} placeholder={t("survey.ph_liked_most")} onChange={(v) => update("liked_most", v)} />
       </Q>
 
-      <Q label="Cos'è la prima cosa che ti ha frustrato o confuso?">
-        <LongText value={answers.frustrated} maxLength={200} placeholder="Tieni pure il tono diretto..." onChange={(v) => update("frustrated", v)} />
+      <Q label={t("survey.q_frustrated")}>
+        <LongText value={answers.frustrated} maxLength={200} placeholder={t("survey.ph_frustrated")} onChange={(v) => update("frustrated", v)} />
       </Q>
 
-      <Q label="Cosa aggiungeresti che oggi non c'è?">
-        <LongText value={answers.would_add} maxLength={300} placeholder="Una funzione che ti sarebbe servita..." onChange={(v) => update("would_add", v)} />
+      <Q label={t("survey.q_would_add")}>
+        <LongText value={answers.would_add} maxLength={300} placeholder={t("survey.ph_would_add")} onChange={(v) => update("would_add", v)} />
       </Q>
 
-      <Q label="La persona che ha ricevuto il regalo cosa ti ha detto/scritto?">
-        <LongText value={answers.recipient_feedback} maxLength={300} placeholder="Anche una frase. Se non ha detto nulla, salta pure." onChange={(v) => update("recipient_feedback", v)} />
+      <Q label={t("survey.q_recipient_feedback")}>
+        <LongText value={answers.recipient_feedback} maxLength={300} placeholder={t("survey.ph_recipient_feedback")} onChange={(v) => update("recipient_feedback", v)} />
       </Q>
     </div>
   );
 }
 
-function Section2({ answers, update, toggleMulti }: { answers: Answers; update: <K extends keyof Answers>(k: K, v: Answers[K]) => void; toggleMulti: (k: "preferred_pricing" | "online_purchase_sites", v: string, max?: number) => void }) {
+function Section2({ answers, update, toggleMulti, t }: { answers: Answers; update: <K extends keyof Answers>(k: K, v: Answers[K]) => void; toggleMulti: (k: "preferred_pricing" | "online_purchase_sites", v: string, max?: number) => void; t: T }) {
   const showVW = answers.would_pay && answers.would_pay !== "no_free";
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-      <Q label="Pagheresti per usare BeGift?" required>
+      <Q label={t("survey.q_would_pay")} required>
         <Radio name="would_pay" value={answers.would_pay} options={[
-          { value: "yes_worth_it", label: "Sì, mi sembra valga il prezzo" },
-          { value: "yes_low",       label: "Sì, ma solo a un prezzo basso" },
-          { value: "maybe",         label: "Forse, dipende dal prezzo e dalle funzioni" },
-          { value: "no_free",       label: "No, vorrei usarlo sempre gratis" },
+          { value: "yes_worth_it", label: t("survey.pay_yes_worth_it") },
+          { value: "yes_low",       label: t("survey.pay_yes_low") },
+          { value: "maybe",         label: t("survey.pay_maybe") },
+          { value: "no_free",       label: t("survey.pay_no_free") },
         ]} onChange={(v) => update("would_pay", v)} />
       </Q>
 
       {showVW && (
         <>
-          <p style={{ fontSize: 12, color: MUTED, lineHeight: 1.5, margin: "0 0 -6px", padding: "10px 12px", background: "#fff8ec", border: "1px solid #f0e0c0", borderRadius: 10 }}>
-            🧮 <strong>Quattro domande sul prezzo (Van Westendorp).</strong> Indica un prezzo in <strong>€/anno</strong>. Anche zero se ti viene così.
-          </p>
+          <p style={{ fontSize: 12, color: MUTED, lineHeight: 1.5, margin: "0 0 -6px", padding: "10px 12px", background: "#fff8ec", border: "1px solid #f0e0c0", borderRadius: 10 }}
+             dangerouslySetInnerHTML={{ __html: t("survey.vw_intro") }} />
 
-          <Q label='A che prezzo penseresti "troppo caro, non lo userei"?' required>
-            <NumberE value={answers.price_too_expensive} onChange={(v) => update("price_too_expensive", v)} />
+          <Q label={t("survey.q_price_too_expensive")} required>
+            <NumberE value={answers.price_too_expensive} unit={t("survey.price_unit")} onChange={(v) => update("price_too_expensive", v)} />
           </Q>
 
-          <Q label='A che prezzo penseresti "caro, ma forse vale"?' required>
-            <NumberE value={answers.price_expensive_but_worth} onChange={(v) => update("price_expensive_but_worth", v)} />
+          <Q label={t("survey.q_price_expensive_but_worth")} required>
+            <NumberE value={answers.price_expensive_but_worth} unit={t("survey.price_unit")} onChange={(v) => update("price_expensive_but_worth", v)} />
           </Q>
 
-          <Q label='A che prezzo penseresti "buon affare"?' required>
-            <NumberE value={answers.price_good_deal} onChange={(v) => update("price_good_deal", v)} />
+          <Q label={t("survey.q_price_good_deal")} required>
+            <NumberE value={answers.price_good_deal} unit={t("survey.price_unit")} onChange={(v) => update("price_good_deal", v)} />
           </Q>
 
-          <Q label='A che prezzo penseresti "troppo economico, non mi fido della qualità"?' required>
-            <NumberE value={answers.price_too_cheap} onChange={(v) => update("price_too_cheap", v)} />
+          <Q label={t("survey.q_price_too_cheap")} required>
+            <NumberE value={answers.price_too_cheap} unit={t("survey.price_unit")} onChange={(v) => update("price_too_cheap", v)} />
           </Q>
         </>
       )}
 
-      <Q label="Per quale formula pagheresti più volentieri?">
-        <p style={{ fontSize: 12, color: MUTED, margin: "-4px 0 8px" }}>Massimo 2 selezioni</p>
+      <Q label={t("survey.q_preferred_pricing")}>
+        <p style={{ fontSize: 12, color: MUTED, margin: "-4px 0 8px" }}>{t("survey.max_n_selections", { n: "2" })}</p>
         <MultiCheck name="preferred_pricing" values={answers.preferred_pricing ?? []} options={[
-          "Abbonamento mensile (es. 2-5€/mese)",
-          "Abbonamento annuale (es. 20-30€/anno)",
-          "Pagamento singolo per regalo (es. 1€ ogni regalo)",
-          "Premium packaging (animazioni, palette uniche) come 'in-app purchase'",
-          "Storage illimitato foto/video",
-          "Niente, vorrei tutto gratis",
+          t("survey.pricing_monthly"),
+          t("survey.pricing_yearly"),
+          t("survey.pricing_per_gift"),
+          t("survey.pricing_premium"),
+          t("survey.pricing_storage"),
+          t("survey.pricing_free"),
         ]} max={2} onToggle={(v) => toggleMulti("preferred_pricing", v, 2)} />
       </Q>
     </div>
   );
 }
 
-function Section3({ answers, update, toggleMulti }: { answers: Answers; update: <K extends keyof Answers>(k: K, v: Answers[K]) => void; toggleMulti: (k: "preferred_pricing" | "online_purchase_sites", v: string, max?: number) => void }) {
+function Section3({ answers, update, toggleMulti, t }: { answers: Answers; update: <K extends keyof Answers>(k: K, v: Answers[K]) => void; toggleMulti: (k: "preferred_pricing" | "online_purchase_sites", v: string, max?: number) => void; t: T }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-      <p style={{ fontSize: 13, color: MUTED, lineHeight: 1.55, margin: 0 }}>
-        Stiamo valutando una funzione: invece di creare un regalo da zero, potresti <strong>inoltrare a BeGift una mail di acquisto</strong> (un voucher, un biglietto, un'esperienza) e BeGift lo impacchetta automaticamente.
-      </p>
+      <p style={{ fontSize: 13, color: MUTED, lineHeight: 1.55, margin: 0 }}
+         dangerouslySetInnerHTML={{ __html: t("survey.voucher_intro") }} />
 
-      <Q label="Hai mai pensato di trasformare in regalo un voucher, biglietto o esperienza che hai comprato online?" required>
+      <Q label={t("survey.q_voucher_interest")} required>
         <Radio name="voucher_interest" value={answers.voucher_interest} options={[
-          { value: "very_useful",   label: "Sì, sarebbe utilissimo" },
-          { value: "would_try",     label: "Mi piacerebbe provarlo" },
-          { value: "not_for_me",    label: "No, non mi serve" },
-          { value: "never_thought", label: "Non avevo mai pensato a questa possibilità" },
+          { value: "very_useful",   label: t("survey.voucher_very_useful") },
+          { value: "would_try",     label: t("survey.voucher_would_try") },
+          { value: "not_for_me",    label: t("survey.voucher_not_for_me") },
+          { value: "never_thought", label: t("survey.voucher_never_thought") },
         ]} onChange={(v) => update("voucher_interest", v)} />
       </Q>
 
-      <Q label="Se compri regali online, da quali siti tipicamente?">
-        <p style={{ fontSize: 12, color: MUTED, margin: "-4px 0 8px" }}>Massimo 5 selezioni</p>
+      <Q label={t("survey.q_online_sites")}>
+        <p style={{ fontSize: 12, color: MUTED, margin: "-4px 0 8px" }}>{t("survey.max_n_selections", { n: "5" })}</p>
         <MultiCheck name="online_purchase_sites" values={answers.online_purchase_sites ?? []} options={[
-          "Booking, Airbnb, Hotels (viaggi)",
-          "Trenitalia, Italo, Ryanair, easyJet (trasporti)",
-          "Vivaticket, Ticketone, Eventbrite (eventi/concerti)",
-          "Smartbox, Wonderbox, Cofanetti (esperienze)",
-          "TheFork, Groupon (cene/ristoranti)",
-          "Amazon (voucher / gift card)",
-          "Decathlon, Zalando, Sephora (shopping)",
-          "Spotify, Netflix, Audible (abbonamenti / gift card)",
-          "Treatwell, Spa (beauty/wellness)",
-          "Altro",
+          t("survey.site_travel"),
+          t("survey.site_transport"),
+          t("survey.site_events"),
+          t("survey.site_experiences"),
+          t("survey.site_food"),
+          t("survey.site_amazon"),
+          t("survey.site_shopping"),
+          t("survey.site_subscriptions"),
+          t("survey.site_beauty"),
+          t("survey.site_other"),
         ]} max={5} onToggle={(v) => toggleMulti("online_purchase_sites", v, 5)} />
       </Q>
     </div>
   );
 }
 
-function Section4({ answers, update }: { answers: Answers; update: <K extends keyof Answers>(k: K, v: Answers[K]) => void }) {
+function Section4({ answers, update, t }: { answers: Answers; update: <K extends keyof Answers>(k: K, v: Answers[K]) => void; t: T }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-      <Q label="Userai di nuovo BeGift?" required>
+      <Q label={t("survey.q_reuse")} required>
         <Radio name="reuse" value={answers.reuse} options={[
-          { value: "yes_for_sure",  label: "Sì, sicuramente" },
-          { value: "maybe",         label: "Forse, dipende dall'occasione" },
-          { value: "no",            label: "No, è stata un'esperienza una-tantum" },
+          { value: "yes_for_sure",  label: t("survey.reuse_yes_for_sure") },
+          { value: "maybe",         label: t("survey.reuse_maybe") },
+          { value: "no",            label: t("survey.reuse_no") },
         ]} onChange={(v) => update("reuse", v)} />
       </Q>
 
-      <Q label="Da 0 a 10, quanto è probabile che consigli BeGift a un amico?" required>
-        <Scale value={answers.nps_score} min={0} max={10} leftLabel="Per niente probabile" rightLabel="Sicuramente" onChange={(v) => update("nps_score", v)} />
+      <Q label={t("survey.q_nps")} required>
+        <Scale value={answers.nps_score} min={0} max={10} leftLabel={t("survey.nps_left")} rightLabel={t("survey.nps_right")} onChange={(v) => update("nps_score", v)} />
       </Q>
 
-      <Q label="Perché hai dato questo voto?">
-        <LongText value={answers.nps_reason} maxLength={300} placeholder="Una riga basta..." onChange={(v) => update("nps_reason", v)} />
+      <Q label={t("survey.q_nps_reason")}>
+        <LongText value={answers.nps_reason} maxLength={300} placeholder={t("survey.ph_nps_reason")} onChange={(v) => update("nps_reason", v)} />
       </Q>
     </div>
   );
 }
 
-function Section5({ answers, update }: { answers: Answers; update: <K extends keyof Answers>(k: K, v: Answers[K]) => void }) {
+function Section5({ answers, update, t }: { answers: Answers; update: <K extends keyof Answers>(k: K, v: Answers[K]) => void; t: T }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
       <p style={{ fontSize: 13, color: MUTED, lineHeight: 1.55, margin: 0 }}>
-        Tutte queste sono opzionali. Se preferisci non rispondere a nulla, va bene così — clicca direttamente "Invia sondaggio" sotto.
+        {t("survey.section5_intro")}
       </p>
 
-      <Q label="Età">
+      <Q label={t("survey.q_age")}>
         <Radio name="age_range" value={answers.age_range} options={[
-          "18-24","25-34","35-44","45-54","55-64","65+","Preferisco non dire",
+          { value: t("survey.age_18_24"),    label: t("survey.age_18_24") },
+          { value: t("survey.age_25_34"),    label: t("survey.age_25_34") },
+          { value: t("survey.age_35_44"),    label: t("survey.age_35_44") },
+          { value: t("survey.age_45_54"),    label: t("survey.age_45_54") },
+          { value: t("survey.age_55_64"),    label: t("survey.age_55_64") },
+          { value: t("survey.age_65_plus"),  label: t("survey.age_65_plus") },
+          { value: t("survey.prefer_not_say"), label: t("survey.prefer_not_say") },
         ]} onChange={(v) => update("age_range", v)} />
       </Q>
 
-      <Q label="Genere">
+      <Q label={t("survey.q_gender")}>
         <Radio name="gender" value={answers.gender} options={[
-          "Donna","Uomo","Altro / non binario","Preferisco non dire",
+          { value: t("survey.gender_woman"),     label: t("survey.gender_woman") },
+          { value: t("survey.gender_man"),       label: t("survey.gender_man") },
+          { value: t("survey.gender_other"),     label: t("survey.gender_other") },
+          { value: t("survey.prefer_not_say"),   label: t("survey.prefer_not_say") },
         ]} onChange={(v) => update("gender", v)} />
       </Q>
 
-      <Q label="Vuoi che ti contatti per un breve confronto telefonico (10 minuti)?">
+      <Q label={t("survey.q_call")}>
         <Radio name="willing_to_call" value={answers.willing_to_call} options={[
-          { value: "yes", label: "Sì" },
-          { value: "no",  label: "No, grazie" },
+          { value: "yes", label: t("survey.call_yes") },
+          { value: "no",  label: t("survey.call_no") },
         ]} onChange={(v) => update("willing_to_call", v)} />
       </Q>
 
       {answers.willing_to_call === "yes" && (
-        <Q label="La tua email">
+        <Q label={t("survey.q_email")}>
           <input
             type="email"
             value={answers.contact_email ?? ""}
             onChange={(e) => update("contact_email", e.target.value)}
-            placeholder="es. mario@email.com"
+            placeholder={t("survey.ph_email")}
             style={inputStyle}
           />
         </Q>
@@ -622,7 +645,7 @@ function LongText({ value, maxLength, placeholder, onChange }: {
   );
 }
 
-function NumberE({ value, onChange }: { value: number | null | undefined; onChange: (v: number) => void }) {
+function NumberE({ value, unit, onChange }: { value: number | null | undefined; unit: string; onChange: (v: number) => void }) {
   return (
     <div style={{ position: "relative" }}>
       <input
@@ -635,13 +658,13 @@ function NumberE({ value, onChange }: { value: number | null | undefined; onChan
         }}
         placeholder="0"
         inputMode="numeric"
-        style={{ ...inputStyle, paddingRight: 48 }}
+        style={{ ...inputStyle, paddingRight: 56 }}
       />
       <span style={{
         position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)",
         fontSize: 13, color: MUTED, fontWeight: 600,
         pointerEvents: "none",
-      }}>€/anno</span>
+      }}>{unit}</span>
     </div>
   );
 }

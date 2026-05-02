@@ -17,9 +17,23 @@
  * viene incluso nel body email. Mostriamo solo nomi + link al gift
  * sull'app: il destinatario ha gia' acconsentito a creare il gift,
  * il creator vede contenuti tramite link autenticato.
+ *
+ * Internazionalizzazione: ogni template accetta un parametro
+ * `locale` opzionale ("it" | "en"). Default = "it" per
+ * retrocompatibilità — gli ambienti che non passano il parametro
+ * continuano a inviare email in italiano. Per ja/zh facciamo
+ * fallback a inglese in attesa di traduzioni dedicate.
  */
 
 import { appUrl } from "./email";
+
+export type EmailLocale = "it" | "en" | "ja" | "zh";
+
+/** Riduce il locale supportato dai template a it|en. ja/zh fallback en. */
+function resolveLocale(loc?: EmailLocale): "it" | "en" {
+  if (loc === "en" || loc === "ja" || loc === "zh") return "en";
+  return "it";
+}
 
 export interface GiftOpenedParams {
   /** Nome del destinatario che ha aperto (es. "Maria") — gia'
@@ -74,6 +88,7 @@ interface RenderedEmail {
 // ── Layout shell condiviso ─────────────────────────────────────────
 
 function shell(opts: {
+  locale: "it" | "en";
   preheader: string;
   headline: string;
   bodyHtml: string;
@@ -81,9 +96,17 @@ function shell(opts: {
   ctaUrl?: string;
   footerNote?: string;
 }): string {
-  const { preheader, headline, bodyHtml, ctaLabel, ctaUrl, footerNote } = opts;
+  const { locale, preheader, headline, bodyHtml, ctaLabel, ctaUrl, footerNote } = opts;
+  const footerWhy = locale === "en"
+    ? "You're getting this email because you use BeGift."
+    : "Ricevi questa email perche' usi BeGift.";
+  const manageNotif = locale === "en" ? "Manage notifications" : "Gestisci notifiche";
+  const tagline = locale === "en"
+    ? "BeGift — the digital gift that moves people"
+    : "BeGift — il regalo digitale che emoziona";
+  const lang = locale === "en" ? "en" : "it";
   return `<!doctype html>
-<html lang="it">
+<html lang="${lang}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -123,13 +146,13 @@ function shell(opts: {
           <tr>
             <td style="padding:8px 28px 22px;border-top:1px solid #efe9e3;font-size:11.5px;line-height:1.6;color:#888;">
               ${footerNote ? `<p style="margin:14px 0 8px;">${footerNote}</p>` : ""}
-              Ricevi questa email perche' usi BeGift.
-              <a href="${appUrl()}/settings" style="color:#888;">Gestisci notifiche</a> ·
+              ${footerWhy}
+              <a href="${appUrl()}/settings" style="color:#888;">${manageNotif}</a> ·
               <a href="${appUrl()}/privacy" style="color:#888;">Privacy</a>
             </td>
           </tr>
         </table>
-        <p style="margin:18px 0 0;font-size:11px;color:#aaa;">BeGift — il regalo digitale che emoziona</p>
+        <p style="margin:18px 0 0;font-size:11px;color:#aaa;">${tagline}</p>
       </td>
     </tr>
   </table>
@@ -139,63 +162,115 @@ function shell(opts: {
 
 // ── Template specifici ─────────────────────────────────────────────
 
-export function giftOpenedTemplate(p: GiftOpenedParams): RenderedEmail {
+export function giftOpenedTemplate(p: GiftOpenedParams, locale?: EmailLocale): RenderedEmail {
+  const loc = resolveLocale(locale);
   const url = `${appUrl()}/gift/${p.giftId}`;
   const opens = p.openCount ?? 1;
   const isReopen = opens > 1;
-  const subject = isReopen
-    ? `🎁 ${p.recipientName} ha riaperto il tuo regalo (${opens}ª volta)`
-    : `🎁 ${p.recipientName} ha aperto il tuo regalo`;
-  const headline = isReopen
-    ? `${p.recipientName} l'ha riaperto`
-    : `${p.recipientName} l'ha aperto!`;
-  const body = isReopen
-    ? `<p style="margin:0 0 12px;">Buon segno: <strong>${escapeHtml(p.recipientName)}</strong> e' tornato/a sul regalo che gli/le hai mandato. E' la <strong>${opens}ª</strong> volta che lo apre — significa che ci tiene.</p>`
-    : `<p style="margin:0 0 12px;">Il regalo che hai preparato per <strong>${escapeHtml(p.recipientName)}</strong> e' stato aperto. Vai a vedere se ha lasciato una reazione.</p>`;
+  let subject: string, headline: string, body: string, preheader: string, ctaLabel: string;
+  if (loc === "en") {
+    subject = isReopen
+      ? `🎁 ${p.recipientName} reopened your gift (${opens}x)`
+      : `🎁 ${p.recipientName} opened your gift`;
+    headline = isReopen
+      ? `${p.recipientName} reopened it`
+      : `${p.recipientName} opened it!`;
+    body = isReopen
+      ? `<p style="margin:0 0 12px;">Good sign: <strong>${escapeHtml(p.recipientName)}</strong> came back to your gift. It's the <strong>${opens}${ordinalSuffix(opens)}</strong> time they've opened it — they care.</p>`
+      : `<p style="margin:0 0 12px;">The gift you prepared for <strong>${escapeHtml(p.recipientName)}</strong> has been opened. Go check if they left a reaction.</p>`;
+    preheader = isReopen ? `Reopened ${opens} times — they really care` : "Go check if they left a reaction";
+    ctaLabel = "Open the gift";
+  } else {
+    subject = isReopen
+      ? `🎁 ${p.recipientName} ha riaperto il tuo regalo (${opens}ª volta)`
+      : `🎁 ${p.recipientName} ha aperto il tuo regalo`;
+    headline = isReopen
+      ? `${p.recipientName} l'ha riaperto`
+      : `${p.recipientName} l'ha aperto!`;
+    body = isReopen
+      ? `<p style="margin:0 0 12px;">Buon segno: <strong>${escapeHtml(p.recipientName)}</strong> e' tornato/a sul regalo che gli/le hai mandato. E' la <strong>${opens}ª</strong> volta che lo apre — significa che ci tiene.</p>`
+      : `<p style="margin:0 0 12px;">Il regalo che hai preparato per <strong>${escapeHtml(p.recipientName)}</strong> e' stato aperto. Vai a vedere se ha lasciato una reazione.</p>`;
+    preheader = isReopen ? `Riaperto ${opens} volte — ci tiene davvero` : "Vai a vedere se ha lasciato una reazione";
+    ctaLabel = "Apri il regalo";
+  }
   return {
     subject,
-    html: shell({
-      preheader: isReopen ? `Riaperto ${opens} volte — ci tiene davvero` : "Vai a vedere se ha lasciato una reazione",
-      headline,
-      bodyHtml: body,
-      ctaLabel: "Apri il regalo",
-      ctaUrl: url,
-    }),
-    text: `${headline}\n\n${stripHtml(body)}\n\nApri il regalo: ${url}`,
+    html: shell({ locale: loc, preheader, headline, bodyHtml: body, ctaLabel, ctaUrl: url }),
+    text: `${headline}\n\n${stripHtml(body)}\n\n${ctaLabel}: ${url}`,
   };
 }
 
-export function reactionTemplate(p: ReactionParams): RenderedEmail {
+export function reactionTemplate(p: ReactionParams, locale?: EmailLocale): RenderedEmail {
+  const loc = resolveLocale(locale);
   const url = `${appUrl()}/gift/${p.giftId}`;
-  const typeLabel: Record<ReactionParams["reactionType"], string> = {
+  const typeLabelIt: Record<ReactionParams["reactionType"], string> = {
     emoji: "ti ha lasciato un'emoji",
     text: "ti ha scritto un messaggio",
     photo: "ti ha mandato una foto",
     video: "ti ha mandato un video",
   };
-  const action = typeLabel[p.reactionType];
-  const subject = `💌 ${p.recipientName} ${action}`;
-  const headline = `${p.recipientName} ti ha risposto`;
+  const typeLabelEn: Record<ReactionParams["reactionType"], string> = {
+    emoji: "left you an emoji",
+    text: "wrote you a message",
+    photo: "sent you a photo",
+    video: "sent you a video",
+  };
+  const action = (loc === "en" ? typeLabelEn : typeLabelIt)[p.reactionType];
+  const subject = loc === "en"
+    ? `💌 ${p.recipientName} ${action}`
+    : `💌 ${p.recipientName} ${action}`;
+  const headline = loc === "en"
+    ? `${p.recipientName} replied to you`
+    : `${p.recipientName} ti ha risposto`;
   let preview = "";
   if (p.preview && (p.reactionType === "emoji" || p.reactionType === "text")) {
     const trimmed = p.preview.length > 80 ? p.preview.slice(0, 77) + "…" : p.preview;
     preview = `<blockquote style="margin:14px 0;padding:12px 14px;background:#fff5f8;border-left:3px solid #D4537E;border-radius:6px;font-style:italic;color:#3d3d3d;">"${escapeHtml(trimmed)}"</blockquote>`;
   }
-  const body = `<p style="margin:0 0 12px;"><strong>${escapeHtml(p.recipientName)}</strong> ${action} sul regalo che gli/le hai inviato.</p>${preview}`;
+  const bodyTop = loc === "en"
+    ? `<p style="margin:0 0 12px;"><strong>${escapeHtml(p.recipientName)}</strong> ${action} on the gift you sent.</p>`
+    : `<p style="margin:0 0 12px;"><strong>${escapeHtml(p.recipientName)}</strong> ${action} sul regalo che gli/le hai inviato.</p>`;
+  const body = `${bodyTop}${preview}`;
+  const ctaLabel = loc === "en" ? "See the reaction" : "Vedi la reazione";
+  const preheader = p.preview
+    ? p.preview.slice(0, 90)
+    : (loc === "en" ? "Go see their reaction" : "Vai a vedere la sua reazione");
   return {
     subject,
-    html: shell({
-      preheader: p.preview ? p.preview.slice(0, 90) : "Vai a vedere la sua reazione",
-      headline,
-      bodyHtml: body,
-      ctaLabel: "Vedi la reazione",
-      ctaUrl: url,
-    }),
-    text: `${headline}\n\n${stripHtml(body)}\n\nVedi: ${url}`,
+    html: shell({ locale: loc, preheader, headline, bodyHtml: body, ctaLabel, ctaUrl: url }),
+    text: `${headline}\n\n${stripHtml(body)}\n\n${ctaLabel}: ${url}`,
   };
 }
 
-export function welcomeTemplate(p: WelcomeParams): RenderedEmail {
+export function welcomeTemplate(p: WelcomeParams, locale?: EmailLocale): RenderedEmail {
+  const loc = resolveLocale(locale);
+  if (loc === "en") {
+    const name = p.name?.trim() || "there";
+    const subject = "Welcome to BeGift 💝";
+    const headline = `Hi ${name}, your first gift is waiting`;
+    const body = `
+      <p style="margin:0 0 14px;">BeGift is the warmest way to give from afar. No empty packaging: a photo, a song, a well-written message in an animated envelope your recipient opens with real emotion.</p>
+      <p style="margin:0 0 8px;font-weight:700;">Three ideas to get started:</p>
+      <ul style="margin:0 0 16px 18px;padding:0;line-height:1.7;">
+        <li><a href="${appUrl()}/festa-mamma" style="color:#D4537E;">Mother's Day</a> — the letter that grows, in 3 minutes</li>
+        <li><a href="${appUrl()}/create" style="color:#D4537E;">A sudden thank-you</a> — to someone who helped you</li>
+        <li><a href="${appUrl()}/create" style="color:#D4537E;">A memory revisited</a> — a photo + a song together</li>
+      </ul>
+      <p style="margin:0 0 8px;color:#888;font-size:13px;">P.S. We're in <strong>public beta</strong>: if something feels off, write to <a href="mailto:ciao@begift.app" style="color:#888;">ciao@begift.app</a>. Your feedback in the next two weeks makes the difference.</p>
+    `;
+    return {
+      subject,
+      html: shell({
+        locale: loc,
+        preheader: "Three ideas to get started — and a tip for Mother's Day",
+        headline,
+        bodyHtml: body,
+        ctaLabel: "Create your first gift",
+        ctaUrl: `${appUrl()}/create`,
+      }),
+      text: `${headline}\n\nBeGift is the warmest way to give from afar. Create your first gift: ${appUrl()}/create\n\nMother's Day: ${appUrl()}/festa-mamma`,
+    };
+  }
   const name = p.name?.trim() || "ciao";
   const subject = "Benvenuto su BeGift 💝";
   const headline = `Ciao ${name}, il tuo primo regalo ti aspetta`;
@@ -212,6 +287,7 @@ export function welcomeTemplate(p: WelcomeParams): RenderedEmail {
   return {
     subject,
     html: shell({
+      locale: loc,
       preheader: "Tre idee per cominciare — e una raccomandazione per la Festa della Mamma",
       headline,
       bodyHtml: body,
@@ -222,9 +298,49 @@ export function welcomeTemplate(p: WelcomeParams): RenderedEmail {
   };
 }
 
-export function festaMammaAnnounceTemplate(p: FestaMammaAnnounceParams): RenderedEmail {
-  const name = p.name?.trim() || "ciao";
+export function festaMammaAnnounceTemplate(p: FestaMammaAnnounceParams, locale?: EmailLocale): RenderedEmail {
+  const loc = resolveLocale(locale);
   const days = p.daysLeft;
+  if (loc === "en") {
+    const name = p.name?.trim() || "hi";
+    const urgencyHint =
+      days <= 0 ? "is tomorrow" :
+      days === 1 ? "is tomorrow" :
+      days <= 3 ? `is in ${days} days` :
+      days <= 7 ? `is in ${days} days — you're still in time` :
+      `is in ${days} days`;
+    const subject = days <= 7
+      ? `💐 ${days <= 1 ? "Tomorrow" : `In ${days} days`} is Mother's Day — ready?`
+      : `💐 Mother's Day — there's a dedicated template`;
+    const headline = `Hi ${name}, Mother's Day ${urgencyHint}`;
+    const body = `
+      <p style="margin:0 0 14px;">We're finishing up BeGift for <strong>Mother's Day</strong>. There's a dedicated template that walks you through 5 questions — out comes a "Letter that grows" that's pretty beautiful, with a photo and a song if you like.</p>
+      <p style="margin:0 0 14px;">Time needed: <strong>3 minutes</strong>. Works on mobile too.</p>
+      <p style="margin:0 0 8px;font-weight:700;">Three things if you want to do it:</p>
+      <ul style="margin:0 0 16px 18px;padding:0;line-height:1.7;">
+        <li>A <strong>recent photo</strong> of mom (or you with her)</li>
+        <li>A <strong>memory</strong> you share (vacations, a recurring phrase, a kitchen)</li>
+        <li>A <strong>song</strong> that connects you — just the name, we'll find it</li>
+      </ul>
+      <p style="margin:0 0 6px;color:#888;font-size:13px;">P.S. We're about to do the "real" launch these days and every bit of feedback from early users matters a lot. If something feels off, write to <a href="mailto:ciao@begift.app" style="color:#888;">ciao@begift.app</a> — we read everything.</p>
+    `;
+    return {
+      subject,
+      html: shell({
+        locale: loc,
+        preheader: days <= 7
+          ? `${days <= 1 ? "Hours" : `${days} days`} left — the Mom template is ready`
+          : `${days} days left — there's a dedicated template`,
+        headline,
+        bodyHtml: body,
+        ctaLabel: "Create the gift for mom",
+        ctaUrl: `${appUrl()}/festa-mamma`,
+        footerNote: "You got this email because you're an early BeGift user. We send few emails per year — no newsletter, only concrete announcements.",
+      }),
+      text: `${headline}\n\nThere's a dedicated template that walks you through 5 questions — a "Letter that grows", with photo and song if you like.\n\nTime: 3 minutes. Works on mobile too.\n\nCreate: ${appUrl()}/festa-mamma`,
+    };
+  }
+  const name = p.name?.trim() || "ciao";
   const urgencyHint =
     days <= 0 ? "è domani" :
     days === 1 ? "è domani" :
@@ -249,6 +365,7 @@ export function festaMammaAnnounceTemplate(p: FestaMammaAnnounceParams): Rendere
   return {
     subject,
     html: shell({
+      locale: loc,
       preheader: days <= 7 ? `Mancano ${days <= 1 ? "ore" : `${days} giorni`} — il template Mamma è pronto` : `Mancano ${days} giorni — c'è il template dedicato`,
       headline,
       bodyHtml: body,
@@ -260,7 +377,41 @@ export function festaMammaAnnounceTemplate(p: FestaMammaAnnounceParams): Rendere
   };
 }
 
-export function surveyInviteTemplate(p: SurveyInviteParams): RenderedEmail {
+export function surveyInviteTemplate(p: SurveyInviteParams, locale?: EmailLocale): RenderedEmail {
+  const loc = resolveLocale(locale);
+  if (loc === "en") {
+    const name = p.name?.trim() || "hi";
+    const recipient = p.recipientName?.trim();
+    const subject = "Got 3 minutes? Help me improve BeGift";
+    const headline = `Hi ${name}, I'm asking for max 3 minutes`;
+    const recipientLine = recipient
+      ? `<p style="margin:0 0 14px;"><strong>${escapeHtml(recipient)}</strong> just opened the gift you created. While the experience is fresh, I'm asking for a few minutes to tell me how it went.</p>`
+      : `<p style="margin:0 0 14px;">You just created and sent a gift on BeGift. While the experience is fresh, I'm asking for a few minutes to tell me how it went.</p>`;
+    const body = `
+      ${recipientLine}
+      <p style="margin:0 0 14px;">I'm Luca, the founder. Answers come straight to me and help me decide how BeGift evolves over the next months: what to keep, what to add, what to drop.</p>
+      <p style="margin:0 0 8px;font-weight:700;">Three things in particular:</p>
+      <ul style="margin:0 0 16px 18px;padding:0;line-height:1.7;">
+        <li>What you liked and what you didn't</li>
+        <li>If the person you sent the gift to said anything</li>
+        <li>If BeGift is something worth paying for (even a little)</li>
+      </ul>
+      <p style="margin:0 0 6px;color:#888;font-size:13px;">Truly thank you — every answer at this stage is worth ten times an answer six months from now.</p>
+    `;
+    return {
+      subject,
+      html: shell({
+        locale: loc,
+        preheader: "Max 3 minutes to tell me how it went. Answers come straight to the founder.",
+        headline,
+        bodyHtml: body,
+        ctaLabel: "Take the survey (max 3 min)",
+        ctaUrl: p.surveyUrl,
+        footerNote: "You got this email because you just created a gift on BeGift. We send few emails per year — if you don't want them, manage them in your settings.",
+      }),
+      text: `${headline}\n\n${stripHtml(recipientLine + body)}\n\nSurvey: ${p.surveyUrl}`,
+    };
+  }
   const name = p.name?.trim() || "ciao";
   const recipient = p.recipientName?.trim();
   const subject = "Hai max 3 minuti? Aiutami a migliorare BeGift";
@@ -282,6 +433,7 @@ export function surveyInviteTemplate(p: SurveyInviteParams): RenderedEmail {
   return {
     subject,
     html: shell({
+      locale: loc,
       preheader: "Max 3 minuti per dirmi com'è andata. Le tue risposte vanno direttamente al fondatore.",
       headline,
       bodyHtml: body,
@@ -308,4 +460,10 @@ function escapeAttr(s: string): string {
 }
 function stripHtml(s: string): string {
   return s.replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
+}
+/** English ordinal suffix: 1st, 2nd, 3rd, 4th... */
+function ordinalSuffix(n: number): string {
+  const s = ["th", "st", "nd", "rd"];
+  const v = n % 100;
+  return s[(v - 20) % 10] || s[v] || s[0];
 }

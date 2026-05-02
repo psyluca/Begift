@@ -18,6 +18,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { fetchAuthed } from "@/lib/clientAuth";
 import { ensurePushSubscription } from "@/lib/pushSubscribe";
+import { useI18n } from "@/lib/i18n";
 
 const ACCENT = "#D4537E";
 const DEEP = "#1a1a1a";
@@ -40,6 +41,7 @@ interface Subscription {
 type PermState = "default" | "granted" | "denied" | "unsupported";
 
 export default function NotificheTestClient() {
+  const { t } = useI18n();
   const [permission, setPermission] = useState<PermState>("default");
   const [pwaStandalone, setPwaStandalone] = useState(false);
   const [subs, setSubs] = useState<Subscription[] | null>(null);
@@ -105,7 +107,7 @@ export default function NotificheTestClient() {
   };
 
   const cleanup = async () => {
-    if (!confirm("Cancellare TUTTE le subscription esistenti e crearne una sola fresca?")) return;
+    if (!confirm(t("settings_notif_test.cleanup_confirm"))) return;
     setCleaning(true);
     setCleanResult(null);
     try {
@@ -113,25 +115,25 @@ export default function NotificheTestClient() {
       const res = await fetchAuthed("/api/push/cleanup", { method: "POST" });
       const data = await res.json();
       if (!res.ok) {
-        setCleanResult(`Errore cleanup: ${data.error || res.status}`);
+        setCleanResult(t("settings_notif_test.cleanup_error", { error: String(data.error || res.status) }));
         return;
       }
       // Step 2: crea una sub fresca con forceRefresh per evitare di
       // riusare la stale che il SW potrebbe avere ancora in cache.
       const sub = await ensurePushSubscription({ forceRefresh: true });
       if (sub.ok) {
-        setCleanResult(`✓ Reset completo: cancellate ${data.deleted}, creata 1 nuova subscription fresca.`);
+        setCleanResult(t("settings_notif_test.cleanup_success", { deleted: String(data.deleted) }));
         setJustReconnected(true);
         // Dai tempo al DB di propagare l'upsert prima di rileggere lo stato.
         setTimeout(() => { reloadStatus(); }, 1500);
         setTimeout(() => { reloadStatus(); }, 4500);
       } else {
-        setCleanResult(`Cancellate ${data.deleted}, ma non sono riuscito a crearne una nuova: ${sub.reason}`);
+        setCleanResult(t("settings_notif_test.cleanup_partial", { deleted: String(data.deleted), reason: sub.reason }));
         await reloadStatus();
       }
     } catch (e) {
       console.error("[cleanup] failed", e);
-      setCleanResult("Errore di rete.");
+      setCleanResult(t("settings_notif_test.test_network_error"));
     } finally {
       setCleaning(false);
     }
@@ -148,8 +150,10 @@ export default function NotificheTestClient() {
       // l'utente resta fantasma.
       const result = await ensurePushSubscription({ forceRefresh: true });
       if (result.ok) {
-        const action = result.refreshed ? "rigenerata" : (result.created ? "creata" : "riallineata");
-        setReconnectResult(`✓ Subscription ${action}. Premi qui sotto "Mandami una notifica" per testare.`);
+        const action = result.refreshed
+          ? t("settings_notif_test.reconnect_action_refreshed")
+          : (result.created ? t("settings_notif_test.reconnect_action_created") : t("settings_notif_test.reconnect_action_realigned"));
+        setReconnectResult(t("settings_notif_test.reconnect_success", { action }));
         // Abilita subito il bottone test anche se il fetch dello stato
         // potrebbe non riflettere ancora la nuova subscription (race
         // possibile con il DB su Supabase region remota).
@@ -160,19 +164,20 @@ export default function NotificheTestClient() {
         // Secondo retry dopo altri 3 secondi se ancora 0 (resilienza).
         setTimeout(() => { reloadStatus(); }, 4500);
       } else {
-        const map: Record<string, string> = {
-          unsupported: "Il browser non supporta le notifiche push.",
-          permission: "Devi prima autorizzare le notifiche dal browser.",
-          vapid: "Configurazione mancante (contatta support).",
-          save_failed: "Errore di rete nel salvataggio. Riprova.",
-          subscribe_failed: "Errore nel collegamento al servizio push. Riprova.",
-          auth: "Sessione scaduta — ricarica la pagina e riprova.",
+        const reasonKey: Record<string, string> = {
+          unsupported: "settings_notif_test.reconnect_err_unsupported",
+          permission: "settings_notif_test.reconnect_err_permission",
+          vapid: "settings_notif_test.reconnect_err_vapid",
+          save_failed: "settings_notif_test.reconnect_err_save_failed",
+          subscribe_failed: "settings_notif_test.reconnect_err_subscribe_failed",
+          auth: "settings_notif_test.reconnect_err_auth",
         };
-        setReconnectResult(`Errore: ${map[result.reason] || result.reason}`);
+        const msg = reasonKey[result.reason] ? t(reasonKey[result.reason]) : t("settings_notif_test.reconnect_err_generic", { reason: result.reason });
+        setReconnectResult(msg);
       }
     } catch (e) {
       console.error("[notifiche-test] reconnect failed", e);
-      setReconnectResult("Errore di rete. Riprova.");
+      setReconnectResult(t("settings_notif_test.reconnect_network_error"));
     } finally {
       setReconnecting(false);
     }
@@ -185,16 +190,17 @@ export default function NotificheTestClient() {
       const res = await fetchAuthed("/api/push/test", { method: "POST" });
       const data = await res.json();
       if (!res.ok) {
-        setTestResult(`Errore: ${data.error || res.status}`);
+        setTestResult(t("settings_notif_test.test_error", { error: String(data.error || res.status) }));
       } else if (data.skipped) {
-        setTestResult("Notifica saltata (preferenza disattivata).");
+        setTestResult(t("settings_notif_test.test_skipped"));
       } else if (data.sent === 0) {
-        setTestResult("Nessuna notifica inviata. Verifica di aver autorizzato le notifiche dal browser.");
+        setTestResult(t("settings_notif_test.test_no_devices"));
       } else {
-        setTestResult(`✓ Inviata su ${data.sent} ${data.sent === 1 ? "device" : "device"}. Dovresti vederla tra qualche secondo.`);
+        const key = data.sent === 1 ? "settings_notif_test.test_sent_one" : "settings_notif_test.test_sent_many";
+        setTestResult(t(key, { n: String(data.sent) }));
       }
     } catch (e) {
-      setTestResult("Errore di rete. Riprova.");
+      setTestResult(t("settings_notif_test.test_network_error"));
     } finally {
       setBusy(false);
       // Dopo il test, refresh dello stato per aggiornare la lista
@@ -208,7 +214,7 @@ export default function NotificheTestClient() {
       <main style={{ minHeight: "100vh", background: LIGHT, padding: 40, textAlign: "center", fontFamily: "system-ui, sans-serif" }}>
         <div style={{ fontSize: 48, marginBottom: 14 }}>🔔</div>
         <Link href="/auth/login?next=/settings/notifiche-test" style={{ color: ACCENT, textDecoration: "none" }}>
-          Accedi per usare questa pagina
+          {t("settings_notif_test.needs_login")}
         </Link>
       </main>
     );
@@ -218,65 +224,54 @@ export default function NotificheTestClient() {
     <main style={{ minHeight: "100vh", background: LIGHT, fontFamily: "system-ui, sans-serif" }}>
       <div style={{ maxWidth: 600, margin: "0 auto", padding: "32px 20px 80px" }}>
         <Link href="/settings" style={{ color: MUTED, fontSize: 13, textDecoration: "none", display: "inline-block", marginBottom: 16 }}>
-          ← Impostazioni
+          {t("settings_notif_test.back_settings")}
         </Link>
         <h1 style={{ fontSize: 26, fontWeight: 900, color: DEEP, margin: "0 0 8px", letterSpacing: "-.5px" }}>
-          Test notifiche
+          {t("settings_notif_test.title")}
         </h1>
         <p style={{ fontSize: 14, color: MUTED, margin: "0 0 28px", lineHeight: 1.6 }}>
-          Verifica che le notifiche push arrivino davvero. Se qualcosa non funziona, qui capisci cosa.
+          {t("settings_notif_test.subtitle")}
         </p>
 
         {/* STATO permesso browser */}
         <Card>
-          <CardHeader>Permesso del browser</CardHeader>
-          <PermBadge permission={permission} />
+          <CardHeader>{t("settings_notif_test.card_browser_perm")}</CardHeader>
+          <PermBadge permission={permission} t={t} />
           {permission === "default" && (
-            <Hint>Non hai ancora dato il permesso. Vai in dashboard, attiva le notifiche dalla card che appare.</Hint>
+            <Hint>{t("settings_notif_test.hint_perm_default")}</Hint>
           )}
           {permission === "denied" && (
-            <Hint>
-              Il permesso e' stato <b>negato</b>. Per riattivarlo: nelle impostazioni del browser, alla pagina begift.app, sblocca le notifiche.
-            </Hint>
+            <Hint><span dangerouslySetInnerHTML={{ __html: t("settings_notif_test.hint_perm_denied") }} /></Hint>
           )}
           {permission === "unsupported" && (
-            <Hint>Il tuo browser non supporta le notifiche push.</Hint>
+            <Hint>{t("settings_notif_test.hint_perm_unsupported")}</Hint>
           )}
         </Card>
 
         {/* iOS PWA install status */}
         <Card>
-          <CardHeader>Installazione PWA</CardHeader>
-          <Row label="Stato">
+          <CardHeader>{t("settings_notif_test.card_pwa_install")}</CardHeader>
+          <Row label={t("settings_notif_test.row_status")}>
             {pwaStandalone ? (
-              <Badge color={OK}>Installata come app</Badge>
+              <Badge color={OK}>{t("settings_notif_test.pwa_installed")}</Badge>
             ) : (
-              <Badge color={WARN}>Non installata (solo browser)</Badge>
+              <Badge color={WARN}>{t("settings_notif_test.pwa_not_installed")}</Badge>
             )}
           </Row>
           {!pwaStandalone && (
-            <Hint>
-              Su <b>iPhone</b> le notifiche push funzionano SOLO se BeGift e' installata come app
-              (icona sulla Home). Apri questo sito in Safari, tocca l'icona di condivisione, poi
-              "Aggiungi alla schermata Home". Su Android invece le push funzionano anche senza installazione.
-            </Hint>
+            <Hint><span dangerouslySetInnerHTML={{ __html: t("settings_notif_test.hint_pwa_not_installed") }} /></Hint>
           )}
         </Card>
 
         {/* Subscriptions */}
         <Card>
-          <CardHeader>Device registrati</CardHeader>
-          {subs === null && <Hint>Caricamento…</Hint>}
+          <CardHeader>{t("settings_notif_test.card_devices")}</CardHeader>
+          {subs === null && <Hint>{t("settings_notif_test.loading")}</Hint>}
           {subs && subs.length === 0 && (
             <>
               {permission === "granted" ? (
                 <>
-                  <Hint>
-                    <b>Stato anomalo:</b> il browser dice che le notifiche sono autorizzate, ma il
-                    server non ha nessun device registrato per te. Capita dopo un aggiornamento di
-                    sistema o se la subscription e' stata invalidata. Premi qui sotto per
-                    riconnetterti senza dover riautorizzare.
-                  </Hint>
+                  <Hint><span dangerouslySetInnerHTML={{ __html: t("settings_notif_test.hint_anomalous") }} /></Hint>
                   <button
                     onClick={reconnect}
                     disabled={reconnecting}
@@ -291,7 +286,7 @@ export default function NotificheTestClient() {
                       fontFamily: "inherit",
                     }}
                   >
-                    {reconnecting ? "Riconnessione…" : "🔄 Riconnetti notifiche"}
+                    {reconnecting ? t("settings_notif_test.btn_reconnecting") : t("settings_notif_test.btn_reconnect")}
                   </button>
                   {reconnectResult && (
                     <div style={{
@@ -307,10 +302,7 @@ export default function NotificheTestClient() {
                   )}
                 </>
               ) : (
-                <Hint>
-                  Nessun device registrato. Significa che il tuo browser non ha (ancora) sottoscritto
-                  le push. Vai in dashboard e attivale dalla card "Notifiche".
-                </Hint>
+                <Hint>{t("settings_notif_test.hint_no_devices")}</Hint>
               )}
             </>
           )}
@@ -327,8 +319,7 @@ export default function NotificheTestClient() {
             return (
             <div style={{ marginTop: 12, padding: "10px 12px", background: "#fffaf0", border: "1px solid #f0e1c5", borderRadius: 8 }}>
               <div style={{ fontSize: 12, color: DEEP, fontWeight: 600, marginBottom: 6 }}>
-                Hai {realCount} subscription registrate.
-                Probabilmente sono duplicati accumulati (succede dopo update iOS).
+                {t("settings_notif_test.duplicates_warning", { count: String(realCount) })}
               </div>
               <button
                 onClick={cleanup}
@@ -341,7 +332,7 @@ export default function NotificheTestClient() {
                   fontFamily: "inherit",
                 }}
               >
-                {cleaning ? "Reset in corso…" : "🧹 Reset completo (cancella + ricrea)"}
+                {cleaning ? t("settings_notif_test.btn_cleaning") : t("settings_notif_test.btn_cleanup")}
               </button>
               {cleanResult && (
                 <div style={{ marginTop: 8, fontSize: 12, color: cleanResult.startsWith("✓") ? OK : ERR }}>
@@ -363,11 +354,11 @@ export default function NotificheTestClient() {
                 }}>
                   <div style={{ fontWeight: 700, color: DEEP, marginBottom: 4 }}>{s.provider}</div>
                   <div style={{ color: MUTED, fontFamily: "ui-monospace,Menlo,monospace", fontSize: 11 }}>
-                    Token: …{s.token_suffix}
+                    {t("settings_notif_test.label_token", { suffix: s.token_suffix })}
                   </div>
                   <div style={{ color: MUTED, fontSize: 11, marginTop: 4 }}>
-                    Aggiunto: {new Date(s.created_at).toLocaleDateString("it-IT")}
-                    {s.last_used_at && ` · Ultimo uso: ${new Date(s.last_used_at).toLocaleDateString("it-IT")}`}
+                    {t("settings_notif_test.label_added", { date: new Date(s.created_at).toLocaleDateString() })}
+                    {s.last_used_at && ` · ${t("settings_notif_test.label_last_used", { date: new Date(s.last_used_at).toLocaleDateString() })}`}
                   </div>
                 </div>
               ))}
@@ -378,30 +369,24 @@ export default function NotificheTestClient() {
         {/* Notifiche non lette (storico) */}
         {unread > 0 && (
           <Card>
-            <CardHeader>Notifiche in attesa</CardHeader>
-            <Row label="Non lette">
-              <Badge color={ACCENT}>{unread} {unread === 1 ? "notifica" : "notifiche"}</Badge>
+            <CardHeader>{t("settings_notif_test.card_pending_notifs")}</CardHeader>
+            <Row label={t("settings_notif_test.row_unread")}>
+              <Badge color={ACCENT}>{t(unread === 1 ? "settings_notif_test.unread_one" : "settings_notif_test.unread_other", { n: String(unread) })}</Badge>
             </Row>
-            <Hint>
-              Hai notifiche che non hai ancora letto. Se la push del momento non e' arrivata
-              (cosa che capita), qui le trovi tutte.
-            </Hint>
+            <Hint>{t("settings_notif_test.hint_pending")}</Hint>
             <Link href="/notifiche" style={{
               display: "inline-block", marginTop: 10,
               color: ACCENT, fontSize: 13, fontWeight: 700, textDecoration: "none",
             }}>
-              Apri il centro notifiche →
+              {t("settings_notif_test.open_notif_center")}
             </Link>
           </Card>
         )}
 
         {/* Manda push di test */}
         <Card>
-          <CardHeader>Mandami una notifica di test</CardHeader>
-          <Hint>
-            Se il permesso e' attivo e c'e' almeno un device registrato, dovresti ricevere
-            una push subito.
-          </Hint>
+          <CardHeader>{t("settings_notif_test.card_send_test")}</CardHeader>
+          <Hint>{t("settings_notif_test.hint_send_test")}</Hint>
           <button
             onClick={sendTest}
             disabled={busy || permission !== "granted" || ((subs?.length ?? 0) === 0 && !justReconnected)}
@@ -416,7 +401,7 @@ export default function NotificheTestClient() {
               fontFamily: "inherit",
             }}
           >
-            {busy ? "Invio…" : "🎁 Mandami una notifica"}
+            {busy ? t("settings_notif_test.btn_sending") : t("settings_notif_test.btn_send_test")}
           </button>
           {testResult && (
             <div style={{
@@ -436,8 +421,8 @@ export default function NotificheTestClient() {
             mismatch "backend dice X, client vede Y". */}
         {debug && (
           <Card>
-            <CardHeader>Diagnostica avanzata</CardHeader>
-            <Hint>Dati raw lato server per debug.</Hint>
+            <CardHeader>{t("settings_notif_test.card_diag")}</CardHeader>
+            <Hint>{t("settings_notif_test.hint_diag")}</Hint>
             <pre style={{
               fontSize: 10, color: DEEP, fontFamily: "ui-monospace,Menlo,monospace",
               marginTop: 8, lineHeight: 1.6,
@@ -508,17 +493,17 @@ function Badge({ children, color }: { children: React.ReactNode; color: string }
   );
 }
 
-function PermBadge({ permission }: { permission: PermState }) {
-  const map: Record<PermState, { label: string; color: string }> = {
-    default: { label: "Non ancora richiesto", color: WARN },
-    granted: { label: "✓ Autorizzato", color: OK },
-    denied: { label: "Bloccato", color: ERR },
-    unsupported: { label: "Non supportato dal browser", color: MUTED },
+function PermBadge({ permission, t }: { permission: PermState; t: (k: string, p?: Record<string, string>) => string }) {
+  const map: Record<PermState, { labelKey: string; color: string }> = {
+    default: { labelKey: "settings_notif_test.perm_default", color: WARN },
+    granted: { labelKey: "settings_notif_test.perm_granted", color: OK },
+    denied: { labelKey: "settings_notif_test.perm_denied", color: ERR },
+    unsupported: { labelKey: "settings_notif_test.perm_unsupported", color: MUTED },
   };
   const m = map[permission];
   return (
-    <Row label="Stato">
-      <Badge color={m.color}>{m.label}</Badge>
+    <Row label={t("settings_notif_test.row_status")}>
+      <Badge color={m.color}>{t(m.labelKey)}</Badge>
     </Row>
   );
 }
