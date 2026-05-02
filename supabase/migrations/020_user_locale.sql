@@ -12,7 +12,7 @@
 --
 -- Idempotente: usa IF NOT EXISTS.
 
-ALTER TABLE public.users
+ALTER TABLE public.profiles
   ADD COLUMN IF NOT EXISTS preferred_locale text NOT NULL DEFAULT 'it';
 
 -- Vincolo soft: accettiamo solo locale supportate dall'app
@@ -20,12 +20,12 @@ ALTER TABLE public.users
 DO $$
 BEGIN
   IF NOT EXISTS (
-    SELECT 1 FROM pg_constraint WHERE conname = 'users_preferred_locale_chk'
+    SELECT 1 FROM pg_constraint WHERE conname = 'profiles_preferred_locale_chk'
   ) THEN
-    ALTER TABLE public.users
-      ADD CONSTRAINT users_preferred_locale_chk
+    ALTER TABLE public.profiles
+      ADD CONSTRAINT profiles_preferred_locale_chk
       CHECK (preferred_locale IN ('it', 'en', 'ja', 'zh'));
   END IF;
 END$$;
 
-COMMENT ON COLUMN public.users.preferred_locale IS 'Lingua preferita per UI e email transazionali. Sincronizzata dal client tramite POST /api/me/locale al cambio di switcher.';
+COMMENT ON COLUMN public.profiles.preferred_locale IS 'Lingua preferita per UI e email transazionali. Sincronizzata dal client tramite POST /api/profile/locale al cambio di switcher.';
