@@ -313,8 +313,8 @@
   "share": {
     "button_label": "Share",
     "share_title": "A gift for you",
-    "whatsapp_text": "I made a little gift for you. I used BeGift, a new free service (I know, it can look like spam but I promise it's not 😅). Try it — no data required, just an email if anything.\n{url}",
-    "whatsapp_notify": "I made a little gift for you. I used BeGift, a new free service (I know, it can look like spam but I promise it's not 😅). Try it — no data required, just an email if anything.\n{url}",
+    "whatsapp_text": "I wrapped a little thought for you. I used BeGift, a new free service (I know, it can look like spam but I promise it's not 😅). Try it — no data required, just an email.\n{url}",
+    "whatsapp_notify": "I wrapped a little thought for you. I used BeGift, a new free service (I know, it can look like spam but I promise it's not 😅). Try it — no data required, just an email.\n{url}",
     "whatsapp_notify_btn": "📲 Notify {name} on WhatsApp",
     "send_inapp_title": "Send directly in-app",
     "send_inapp_search": "Search by name or email…",

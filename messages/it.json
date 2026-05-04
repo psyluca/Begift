@@ -313,8 +313,8 @@
   "share": {
     "button_label": "Condividi",
     "share_title": "Un regalo per te",
-    "whatsapp_text": "ho preparato un regalino per te. Ho usato BeGift, un nuovo servizio gratuito (lo so, può sembrare spam, ma giuro che non lo è 😅). Provalo, non chiede dati, eventualmente solo una mail.\n{url}",
-    "whatsapp_notify": "ho preparato un regalino per te. Ho usato BeGift, un nuovo servizio gratuito (lo so, può sembrare spam, ma giuro che non lo è 😅). Provalo, non chiede dati, eventualmente solo una mail.\n{url}",
+    "whatsapp_text": "ho impacchettato un pensiero per te. Ho usato BeGift, un nuovo servizio gratuito (lo so, può sembrare spam, ma giuro che non lo è 😅). Provalo, non chiede dati, solo una mail.\n{url}",
+    "whatsapp_notify": "ho impacchettato un pensiero per te. Ho usato BeGift, un nuovo servizio gratuito (lo so, può sembrare spam, ma giuro che non lo è 😅). Provalo, non chiede dati, solo una mail.\n{url}",
     "whatsapp_notify_btn": "📲 Avvisa {name} su WhatsApp",
     "send_inapp_title": "Invia direttamente in-app",
     "send_inapp_search": "Cerca per nome o email…",
