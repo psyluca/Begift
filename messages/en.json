@@ -71,7 +71,7 @@
     "copy": "Copy link",
     "copied": "Copied!",
     "whatsapp": "WhatsApp",
-    "wa_message": "Hey! I'm sending you a digital gift on BeGift 🎁 You'll love it. {link}"
+    "wa_message": "I'm using BeGift, an Italian service for digital gifts that feel a bit different. If it sounds interesting, take a look: {link}"
   },
   "dashboard": {
     "sent": "Sent",
@@ -194,6 +194,31 @@
     "login_desc": "Create a free account to start sending unforgettable digital gifts.",
     "file_too_large": "File too large (max 10MB)"
   },
+  "trust": {
+    "invited_by": "You were invited by",
+    "invited_by_someone": "You were invited",
+    "what_is": "BeGift is a free Italian service by Luca Galli, psychotherapist based in Lucca.",
+    "verify": "About us →",
+    "no_app": "No app to download · No payment required"
+  },
+  "about": {
+    "title": "About me",
+    "back": "← Back to BeGift",
+    "intro_1": "Hi, I'm Luca Galli. I live in Lucca (Italy), I'm a psychotherapist, and for ten years I served as chief of staff to the mayor of my city.",
+    "intro_2": "BeGift is a project I built alone, in evenings and weekends, because I believe long-distance gifting can be more than a wire transfer or an Amazon voucher. I wanted to make an Italian service, free at this stage, where a gift starts from four or five personal questions and opens like a small animated letter.",
+    "trust_title": "If you're here because someone sent you a link",
+    "trust_body": "I understand the caution — I'm careful too with links I don't recognize. BeGift doesn't ask for payment information, doesn't install anything on your phone, doesn't sell emails. If you have doubts, write to me directly: I read every message.",
+    "contact_title": "Contact",
+    "contact_email": "Direct email:",
+    "contact_legal": "Legal seat:",
+    "lucca_label": "Lucca, Italy",
+    "founder_role": "Founder · Psychotherapist",
+    "links_title": "Useful links",
+    "link_privacy": "Privacy Policy",
+    "link_terms": "Terms of use",
+    "link_security": "Security & vulnerability disclosure",
+    "link_home": "BeGift home"
+  },
   "gift": {
     "gift_for": "A gift for",
     "from": "from",
@@ -294,9 +319,9 @@
   },
   "share": {
     "button_label": "Share",
-    "share_title": "A gift for you on BeGift",
-    "whatsapp_text": "I have a gift for you! 🎁\n{url}",
-    "whatsapp_notify": "Hey {name}! I have a gift for you on BeGift 🎁\nOpen it here: {url}",
+    "share_title": "A personal gift (and legit)",
+    "whatsapp_text": "I made something personal for you — it's BeGift, a free Italian service (I know it looks like spam but I swear it's not 😅):\n{url}",
+    "whatsapp_notify": "Hey {name}, I made something personal for you — it's BeGift, a free Italian service (I know it looks like spam but I swear it's not 😅):\n{url}",
     "whatsapp_notify_btn": "📲 Notify {name} on WhatsApp",
     "send_inapp_title": "Send directly in-app",
     "send_inapp_search": "Search by name or email…",

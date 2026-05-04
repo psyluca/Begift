@@ -71,7 +71,7 @@
     "copy": "Copia link",
     "copied": "Copiato!",
     "whatsapp": "WhatsApp",
-    "wa_message": "Ciao! Ti regalo un regalo digitale su BeGift 🎁 Ti piacerà. {link}"
+    "wa_message": "Sto usando BeGift, un servizio italiano per fare regali digitali un po' diversi dal solito. Se ti incuriosisce, dagli un'occhiata: {link}"
   },
   "dashboard": {
     "sent": "Inviati",
@@ -194,6 +194,31 @@
     "login_desc": "Crea un account gratuito per iniziare a inviare regali digitali indimenticabili.",
     "file_too_large": "File troppo grande (max 10MB)"
   },
+  "trust": {
+    "invited_by": "Sei stato invitato da",
+    "invited_by_someone": "Sei stato invitato",
+    "what_is": "BeGift è un servizio italiano gratuito di Luca Galli, psicoterapeuta a Lucca.",
+    "verify": "Chi siamo →",
+    "no_app": "Nessuna app da scaricare · Nessun pagamento richiesto"
+  },
+  "about": {
+    "title": "Chi sono",
+    "back": "← Torna a BeGift",
+    "intro_1": "Ciao, sono Luca Galli. Vivo a Lucca, sono psicoterapeuta e per dieci anni sono stato capo gabinetto del sindaco della mia città.",
+    "intro_2": "BeGift è un progetto che ho costruito da solo, in serate e weekend, perché credo che si possa regalare a distanza qualcosa di più di un bonifico o di un buono Amazon. Ho voluto fare un servizio italiano, gratuito al momento, dove un regalo nasce da quattro o cinque domande personali e si apre come una piccola lettera animata.",
+    "trust_title": "Se sei qui perché qualcuno ti ha mandato un link",
+    "trust_body": "Capisco la diffidenza — io stesso clicco con cautela link che non riconosco. BeGift non chiede dati di pagamento, non installa nulla sul tuo telefono, non vende email. Se hai dubbi, scrivimi direttamente: leggo io ogni messaggio.",
+    "contact_title": "Contatti",
+    "contact_email": "Email diretta:",
+    "contact_legal": "Sede e info legali:",
+    "lucca_label": "Lucca, Italia",
+    "founder_role": "Founder · Psicoterapeuta",
+    "links_title": "Link utili",
+    "link_privacy": "Privacy Policy",
+    "link_terms": "Condizioni d'uso",
+    "link_security": "Sicurezza & vulnerability disclosure",
+    "link_home": "Home BeGift"
+  },
   "gift": {
     "gift_for": "Un regalo per",
     "from": "da parte di",
@@ -294,9 +319,9 @@
   },
   "share": {
     "button_label": "Condividi",
-    "share_title": "Un regalo per te su BeGift",
-    "whatsapp_text": "Ho un regalo per te! 🎁\n{url}",
-    "whatsapp_notify": "Ciao {name}! Ho un regalo per te su BeGift 🎁\nAprilo qui: {url}",
+    "share_title": "Un regalo personale (e legittimo)",
+    "whatsapp_text": "Ti ho preparato una cosa personale — è BeGift, un servizio italiano gratuito (lo so, sembra spam ma giuro che no 😅):\n{url}",
+    "whatsapp_notify": "Ciao {name}, ti ho preparato una cosa personale — è BeGift, un servizio italiano gratuito (lo so, sembra spam ma giuro che no 😅):\n{url}",
     "whatsapp_notify_btn": "📲 Avvisa {name} su WhatsApp",
     "send_inapp_title": "Invia direttamente in-app",
     "send_inapp_search": "Cerca per nome o email…",
