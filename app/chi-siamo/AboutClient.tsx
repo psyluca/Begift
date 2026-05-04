@@ -17,6 +17,7 @@
  */
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { useI18n } from "@/lib/i18n";
 
@@ -63,11 +64,13 @@ export default function AboutClient() {
               flexShrink: 0,
             }} aria-hidden>LG</div>
           ) : (
-            <img
+            <Image
               src="/luca.jpeg"
               alt="Luca Galli"
               width={72}
               height={72}
+              priority
+              quality={85}
               onError={() => setPhotoFailed(true)}
               style={{
                 width: 72, height: 72, borderRadius: "50%",
