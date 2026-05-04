@@ -4,18 +4,21 @@
  * Cron giornaliero (10:00 UTC = 12:00 CET, fascia di pranzo italiana
  * dove il tasso di apertura email B2C è tra i piu' alti).
  *
- * Logica:
- *  1. Trova tutti i `gift_opens` con `opened_at` tra 24h e 48h fa
- *  2. JOIN gifts per ottenere `creator_id` + `recipient_name`
- *  3. Per ogni creator unique:
- *      - Skip se ha gia' ricevuto la survey (profiles.survey_invite_sent_at non null)
+ * Logica (post-fix 2026-05-03 "catch-up"):
+ *  1. Trova tutti i `gift_opens` aperti negli ultimi 7 giorni (era:
+ *     finestra rigida 24-48h, fragile se il cron salta un giorno —
+ *     limiti Vercel Hobby gratuiti).
+ *  2. Skippa quelli aperti meno di 24h fa (l'esperienza è troppo
+ *     fresca, vogliamo che il destinatario abbia metabolizzato).
+ *  3. JOIN gifts per ottenere `creator_id` + `recipient_name`.
+ *  4. Per ogni creator unique (mai inviata survey prima):
  *      - Skip se notify_email = false
- *      - Altrimenti invia survey via sendSurveyInvite (lock atomico)
+ *      - Altrimenti invia survey via sendSurveyInvite (lock atomico
+ *        sul flag profiles.survey_invite_sent_at — idempotente)
  *
- * La logica "24-48h fa" garantisce che:
- *  - L'esperienza e' fresca (non chiediamo dopo settimane)
- *  - Ma non chiediamo subito (evita di interrompere il momento "wow"
- *    della prima apertura, che e' del destinatario non del creator)
+ * Catch-up: se il cron non parte un giorno (limite Hobby), il giorno
+ * dopo recupera automaticamente le aperture nella finestra estesa di
+ * 7 giorni. Nessuna survey viene persa per silent skip del cron.
  *
  * URL del sondaggio: di default usa il form NATIVO BeGift a
  * /sondaggio (richiesta del 28-04-2026: sostituiti Tally + Zapier
@@ -52,15 +55,20 @@ export async function GET(req: NextRequest) {
 
   const admin = createSupabaseAdmin();
   const now = Date.now();
-  const d24 = new Date(now - 24 * 60 * 60 * 1000).toISOString();
-  const d48 = new Date(now - 48 * 60 * 60 * 1000).toISOString();
+  // Finestra "catch-up": ultimi 7 giorni (era 24-48h rigida).
+  // Se il cron salta un giorno (limiti Vercel Hobby), il giorno
+  // dopo recupera. Il lock atomico su profiles.survey_invite_sent_at
+  // garantisce che ogni creator riceva 1 sola survey anche se la sua
+  // apertura cade in più finestre giornaliere.
+  const lower = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const upper = new Date(now - 24 * 60 * 60 * 1000).toISOString();
 
-  // Step 1: gift_opens 24-48h fa
+  // Step 1: gift_opens fra 24h fa e 7 giorni fa
   const { data: opens, error: opensErr } = await admin
     .from("gift_opens")
     .select("gift_id, opened_at")
-    .gte("opened_at", d48)
-    .lt("opened_at", d24);
+    .gte("opened_at", lower)
+    .lt("opened_at", upper);
   if (opensErr) {
     console.error("[cron/survey-invites] opens query error", opensErr);
     return NextResponse.json({ error: "server", detail: opensErr.message }, { status: 500 });
