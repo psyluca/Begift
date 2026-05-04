@@ -12,7 +12,6 @@ import Footer from "@/components/Footer";
 import { UsernameOnboarding } from "@/components/UsernameOnboarding";
 import { PushAutoHeal } from "@/components/PushAutoHeal";
 import { baseGraph } from "@/lib/structured-data";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 
 export const viewport: Viewport = {
   themeColor: "#D4537E",
@@ -152,10 +151,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               per sessione browser. */}
           <PushAutoHeal/>
         </I18nProvider>
-        {/* Speed Insights: misura Core Web Vitals reali (LCP, CLS, INP)
-            degli utenti su tutte le pagine. Visibile sul dashboard Vercel.
-            Gratis incluso nel piano Pro. Niente cookie, niente PII. */}
-        <SpeedInsights/>
       </body>
     </html>
   );
