@@ -71,7 +71,7 @@
     "copy": "Copia link",
     "copied": "Copiato!",
     "whatsapp": "WhatsApp",
-    "wa_message": "Sto usando BeGift, un servizio italiano per fare regali digitali un po' diversi dal solito. Se ti incuriosisce, dagli un'occhiata, non costa niente e come dati chiede solo una mail: {link}"
+    "wa_message": "Sto usando BeGift, un servizio per fare regali digitali un po' diversi dal solito. Se ti incuriosisce, dagli un'occhiata, non costa niente e come dati chiede solo una mail: {link}"
   },
   "dashboard": {
     "sent": "Inviati",
@@ -313,8 +313,8 @@
   "share": {
     "button_label": "Condividi",
     "share_title": "Un regalo per te",
-    "whatsapp_text": "ho preparato un regalino per te. Ho usato BeGift, un nuovo servizio italiano gratuito (lo so, può sembrare spam, ma giuro che non lo è 😅). Provalo, non chiede dati, eventualmente solo una mail.\n{url}",
-    "whatsapp_notify": "ho preparato un regalino per te. Ho usato BeGift, un nuovo servizio italiano gratuito (lo so, può sembrare spam, ma giuro che non lo è 😅). Provalo, non chiede dati, eventualmente solo una mail.\n{url}",
+    "whatsapp_text": "ho preparato un regalino per te. Ho usato BeGift, un nuovo servizio gratuito (lo so, può sembrare spam, ma giuro che non lo è 😅). Provalo, non chiede dati, eventualmente solo una mail.\n{url}",
+    "whatsapp_notify": "ho preparato un regalino per te. Ho usato BeGift, un nuovo servizio gratuito (lo so, può sembrare spam, ma giuro che non lo è 😅). Provalo, non chiede dati, eventualmente solo una mail.\n{url}",
     "whatsapp_notify_btn": "📲 Avvisa {name} su WhatsApp",
     "send_inapp_title": "Invia direttamente in-app",
     "send_inapp_search": "Cerca per nome o email…",
