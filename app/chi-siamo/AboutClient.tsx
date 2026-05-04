@@ -3,22 +3,21 @@
 /**
  * /chi-siamo — pagina trust/about minima.
  *
- * Pensata per essere il landing del link "Chi siamo →" del trust banner
- * sulla pagina /gift/[id] (introdotto 03/05/2026 per ridurre la friction
- * "sembra una truffa" che impattava il 47% di non-aperture). Deve dare
- * al destinatario abbastanza informazioni umane per decidere se fidarsi:
- *   - nome reale
- *   - sede fisica
- *   - email diretta non automatizzata
- *   - link a Privacy/Terms/Security già presenti
+ * Deve dare al destinatario abbastanza informazioni umane per decidere
+ * se fidarsi: nome reale, foto, sede fisica, email diretta non
+ * automatizzata, link a Privacy/Terms/Security.
  *
- * Versione minima v1: tutto in una colonna, no foto (se Luca vuole
- * aggiungere una foto, è banale aggiungere un <img> sopra il nome).
  * Volutamente sobrio e non promozionale: l'obiettivo è "questa persona
  * esiste e si prende la responsabilità", non vendere il prodotto.
+ *
+ * Foto: /public/luca.jpeg (caricata 04/05/2026 dal founder). Se il file
+ * non è presente l'<img> failsafe a un placeholder testuale "LG" via
+ * onError handler, così la pagina funziona anche prima del deploy del
+ * binario.
  */
 
 import Link from "next/link";
+import { useState } from "react";
 import { useI18n } from "@/lib/i18n";
 
 const ACCENT = "#D4537E";
@@ -29,6 +28,7 @@ const BORDER = "#e8e2d8";
 
 export default function AboutClient() {
   const { t } = useI18n();
+  const [photoFailed, setPhotoFailed] = useState(false);
   return (
     <main style={{ minHeight: "100vh", background: LIGHT, fontFamily: "system-ui, sans-serif" }}>
       <div style={{ maxWidth: 600, margin: "0 auto", padding: "32px 22px 80px" }}>
@@ -52,13 +52,31 @@ export default function AboutClient() {
           padding: "20px 22px", marginBottom: 18,
           display: "flex", gap: 16, alignItems: "center",
         }}>
-          <div style={{
-            width: 64, height: 64, borderRadius: "50%",
-            background: `linear-gradient(135deg, ${ACCENT}, #f4a8c0)`,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            color: "#fff", fontSize: 26, fontWeight: 800,
-            flexShrink: 0,
-          }} aria-hidden>LG</div>
+          {photoFailed ? (
+            // Fallback: avatar testuale se /luca.jpg non e' ancora stato
+            // deployato (binario non versionato in git? oppure 404).
+            <div style={{
+              width: 72, height: 72, borderRadius: "50%",
+              background: `linear-gradient(135deg, ${ACCENT}, #f4a8c0)`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: "#fff", fontSize: 28, fontWeight: 800,
+              flexShrink: 0,
+            }} aria-hidden>LG</div>
+          ) : (
+            <img
+              src="/luca.jpeg"
+              alt="Luca Galli"
+              width={72}
+              height={72}
+              onError={() => setPhotoFailed(true)}
+              style={{
+                width: 72, height: 72, borderRadius: "50%",
+                objectFit: "cover",
+                flexShrink: 0,
+                border: `2px solid ${BORDER}`,
+              }}
+            />
+          )}
           <div>
             <div style={{ fontSize: 18, fontWeight: 800, color: DEEP }}>Luca Galli</div>
             <div style={{ fontSize: 13, color: MUTED, marginTop: 2 }}>{t("about.founder_role")}</div>

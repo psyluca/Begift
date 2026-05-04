@@ -1083,53 +1083,6 @@ export default function GiftOpeningClient({ gift }: { gift: Gift }) {
         )}
       </div>
 
-      {/* Trust banner — visibile a chi NON è il creator e NON arriva da
-          flow di creazione. Riduce friction "sembra una truffa" che era
-          identificata come bottleneck del 47% di non-aperture (3/5/2026).
-          Mostra: chi ha invitato + cos'è BeGift + reassurance "no app/no
-          pagamento" + link verifica. Pattern usato da Vinted/Cortilia
-          nei loro primi anni per costruire trust su nuovi servizi. */}
-      {!isCreator && !fromCreate && (
-        <div style={{
-          maxWidth: 480,
-          margin: "0 auto 18px",
-          padding: "12px 16px",
-          background: "#fff",
-          border: "1px solid #e8e2d8",
-          borderRadius: 12,
-          fontSize: 12.5,
-          color: "#3d3d3d",
-          lineHeight: 1.55,
-        }}>
-          <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-            <span style={{ fontSize: 18, lineHeight: 1, flexShrink: 0, marginTop: 1 }} aria-hidden>🛡️</span>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ marginBottom: 4 }}>
-                <strong style={{ color: DEEP }}>
-                  {fromName
-                    ? `${t("trust.invited_by")} ${fromName}`
-                    : t("trust.invited_by_someone")}
-                </strong>
-              </div>
-              <div style={{ color: MUTED, marginBottom: 4 }}>
-                {t("trust.what_is")}
-              </div>
-              <div style={{ color: MUTED, fontSize: 11.5, marginBottom: 6 }}>
-                {t("trust.no_app")}
-              </div>
-              <a href="/chi-siamo" style={{
-                color: ACCENT,
-                fontSize: 12,
-                fontWeight: 600,
-                textDecoration: "none",
-              }}>
-                {t("trust.verify")}
-              </a>
-            </div>
-          </div>
-        </div>
-      )}
-
       {fromCreate && (
         // Pannello "Regalo creato! Condividi" — mostrato dopo il submit
         // del template Festa Mamma/Papà (e potenzialmente futuri flow
