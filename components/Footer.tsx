@@ -50,6 +50,8 @@ export default function Footer() {
           <span aria-hidden="true">·</span>
           <Link href="/press" style={{ color: MUTED, textDecoration: "none" }}>Press</Link>
           <span aria-hidden="true">·</span>
+          <Link href="/chi-siamo" style={{ color: MUTED, textDecoration: "none" }}>Chi siamo</Link>
+          <span aria-hidden="true">·</span>
           <Link href="/privacy" style={{ color: MUTED, textDecoration: "none" }}>Privacy</Link>
           <span aria-hidden="true">·</span>
           <Link href="/terms" style={{ color: MUTED, textDecoration: "none" }}>Termini</Link>
