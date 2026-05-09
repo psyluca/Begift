@@ -294,9 +294,9 @@
   },
   "share": {
     "button_label": "分享",
-    "share_title": "来自BeGift的一份礼物",
-    "whatsapp_text": "我有一份礼物送给你！ 🎁\n{url}",
-    "whatsapp_notify": "{name}，我在BeGift上给你准备了一份礼物 🎁\n在这里打开: {url}",
+    "share_title": "送给你的礼物",
+    "whatsapp_text": "我为你准备了一份心意。我用了BeGift,一个新的免费服务(我知道,看起来可能像垃圾信息,但真的不是😅)。可以自由打开,不需要填写任何信息。只有想自己也制作礼物的人才需要填写邮箱 — 当然也是免费的。\n{url}",
+    "whatsapp_notify": "我为你准备了一份心意。我用了BeGift,一个新的免费服务(我知道,看起来可能像垃圾信息,但真的不是😅)。可以自由打开,不需要填写任何信息。只有想自己也制作礼物的人才需要填写邮箱 — 当然也是免费的。\n{url}",
     "whatsapp_notify_btn": "📲 通过WhatsApp通知{name}",
     "send_inapp_title": "直接在应用内发送",
     "send_inapp_search": "按姓名或邮箱搜索…",
