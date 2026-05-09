@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Regalo Festa della Mamma — la Lettera che cresce",
     description:
-      "5 domande emotive, una foto, una canzone. BeGift le confeziona in un regalo che mamma aprirà l'11 maggio. Gratis.",
+      "5 domande emotive, una foto, una canzone. BeGift le confeziona in un regalo che mamma aprirà il 10 maggio. Gratis.",
     url: "/festa-mamma",
     type: "website",
     locale: "it_IT",

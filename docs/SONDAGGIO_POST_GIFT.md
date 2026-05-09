@@ -181,7 +181,7 @@ Categorizza manualmente le risposte per estrarre i top 3 temi di:
 
 ## Distribution plan
 
-### Settimana 1 (5-11 maggio)
+### Settimana 1 (5-10 maggio)
 - Quando un creator riceve la prima notifica "Maria ha aperto il tuo regalo" → trigger email sondaggio 24h dopo
 - Implementazione: cron job giornaliero che cerca gift_opens fra 24-48h fa, manda mail al creator se notify_email=true
 

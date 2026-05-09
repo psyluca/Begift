@@ -1,6 +1,6 @@
 # QA Report — Flow Festa della Mamma
 
-**Data:** 2026-04-27 (T-14 dal lancio Festa Mamma 11 maggio)
+**Data:** 2026-04-27 (T-13 dal lancio Festa Mamma 10 maggio)
 **Autore:** Claude (audit code-review, no end-to-end test runtime)
 **Scope:** `/festa-mamma` (landing) → `/festa-mamma/crea` (questionario 8 step) → `/gift/{id}` (rendering del regalo aperto)
 

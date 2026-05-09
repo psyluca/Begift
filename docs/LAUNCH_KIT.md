@@ -1,6 +1,6 @@
 # BeGift — Launch Kit Festa della Mamma 2026
 
-**Data lancio:** domenica 11 maggio 2026
+**Data lancio:** domenica 10 maggio 2026
 **Oggi:** 27 aprile 2026 (T-14)
 **Canale primario:** WhatsApp (rubrica + gruppi)
 **Tono:** caldo + personale, ma sobrio. Niente vendita, niente marketingese.
@@ -17,7 +17,7 @@ tutto in una volta + costruisce momentum.
 |---|---|---|---|
 | **4–6 maggio** (T-7/-5) | **Premessa** | Racconti che hai fatto una cosa. Niente CTA forte. | Amici stretti + family core |
 | **7–9 maggio** (T-4/-2) | **Demo & invito** | Mandi link + 1 frase "guarda se ti piace, e se ti va testala per la mamma" | Amici secondari + gruppi |
-| **10–11 maggio** (T-1/0) | **Spinta finale** | "Domani è la Festa della Mamma. Se vi serve, è qui." | Gruppi famiglia + chi ha già detto "interessante" |
+| **10–10 maggio** (T-1/0) | **Spinta finale** | "Domani è la Festa della Mamma. Se vi serve, è qui." | Gruppi famiglia + chi ha già detto "interessante" |
 
 **Non fare** il giorno 11 un broadcast di 200 messaggi: bruci la rubrica.
 Punta a conversazioni vere su 50-80 persone, distribuite nei 7 giorni.
@@ -93,7 +93,7 @@ Vai più asciutto, leggermente "showroom":
 > Se la usate per le vostre mamme me lo fate sapere? Ogni segnalazione
 > mi aiuta tantissimo prima del lancio "vero".
 
-### 2.5 — Wave 3 — Spinta finale (10-11 maggio)
+### 2.5 — Wave 3 — Spinta finale (10-10 maggio)
 
 A chi ha già visto i messaggi precedenti **senza rispondere**:
 
@@ -125,7 +125,7 @@ A gruppi WhatsApp dove c'è già stata reazione positiva:
 > messaggi, canzoni) viene "impacchettato" in una busta animata che il
 > destinatario apre come fosse un regalo vero.
 >
-> Domenica 11 maggio è la Festa della Mamma e per l'occasione ho costruito
+> Domenica 10 maggio è la Festa della Mamma e per l'occasione ho costruito
 > un **template dedicato**: ti accompagna in 5 domande affettive sulla tua
 > mamma, ti chiede una foto e una canzone, e tira fuori una "Lettera che
 > cresce" che lei apre come un regalo da scartare.
@@ -144,13 +144,13 @@ A gruppi WhatsApp dove c'è già stata reazione positiva:
 
 ---
 
-## 4. Storie Instagram (opzionali, 1 al giorno 5-11 maggio)
+## 4. Storie Instagram (opzionali, 1 al giorno 5-10 maggio)
 
 Se vuoi tenere viva la presenza social anche se non è il canale primario:
 
 - **Lun 5/5** — screenshot della homepage + frase "Ho costruito una cosa. Se la mamma è importante per te, leggi qui ↓"
 - **Mar 6/5** — story con video di te che mostri 1 gift (filma lo schermo durante la creazione, 15 secondi)
-- **Mer 7/5** — testo bianco su nero: "BeGift — beta pubblica · per la Festa della Mamma 11 maggio · link in bio"
+- **Mer 7/5** — testo bianco su nero: "BeGift — beta pubblica · per la Festa della Mamma 10 maggio · link in bio"
 - **Gio 8/5** — repost di un commento positivo arrivato (se ce n'è uno; altrimenti skip)
 - **Ven 9/5** — countdown sticker + "2 giorni alla Festa della Mamma"
 - **Sab 10/5** — il link diretto a /festa-mamma con mockup
@@ -187,7 +187,7 @@ Non sentirti obbligato. Una storia ogni 2 giorni è più sostenibile.
 - [ ] Wave 3 ai contatti che NON hanno ancora risposto (max 30 messaggi)
 - [ ] Cellulare a portata: il sabato sera c'è il primo picco di chi pensa "domani la mamma..."
 
-### Domenica 11 maggio (T-0) — Festa della Mamma
+### Domenica 10 maggio (T-0) — Festa della Mamma
 - [ ] Mattina presto: messaggio leggero ai gruppi famiglia "📌 oggi è la Festa, se serve BeGift è qui"
 - [ ] **Cellulare aperto tutto il giorno**. Il picco di traffico è 9:00-12:00 e 18:00-21:00
 - [ ] Se qualcosa si rompe, **kill switch ready** (vedi `INCIDENT_RESPONSE.md` § 3.1)

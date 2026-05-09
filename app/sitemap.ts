@@ -58,7 +58,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     {
       // Festa della Mamma — landing speciale "Lettera che cresce".
-      // Priority alta nei mesi prima dell'11 maggio.
+      // Priority alta nei mesi prima del 10 maggio (Festa Mamma 2026).
       url: `${baseUrl}/festa-mamma`,
       lastModified: now,
       changeFrequency: "weekly",

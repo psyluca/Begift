@@ -251,7 +251,7 @@ export default function HomePage() {
             const now = new Date();
             const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
             const seasonal = [
-              { occ: "mothers_day", month: 5, day: 11, label: "Festa della Mamma", emoji: "💐", paper: "#F4DCD8", ribbon: "#D4537E", href: "/festa-mamma", noticeWindow: 28 },
+              { occ: "mothers_day", month: 5, day: 10, label: "Festa della Mamma", emoji: "💐", paper: "#F4DCD8", ribbon: "#D4537E", href: "/festa-mamma", noticeWindow: 28 },
               { occ: "fathers_day", month: 3, day: 19, label: "Festa del Papà",   emoji: "🌳", paper: "#E8DCC4", ribbon: "#5C7A4A", href: "/festa-papa",  noticeWindow: 28 },
             ];
             const active = seasonal.find((s) => {

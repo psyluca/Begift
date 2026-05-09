@@ -43,7 +43,7 @@ const BANNERS: BannerConfig[] = [
   {
     id: "mothers_day_2026",
     month: 5,
-    day: 11,
+    day: 10,
     noticeWindow: 28,
     emoji: "💐",
     paletteBg: "linear-gradient(135deg, #F4DCD8 0%, #FFF3EA 100%)",

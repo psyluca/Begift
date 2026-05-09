@@ -4,7 +4,7 @@
 
 **Decisione di Luca:** quando si riabilita, sarà con architettura "search nella cerchia provata" (Opzione 1 + Opzione 3).
 
-**Quando:** post-lancio, dopo Festa Mamma 11 maggio. Stima realistica: Q3 2026 (giugno-luglio).
+**Quando:** post-lancio, dopo Festa Mamma 10 maggio. Stima realistica: Q3 2026 (giugno-luglio).
 
 ---
 
@@ -202,7 +202,7 @@ In altre parole: la tabella `connections` non è solo per la search. È **il gra
 **Trigger naturale**: quando avrai 200+ utenti registrati con relazioni multiple (almeno 2-3 connections per utente medio). A quel punto la search inizia a essere utile davvero — sotto i 100 utenti, ognuno conosce a memoria i 4-5 contatti che ha scambiato gift, search non serve.
 
 **Sequenza realistica**:
-1. Festa Mamma 11 maggio → primo aumento utenti
+1. Festa Mamma 10 maggio → primo aumento utenti
 2. Settimane successive → naturale formazione di connessioni via gift_opens e reactions
 3. Quando vedi nei dati `/admin/stats` che il 40%+ degli utenti ha 2+ connessioni → conviene attivare
 4. **Stima**: probabilmente luglio-agosto 2026

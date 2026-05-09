@@ -45,7 +45,7 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 300; // 5 minuti — basta per qualche centinaio di mail
 
 const CAMPAIGN_ID = "festa_mamma_2026";
-const FESTA_MAMMA_TARGET = { month: 5, day: 11 }; // 11 maggio 2026
+const FESTA_MAMMA_TARGET = { month: 5, day: 10 }; // 10 maggio 2026 (2ª domenica di maggio)
 
 function daysUntilFestaMamma(): number {
   const now = new Date();
