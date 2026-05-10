@@ -374,12 +374,15 @@ function GiftContent({ gift }: { gift: Gift }) {
  * rotazione (-1.5°), ombra profonda, animazione di apparizione
  * che simula l'istantanea che si sviluppa.
  *
- * Se la caption è troppo lunga (>140 char) viene troncata con
- * ellipsis per preservare il layout Polaroid. Le didascalie medie
- * funzionano meglio per l'effetto visivo.
+ * Caption: nessun troncamento. Per messaggi lunghi (>140 char) il
+ * font scende da 20px a 16px così la polaroid resta visivamente
+ * bilanciata anche con testi multi-paragrafo. Pre-2026-05-06
+ * tagliavamo a 140 char con "…" — choice tecnicamente giustificata
+ * dal layout ma emotivamente sbagliata: chi scrive un messaggio
+ * lungo ha investito intenzionalmente, tagliare è offensivo.
  */
 function PolaroidPhoto({ src, caption }: { src: string; caption: string | null }) {
-  const shortCaption = caption && caption.length > 140 ? caption.slice(0, 137) + "…" : caption;
+  const isLongCaption = !!(caption && caption.length > 140);
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14, marginBottom: 24, perspective: 1000 }}>
       <div style={{
@@ -417,16 +420,18 @@ function PolaroidPhoto({ src, caption }: { src: string; caption: string | null }
             anche se la caption è vuota l'istantanea ha il margine
             bianco in basso tipico */}
         <div style={{
-          padding: "18px 8px 22px",
+          padding: "18px 10px 22px",
           textAlign: "center",
           minHeight: 24,
           fontFamily: "'Caveat', 'Kalam', 'Brush Script MT', cursive",
-          fontSize: 20,
+          fontSize: isLongCaption ? 16 : 20,
           color: "#2a2a2a",
-          lineHeight: 1.3,
+          lineHeight: isLongCaption ? 1.45 : 1.3,
           fontStyle: "italic",
+          wordBreak: "break-word",
+          whiteSpace: "pre-wrap",
         }}>
-          {shortCaption || ""}
+          {caption || ""}
         </div>
       </div>
       {/* Pulsante "Scarica" sotto la polaroid: il destinatario puo'
