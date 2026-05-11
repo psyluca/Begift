@@ -861,7 +861,10 @@
     "err_create": "Creation error: {detail}",
     "err_network": "Network error: {msg}. Check your connection and try again.",
     "err_network_default": "network error",
-    "fallback_warning": "Gift created. Note: the special template rendering may not be available on this environment — the recipient will see a standard gift."
+    "fallback_warning": "Gift created. Note: the special template rendering may not be available on this environment — the recipient will see a standard gift.",
+    "step3_add_another": "+ Add another photo",
+    "step3_remove_aria": "Remove this photo",
+    "step3_max_reached": "Maximum {n} photos reached"
   },
   "parent_templates": {
     "mother": {

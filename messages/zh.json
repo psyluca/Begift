@@ -861,7 +861,10 @@
     "err_create": "创建错误:{detail}",
     "err_network": "网络错误:{msg}。请检查连接后重试。",
     "err_network_default": "网络错误",
-    "fallback_warning": "礼物已创建。注意:此环境可能不支持模板的特殊渲染 — 收件人将看到标准礼物。"
+    "fallback_warning": "礼物已创建。注意:此环境可能不支持模板的特殊渲染 — 收件人将看到标准礼物。",
+    "step3_add_another": "+ 添加另一张照片",
+    "step3_remove_aria": "移除这张照片",
+    "step3_max_reached": "已达到 {n} 张照片的上限"
   },
   "parent_templates": {
     "mother": {

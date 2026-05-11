@@ -31,8 +31,14 @@ interface Props {
 
 /** Versione del formato draft localStorage. Se in futuro cambia
  *  la shape del template (es. nuovi step, rinomina campi), incrementa
- *  questo numero per invalidare draft vecchi e non confondere utenti. */
-const DRAFT_VERSION = 1;
+ *  questo numero per invalidare draft vecchi e non confondere utenti.
+ *  v2 (12/05/2026): photoUrl: string → photoUrls: string[] per supporto
+ *  multi-foto (fino a 4) nel template parent-letter. */
+const DRAFT_VERSION = 2;
+
+/** Numero massimo di foto caricabili nel template. Allineato col
+ *  flusso standard CreateGiftClient (extra_media) per coerenza UX. */
+const MAX_PHOTOS = 4;
 
 interface SongMeta {
   name: string;
@@ -47,7 +53,7 @@ interface DraftPayload {
   senderAlias: string;
   word: string;
   memory: string;
-  photoUrl: string;
+  photoUrls: string[];
   lesson: string;
   songUrl: string;
   songMeta: SongMeta | null;
@@ -68,7 +74,7 @@ function loadDraft(templateKey: string): DraftPayload | null {
     const parsed = JSON.parse(raw) as DraftPayload;
     if (parsed.v !== DRAFT_VERSION) return null;
     // Skip draft "vuoti" (nessun campo significativo riempito)
-    const hasContent = parsed.recipientName || parsed.word || parsed.memory || parsed.photoUrl;
+    const hasContent = parsed.recipientName || parsed.word || parsed.memory || (parsed.photoUrls && parsed.photoUrls.length > 0);
     if (!hasContent) return null;
     return parsed;
   } catch {
@@ -116,7 +122,7 @@ export function ParentLetterCreateClient({ config: rawConfig }: Props) {
   const [senderAlias, setSenderAlias] = useState("");
   const [word, setWord] = useState("");
   const [memory, setMemory] = useState("");
-  const [photoUrl, setPhotoUrl] = useState("");
+  const [photoUrls, setPhotoUrls] = useState<string[]>([]);
   const [photoUploading, setPhotoUploading] = useState(false);
   // Tempo trascorso dall'inizio dell'upload foto, in secondi.
   // Aggiornato ogni 250ms da un setInterval. Mostriamo "Caricamento da 4s…"
@@ -169,15 +175,15 @@ export function ParentLetterCreateClient({ config: rawConfig }: Props) {
     if (submitting) return;
     // Skip save se l'utente non ha ancora messo niente (draft vuoto =
     // niente da ripristinare → evita pollution di localStorage).
-    if (!recipientName && !word && !memory && !photoUrl) return;
+    if (!recipientName && !word && !memory && photoUrls.length === 0) return;
     const t = setTimeout(() => {
       saveDraft(config.key, {
         step, recipientName, senderAlias, word, memory,
-        photoUrl, lesson, songUrl, songMeta, voucherUrl,
+        photoUrls, lesson, songUrl, songMeta, voucherUrl,
       });
     }, 600);
     return () => clearTimeout(t);
-  }, [draftDecided, submitting, step, recipientName, senderAlias, word, memory, photoUrl, lesson, songUrl, songMeta, voucherUrl, config.key]);
+  }, [draftDecided, submitting, step, recipientName, senderAlias, word, memory, photoUrls, lesson, songUrl, songMeta, voucherUrl, config.key]);
 
   const resumeDraft = () => {
     if (!pendingDraft) return;
@@ -186,7 +192,7 @@ export function ParentLetterCreateClient({ config: rawConfig }: Props) {
     setSenderAlias(pendingDraft.senderAlias);
     setWord(pendingDraft.word);
     setMemory(pendingDraft.memory);
-    setPhotoUrl(pendingDraft.photoUrl);
+    setPhotoUrls(pendingDraft.photoUrls ?? []);
     setLesson(pendingDraft.lesson);
     setSongUrl(pendingDraft.songUrl);
     setSongMeta(pendingDraft.songMeta ?? null);
@@ -235,7 +241,7 @@ export function ParentLetterCreateClient({ config: rawConfig }: Props) {
    *  pre-fix pensavano che servisse riempire ogni campo. */
   const stepIsEmpty = (() => {
     switch (step) {
-      case 3: return !photoUrl;
+      case 3: return photoUrls.length === 0;
       case 4: return !lesson.trim();
       case 5: return !songUrl;
       case 6: return !voucherUrl;
@@ -247,6 +253,9 @@ export function ParentLetterCreateClient({ config: rawConfig }: Props) {
   const prev = () => { if (step > 0) setStep(step - 1); setError(null); };
 
   const handlePhoto = async (file: File) => {
+    // Guard: non superare il MAX_PHOTOS (sicurezza contro race condition
+    // o doppio click). UI dovrebbe già impedire selezione oltre il max.
+    if (photoUrls.length >= MAX_PHOTOS) return;
     setPhotoUploading(true);
     setPhotoUploadElapsed(0);
     const started = Date.now();
@@ -255,7 +264,7 @@ export function ParentLetterCreateClient({ config: rawConfig }: Props) {
     }, 250);
     try {
       const url = await upload(file, "gift-media");
-      if (url) setPhotoUrl(url);
+      if (url) setPhotoUrls((prev) => [...prev, url]);
     } catch (e) {
       console.error("[parent-letter] photo upload failed", e);
       setError(t("parent_letter.err_photo_upload"));
@@ -266,6 +275,10 @@ export function ParentLetterCreateClient({ config: rawConfig }: Props) {
     }
   };
 
+  const removePhoto = (urlToRemove: string) => {
+    setPhotoUrls((prev) => prev.filter((u) => u !== urlToRemove));
+  };
+
   const submit = async () => {
     setSubmitting(true);
     setError(null);
@@ -273,7 +286,12 @@ export function ParentLetterCreateClient({ config: rawConfig }: Props) {
       const templateData = {
         word: word.trim(),
         memory: memory.trim(),
-        photo_url: photoUrl || null,
+        // photo_url (singolo) = prima foto come fallback per render legacy
+        // e per consumer che leggono ancora il vecchio schema.
+        photo_url: photoUrls[0] || null,
+        // photo_urls (array completo) = sorgente di verità per il render
+        // moderno multi-foto in ParentLetterReveal.
+        photo_urls: photoUrls.length > 0 ? photoUrls : null,
         lesson: lesson.trim() || null,
         song_url: songUrl.trim() || null,
         voucher_url: voucherUrl.trim() || null,
@@ -551,80 +569,147 @@ export function ParentLetterCreateClient({ config: rawConfig }: Props) {
 
           {step === 3 && (
             <>
-              {!photoUrl ? (
-                photoUploading ? (
-                  <div style={{
-                    display: "block",
-                    border: `2px dashed ${config.paletteAccent}`,
-                    borderRadius: 14,
-                    padding: "36px 20px",
-                    textAlign: "center",
-                    background: LIGHT,
-                  }}>
-                    <style>{`@keyframes plUploadSpin { to { transform: rotate(360deg); } }`}</style>
-                    {/* Spinner CSS animato. Supabase SDK non espone progress
-                        nativo quindi non possiamo mostrare percentuale,
-                        ma diamo feedback "non e' freezato". */}
-                    <div style={{
-                      width: 44, height: 44,
-                      border: `3px solid ${BORDER}`,
-                      borderTopColor: config.paletteAccent,
-                      borderRadius: "50%",
-                      margin: "0 auto 14px",
-                      animation: "plUploadSpin 0.9s linear infinite",
-                    }} aria-hidden/>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: DEEP, marginBottom: 4 }}>
-                      {t("parent_letter.step3_uploading")}{photoUploadElapsed >= 3 ? ` · ${photoUploadElapsed}s` : "…"}
-                    </div>
-                    <div style={{ fontSize: 12, color: MUTED, lineHeight: 1.5 }}>
-                      {photoUploadElapsed < 5
-                        ? t("parent_letter.step3_upload_short")
-                        : photoUploadElapsed < 15
-                        ? t("parent_letter.step3_upload_medium")
-                        : t("parent_letter.step3_upload_slow")}
-                    </div>
+              <style>{`@keyframes plUploadSpin { to { transform: rotate(360deg); } }`}</style>
+
+              {/* Caso 1: nessuna foto caricata e non in upload — dropzone iniziale grande */}
+              {photoUrls.length === 0 && !photoUploading && (
+                <label style={{
+                  display: "block",
+                  border: `2px dashed ${BORDER}`,
+                  borderRadius: 14,
+                  padding: "32px 20px",
+                  textAlign: "center",
+                  background: LIGHT,
+                  cursor: "pointer",
+                }}>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => e.target.files?.[0] && handlePhoto(e.target.files[0])}
+                    style={{ display: "none" }}
+                  />
+                  <div style={{ fontSize: 36, marginBottom: 10 }} aria-hidden>📷</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: DEEP, marginBottom: 4 }}>
+                    {t("parent_letter.step3_choose")}
                   </div>
-                ) : (
-                  <label style={{
-                    display: "block",
-                    border: `2px dashed ${BORDER}`,
-                    borderRadius: 14,
-                    padding: "32px 20px",
-                    textAlign: "center",
-                    background: LIGHT,
-                    cursor: "pointer",
-                  }}>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => e.target.files?.[0] && handlePhoto(e.target.files[0])}
-                      style={{ display: "none" }}
-                    />
-                    <div style={{ fontSize: 36, marginBottom: 10 }} aria-hidden>📷</div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: DEEP, marginBottom: 4 }}>
-                      {t("parent_letter.step3_choose")}
-                    </div>
-                    <div style={{ fontSize: 12, color: MUTED }}>
-                      {t("parent_letter.step3_choose_hint")}
-                    </div>
-                  </label>
-                )
-              ) : (
-                <div style={{ textAlign: "center" }}>
-                  <div style={{
-                    display: "inline-block",
-                    padding: 8,
-                    background: "#fff",
-                    border: "8px solid #fff",
-                    boxShadow: "0 6px 20px rgba(0,0,0,.12)",
-                    transform: "rotate(-3deg)",
-                  }}>
-                    <img src={photoUrl} alt="" style={{ display: "block", width: 200, height: 200, objectFit: "cover" }}/>
+                  <div style={{ fontSize: 12, color: MUTED }}>
+                    {t("parent_letter.step3_choose_hint")}
                   </div>
-                  <div style={{ marginTop: 14 }}>
-                    <button onClick={() => setPhotoUrl("")} style={{ background: "transparent", border: "none", color: MUTED, fontSize: 13, cursor: "pointer", textDecoration: "underline" }}>
-                      {t("parent_letter.step3_change_photo")}
-                    </button>
+                </label>
+              )}
+
+              {/* Caso 2: foto già caricate — grid + (opzionale) bottone aggiungi/spinner */}
+              {photoUrls.length > 0 && (
+                <>
+                  {/* Grid polaroid già caricate. Rotazioni leggere alternate
+                      per dare anteprima dello stack che il destinatario vedra'. */}
+                  <div style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
+                    gap: 18,
+                    justifyItems: "center",
+                    marginBottom: 16,
+                  }}>
+                    {photoUrls.map((url, idx) => (
+                      <div key={url} style={{ position: "relative" }}>
+                        <div style={{
+                          display: "inline-block",
+                          padding: 6,
+                          background: "#fff",
+                          border: "6px solid #fff",
+                          boxShadow: "0 4px 14px rgba(0,0,0,.12)",
+                          transform: `rotate(${idx % 2 === 0 ? -2 : 2}deg)`,
+                        }}>
+                          <img src={url} alt="" style={{ display: "block", width: 120, height: 120, objectFit: "cover" }}/>
+                        </div>
+                        <button
+                          onClick={() => removePhoto(url)}
+                          aria-label={t("parent_letter.step3_remove_aria")}
+                          style={{
+                            position: "absolute",
+                            top: -8,
+                            right: -8,
+                            width: 26,
+                            height: 26,
+                            borderRadius: "50%",
+                            background: "#fff",
+                            border: "1.5px solid #e0d0c8",
+                            color: "#B71C1C",
+                            fontSize: 14,
+                            fontWeight: 700,
+                            cursor: "pointer",
+                            lineHeight: 1,
+                            padding: 0,
+                            boxShadow: "0 2px 6px rgba(0,0,0,.15)",
+                            fontFamily: "inherit",
+                          }}
+                        >×</button>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Bottone aggiungi un'altra foto (visibile solo se sotto max
+                      e non gia' in upload). */}
+                  {photoUrls.length < MAX_PHOTOS && !photoUploading && (
+                    <label style={{
+                      display: "block",
+                      border: `2px dashed ${BORDER}`,
+                      borderRadius: 12,
+                      padding: "14px 20px",
+                      textAlign: "center",
+                      background: LIGHT,
+                      cursor: "pointer",
+                      fontSize: 13,
+                      fontWeight: 600,
+                      color: MUTED,
+                    }}>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => e.target.files?.[0] && handlePhoto(e.target.files[0])}
+                        style={{ display: "none" }}
+                      />
+                      {t("parent_letter.step3_add_another")}
+                    </label>
+                  )}
+
+                  {/* Hint quando si raggiunge il max */}
+                  {photoUrls.length >= MAX_PHOTOS && !photoUploading && (
+                    <div style={{ fontSize: 12, color: MUTED, textAlign: "center", padding: "10px 0" }}>
+                      {t("parent_letter.step3_max_reached", { n: String(MAX_PHOTOS) })}
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Spinner upload — visibile sia per la prima foto sia per le successive */}
+              {photoUploading && (
+                <div style={{
+                  display: "block",
+                  border: `2px dashed ${config.paletteAccent}`,
+                  borderRadius: 14,
+                  padding: "28px 20px",
+                  textAlign: "center",
+                  background: LIGHT,
+                  marginTop: photoUrls.length > 0 ? 8 : 0,
+                }}>
+                  <div style={{
+                    width: 36, height: 36,
+                    border: `3px solid ${BORDER}`,
+                    borderTopColor: config.paletteAccent,
+                    borderRadius: "50%",
+                    margin: "0 auto 12px",
+                    animation: "plUploadSpin 0.9s linear infinite",
+                  }} aria-hidden/>
+                  <div style={{ fontSize: 13.5, fontWeight: 700, color: DEEP, marginBottom: 4 }}>
+                    {t("parent_letter.step3_uploading")}{photoUploadElapsed >= 3 ? ` · ${photoUploadElapsed}s` : "…"}
+                  </div>
+                  <div style={{ fontSize: 11.5, color: MUTED, lineHeight: 1.5 }}>
+                    {photoUploadElapsed < 5
+                      ? t("parent_letter.step3_upload_short")
+                      : photoUploadElapsed < 15
+                      ? t("parent_letter.step3_upload_medium")
+                      : t("parent_letter.step3_upload_slow")}
                   </div>
                 </div>
               )}
@@ -696,7 +781,7 @@ export function ParentLetterCreateClient({ config: rawConfig }: Props) {
               recipient={recipientName}
               word={word}
               memory={memory}
-              photoUrl={photoUrl}
+              photoUrls={photoUrls}
               lesson={lesson}
               songUrl={songUrl}
               songMeta={songMeta}
@@ -805,10 +890,10 @@ function Textarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
   );
 }
 function Preview({
-  recipient, word, memory, photoUrl, lesson, songUrl, songMeta, voucherUrl, accent, bg, t,
+  recipient, word, memory, photoUrls, lesson, songUrl, songMeta, voucherUrl, accent, bg, t,
 }: {
   recipient: string; word: string; memory: string;
-  photoUrl: string; lesson: string; songUrl: string;
+  photoUrls: string[]; lesson: string; songUrl: string;
   songMeta: SongMeta | null;
   voucherUrl: string;
   accent: string; bg: string;
@@ -829,13 +914,31 @@ function Preview({
             "{word}"
           </div>
         )}
-        {photoUrl && (
-          <div style={{
-            display: "inline-block", padding: 6, background: "#fff",
-            border: "6px solid #fff", boxShadow: "0 6px 16px rgba(0,0,0,.1)",
-            transform: "rotate(-3deg)", margin: "0 0 14px",
-          }}>
-            <img src={photoUrl} alt="" style={{ display: "block", width: 140, height: 140, objectFit: "cover" }}/>
+        {photoUrls.length > 0 && (
+          <div style={{ margin: "0 0 14px", position: "relative", display: "inline-block" }}>
+            {/* Mini preview: prima polaroid leggermente più grande,
+                eventuali altre polaroid sovrapposte come piccolo "stack" */}
+            <div style={{
+              display: "inline-block", padding: 6, background: "#fff",
+              border: "6px solid #fff", boxShadow: "0 6px 16px rgba(0,0,0,.1)",
+              transform: "rotate(-3deg)",
+              position: "relative",
+              zIndex: photoUrls.length,
+            }}>
+              <img src={photoUrls[0]} alt="" style={{ display: "block", width: 140, height: 140, objectFit: "cover" }}/>
+            </div>
+            {photoUrls.length > 1 && (
+              <div style={{
+                position: "absolute",
+                top: -8, right: -22,
+                background: "#fff", borderRadius: 12, padding: "3px 10px",
+                fontSize: 11, fontWeight: 700, color: accent,
+                boxShadow: "0 2px 6px rgba(0,0,0,.12)",
+                border: `1.5px solid ${accent}`,
+              }}>
+                +{photoUrls.length - 1}
+              </div>
+            )}
           </div>
         )}
         {memory && (

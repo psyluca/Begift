@@ -861,7 +861,10 @@
     "err_create": "作成エラー: {detail}",
     "err_network": "ネットワークエラー: {msg}。接続を確認してもう一度お試しください。",
     "err_network_default": "ネットワークエラー",
-    "fallback_warning": "贈り物を作成しました。ご注意: この環境では特別なテンプレート表示が利用できない可能性があり、受信者には標準的な贈り物として表示されます。"
+    "fallback_warning": "贈り物を作成しました。ご注意: この環境では特別なテンプレート表示が利用できない可能性があり、受信者には標準的な贈り物として表示されます。",
+    "step3_add_another": "+ 別の写真を追加",
+    "step3_remove_aria": "この写真を削除",
+    "step3_max_reached": "最大{n}枚の写真に達しました"
   },
   "parent_templates": {
     "mother": {

@@ -861,7 +861,10 @@
     "err_create": "Errore nella creazione: {detail}",
     "err_network": "Errore di rete: {msg}. Verifica la connessione e riprova.",
     "err_network_default": "errore di rete",
-    "fallback_warning": "Regalo creato. Nota: il rendering speciale del template potrebbe non essere disponibile su questo ambiente — il destinatario vedrà un regalo standard."
+    "fallback_warning": "Regalo creato. Nota: il rendering speciale del template potrebbe non essere disponibile su questo ambiente — il destinatario vedrà un regalo standard.",
+    "step3_add_another": "+ Aggiungi un'altra foto",
+    "step3_remove_aria": "Rimuovi questa foto",
+    "step3_max_reached": "Massimo {n} foto raggiunto"
   },
   "parent_templates": {
     "mother": {

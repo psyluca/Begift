@@ -24,7 +24,12 @@ const MUTED = "#6a6a6a";
 export interface ParentLetterData {
   word?: string | null;
   memory?: string | null;
+  /** Singolo URL legacy — gift creati prima del 12/05/2026 e fallback
+   *  quando photo_urls non è valorizzato. */
   photo_url?: string | null;
+  /** Array di URL — sorgente di verità per gift moderni (post 12/05/2026),
+   *  max 4 foto. Se vuoto/null, fallback su photo_url singolo. */
+  photo_urls?: string[] | null;
   lesson?: string | null;
   song_url?: string | null;
   voucher_url?: string | null;
@@ -183,35 +188,87 @@ export function ParentLetterReveal({ data, recipientName, senderName, config }: 
         </div>
       )}
 
-      {data.photo_url && (
-        <div className="p-fade-in" style={{ textAlign: "center", margin: "0 0 28px", animationDelay: "0.8s" }}>
+      {/* Risoluzione foto: photo_urls (array, moderno) ha precedenza
+          su photo_url (singolo, legacy). Se entrambi assenti, salta. */}
+      {(() => {
+        const photos: string[] = (data.photo_urls && data.photo_urls.length > 0)
+          ? data.photo_urls
+          : (data.photo_url ? [data.photo_url] : []);
+        if (photos.length === 0) return null;
+
+        // Rotazioni leggermente diverse per ogni polaroid — effetto
+        // "stack disordinato sul tavolo dei ricordi". La prima
+        // (principale) ha rotazione -3° come prima del refactor;
+        // le successive alternano per non sembrare allineate.
+        const rotations = [-3, 4, -2.5, 3.5];
+        // Sfasamento orizzontale (in px) per le polaroid >1 — solo
+        // quando ce ne sono almeno 2, altrimenti centrata.
+        const offsets = [0, -18, 22, -10];
+        // Animation delay scalare: la prima 0.8s come prima, le
+        // successive +0.3s ognuna per effetto "arrivano una alla volta".
+        const delays = [0.8, 1.1, 1.4, 1.7];
+
+        // Dimensione foto: più piccola se sono multiple per stare nel
+        // viewport mobile. 260px singola, 200px multi.
+        const size = photos.length === 1 ? "min(260px, 70vw)" : "min(200px, 56vw)";
+
+        return (
           <div style={{
-            display: "inline-block",
-            padding: 10,
-            background: "#fff",
-            border: "10px solid #fff",
-            boxShadow: "0 12px 30px rgba(0,0,0,.18)",
-            transform: "rotate(-3deg)",
             position: "relative",
+            textAlign: "center",
+            margin: "0 0 32px",
+            // Aumenta il margin-bottom proporzionalmente al numero di
+            // foto perché lo stack disordinato "sporge" un po' lateralmente
+            // e verticalmente, quindi serve più respiro.
+            minHeight: photos.length > 1 ? 280 : 240,
           }}>
-            <img
-              src={data.photo_url}
-              alt={`Una foto di ${recipientName}`}
-              style={{ display: "block", width: "min(260px, 70vw)", height: "min(260px, 70vw)", objectFit: "cover" }}
-            />
-            <div style={{
-              position: "absolute",
-              top: -10,
-              left: "50%",
-              transform: "translateX(-50%) rotate(-5deg)",
-              width: 70,
-              height: 18,
-              background: "rgba(220,200,170,.7)",
-              boxShadow: "0 1px 2px rgba(0,0,0,.1)",
-            }}/>
+            {photos.map((url, idx) => (
+              <div
+                key={url}
+                className="p-fade-in"
+                style={{
+                  display: "inline-block",
+                  padding: 10,
+                  background: "#fff",
+                  border: "10px solid #fff",
+                  boxShadow: "0 12px 30px rgba(0,0,0,.18)",
+                  transform: `rotate(${rotations[idx % rotations.length]}deg) translateX(${offsets[idx % offsets.length]}px)`,
+                  position: photos.length > 1 ? "absolute" : "relative",
+                  // Per multi-foto: posizionamento absolute centrato sul container,
+                  // le foto si sovrappongono in stack. La prima sta sopra.
+                  ...(photos.length > 1 ? {
+                    top: idx * 8,
+                    left: "50%",
+                    marginLeft: `calc(-${size}/2 - 10px)`,
+                    zIndex: photos.length - idx, // prima foto sopra
+                  } : {}),
+                  animationDelay: `${delays[idx % delays.length]}s`,
+                }}
+              >
+                <img
+                  src={url}
+                  alt={idx === 0 ? `Una foto di ${recipientName}` : ""}
+                  style={{ display: "block", width: size, height: size, objectFit: "cover" }}
+                />
+                {/* Pezzo di nastro/scotch carta — solo sulla prima foto
+                    per non creare confusione visiva quando sono multiple */}
+                {idx === 0 && (
+                  <div style={{
+                    position: "absolute",
+                    top: -10,
+                    left: "50%",
+                    transform: "translateX(-50%) rotate(-5deg)",
+                    width: 70,
+                    height: 18,
+                    background: "rgba(220,200,170,.7)",
+                    boxShadow: "0 1px 2px rgba(0,0,0,.1)",
+                  }}/>
+                )}
+              </div>
+            ))}
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {data.memory && (
         <div className="p-fade-in" style={{ margin: "0 0 28px", animationDelay: "1.5s" }}>
