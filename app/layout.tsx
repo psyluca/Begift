@@ -90,6 +90,9 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
+  verification: {
+    google: "auQIQhkfwZJ2ZOCrZJl-TAQmBU5vOT7Lwd405_RU0zQ",
+  },
   category: "Lifestyle",
 };
 
