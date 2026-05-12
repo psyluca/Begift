@@ -42,6 +42,15 @@ import { isAdminEmail } from "@/lib/admin";
 import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
+// Next 14 App Router cacha automaticamente le sub-fetch HTTP (incluse
+// quelle interne di supabase-js) anche quando dynamic = "force-dynamic".
+// In produzione abbiamo osservato il sintomo: la dashboard /admin/survey
+// ritornava 2 risposte mentre il DB ne aveva 4 (le 2 piu' recenti
+// invisibili). I tre flag insieme garantiscono fresh fetch ad ogni
+// chiamata, indispensabile per una dashboard admin che deve mostrare
+// dati real-time delle survey responses.
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
 
 interface AnswersShape {
   recipient_type?: string;
