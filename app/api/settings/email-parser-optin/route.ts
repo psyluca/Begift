@@ -1,11 +1,14 @@
 /**
+ * GET  /api/settings/email-parser-optin
+ *   Ritorna lo stato corrente del flag opt-in per l'utente loggato.
+ *   Response: { opted_in: boolean }
+ *
  * POST /api/settings/email-parser-optin
+ *   Aggiorna il flag email_parser_opted_in del profilo utente loggato.
+ *   Body: { opted_in: boolean }
  *
- * Aggiorna il flag email_parser_opted_in del profilo utente loggato.
- * Body: { opted_in: boolean }
- *
- * Quando opted_in passa da false a true, registra timestamp di
- * consenso (audit trail GDPR).
+ *   Quando opted_in passa da false a true, registra timestamp di
+ *   consenso (audit trail GDPR).
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -13,6 +16,32 @@ import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+export async function GET() {
+  if (process.env.NEXT_PUBLIC_FEATURE_EMAIL_PARSER !== "true") {
+    return NextResponse.json({ error: "feature_disabled" }, { status: 503 });
+  }
+
+  const supabase = createSupabaseServer();
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) {
+    return NextResponse.json({ error: "not_authenticated" }, { status: 401 });
+  }
+
+  const admin = createSupabaseAdmin();
+  const { data, error } = await admin
+    .from("profiles")
+    .select("email_parser_opted_in")
+    .eq("id", userData.user.id)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[api/settings/email-parser-optin GET] error", error);
+    return NextResponse.json({ error: "server", detail: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ opted_in: !!data?.email_parser_opted_in });
+}
 
 export async function POST(req: NextRequest) {
   if (process.env.NEXT_PUBLIC_FEATURE_EMAIL_PARSER !== "true") {
