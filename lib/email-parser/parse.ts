@@ -23,13 +23,6 @@ import type {
 
 const DEFAULT_MODEL = "claude-haiku-4-5-20251001";
 
-/**
- * Parsa una email forwardata estraendo dati strutturati.
- *
- * @param email - email da parsare
- * @param opts.model - override modello Claude (default haiku)
- * @returns ParseResult con content o error
- */
 export async function parseEmail(
   email: InboundEmail,
   opts: { model?: string } = {}
@@ -49,12 +42,10 @@ export async function parseEmail(
 
   const startedAt = Date.now();
 
-  // SDK ufficiale Anthropic: gestisce HTTP agent, retry built-in,
-  // timeout configurabili. Robusto in dev mode Next.js.
   const anthropic = new Anthropic({
     apiKey,
-    maxRetries: 2, // retry automatico su errori transitori (network, 5xx)
-    timeout: 30_000, // 30s timeout
+    maxRetries: 2,
+    timeout: 30_000,
   });
 
   let apiResponse: Awaited<ReturnType<typeof anthropic.messages.create>>;
@@ -91,7 +82,6 @@ export async function parseEmail(
     };
   }
 
-  // Estrai JSON dalla risposta (potrebbe avere markdown fence o testo extra)
   const jsonText = extractJson(textBlock.text);
   if (!jsonText) {
     return {
@@ -116,11 +106,10 @@ export async function parseEmail(
     };
   }
 
-  // Valida schema minimo
   const validation = validateContent(parsed, merchant);
   if (!validation.valid) {
     return {
-      content: parsed, // restituiamo comunque, marcato come low_confidence
+      content: parsed,
       status: "low_confidence",
       error: `Schema validation: ${validation.errors.join("; ")}`,
       llm_model_used: model,
@@ -130,7 +119,6 @@ export async function parseEmail(
     };
   }
 
-  // Override merchant con quello detected (in caso LLM si sbagli)
   if (merchant !== "unknown" && parsed.merchant !== merchant) {
     parsed.merchant = merchant;
     parsed.warnings = [
@@ -139,7 +127,6 @@ export async function parseEmail(
     ];
   }
 
-  // Confidence threshold
   const finalStatus: ParseResult["status"] =
     typeof parsed.confidence === "number" && parsed.confidence < 0.5
       ? "low_confidence"
@@ -155,24 +142,15 @@ export async function parseEmail(
   };
 }
 
-/**
- * Estrae il primo blocco JSON valido dal testo di Claude.
- * Gestisce sia output puri sia output con markdown code fences.
- */
 function extractJson(text: string): string | null {
-  // Caso 1: JSON puro
   const trimmed = text.trim();
   if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
     return trimmed;
   }
-
-  // Caso 2: dentro markdown code fence
   const fenceMatch = trimmed.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
   if (fenceMatch) {
     return fenceMatch[1].trim();
   }
-
-  // Caso 3: cerca il primo blocco { ... } bilanciato
   let depth = 0;
   let start = -1;
   for (let i = 0; i < trimmed.length; i++) {
@@ -186,36 +164,25 @@ function extractJson(text: string): string | null {
       }
     }
   }
-
   return null;
 }
 
-/**
- * Validazione schema minima del parsed content.
- * Non e' uno schema completo (sarebbe over-engineering per il POC),
- * controlla solo i campi essenziali.
- */
 function validateContent(
   c: Partial<ParsedEmailContent>,
   expectedMerchant: SupportedMerchant
 ): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
-
   if (!c.merchant) errors.push("missing 'merchant'");
   if (!c.type) errors.push("missing 'type'");
   if (typeof c.confidence !== "number") errors.push("missing or invalid 'confidence'");
   if (c.confidence !== undefined && (c.confidence < 0 || c.confidence > 1)) {
     errors.push("'confidence' out of range [0,1]");
   }
-
-  // Per merchant noti, controlla che ci siano almeno alcuni campi essenziali
   if (expectedMerchant !== "unknown" && c.confidence !== undefined && c.confidence > 0.5) {
     if (!c.title) errors.push("missing 'title' for known merchant");
   }
-
   return { valid: errors.length === 0, errors };
 }
 
-// Re-export types per consumer comodi
 export type { InboundEmail, ParsedEmailContent, ParseResult, SupportedMerchant } from "./types";
 export { detectMerchant } from "./prompts";

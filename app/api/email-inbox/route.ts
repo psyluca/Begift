@@ -31,6 +31,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { parseEmail } from "@/lib/email-parser/parse";
+import { notifyDraftReady } from "@/lib/email-parser/notify";
 import type { InboundEmail } from "@/lib/email-parser/types";
 
 export const runtime = "nodejs";
@@ -94,11 +95,11 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Cerca user BeGift con quella email
+  // Cerca user BeGift con quella email + verifica opt-in
   const admin = createSupabaseAdmin();
   const { data: profile, error: profileErr } = await admin
     .from("profiles")
-    .select("id, email")
+    .select("id, email, email_parser_opted_in")
     .eq("email", forwardedByEmail)
     .maybeSingle();
   if (profileErr || !profile) {
@@ -107,6 +108,17 @@ export async function POST(req: NextRequest) {
     );
     return NextResponse.json(
       { error: "unknown_forwarder" },
+      { status: 403 }
+    );
+  }
+
+  // GDPR: verifica consenso esplicito al parsing
+  if (!profile.email_parser_opted_in) {
+    console.warn(
+      `[email-inbox] user ${profile.id} has not opted in to email parsing, dropping`
+    );
+    return NextResponse.json(
+      { error: "not_opted_in", detail: "User has not enabled email parsing in settings" },
       { status: 403 }
     );
   }
@@ -189,8 +201,16 @@ export async function POST(req: NextRequest) {
         })
         .eq("id", draft.id);
 
-      // TODO Luca: trigger notifica push/email all'utente
-      // ("Hai un nuovo regalo in bozza, completalo")
+      // Notifica utente che il draft e' pronto. Fire-and-forget: non
+      // blocchiamo la risposta a SendGrid se Resend e' lento.
+      notifyDraftReady({
+        draftId: draft.id,
+        userId: profile.id,
+        title: result.content?.title || undefined,
+        detectedMerchant: result.content?.merchant || undefined,
+      }).catch((e) => {
+        console.warn("[email-inbox] notify failed (non-blocking)", e);
+      });
     }
   } catch (e) {
     console.error("[email-inbox] parser exception", e);
