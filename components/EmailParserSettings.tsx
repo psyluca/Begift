@@ -47,15 +47,18 @@ export default function EmailParserSettings() {
     }
     (async () => {
       try {
-        const res = await fetchAuthed("/api/profile");
+        const res = await fetchAuthed("/api/settings/email-parser-optin");
         if (!res.ok) {
+          // Se l'endpoint non risponde (es. feature flag off lato server),
+          // restiamo in stato disattivato senza crash.
+          setOptedIn(false);
           setLoading(false);
           return;
         }
         const j = await res.json();
-        setOptedIn(!!j.profile?.email_parser_opted_in);
+        setOptedIn(!!j.opted_in);
       } catch {
-        // ignora
+        setOptedIn(false);
       } finally {
         setLoading(false);
       }
