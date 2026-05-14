@@ -143,16 +143,16 @@ export default function DraftCompletionClient({
             />
           )}
           {location && <DetailRow label="Dove" value={location} />}
-          {parsedContent?.booking_code && (
+          {typeof parsedContent?.booking_code === "string" && (
             <DetailRow
               label="Codice"
-              value={parsedContent.booking_code as string}
+              value={parsedContent.booking_code}
             />
           )}
-          {parsedContent?.voucher_code && (
+          {typeof parsedContent?.voucher_code === "string" && (
             <DetailRow
               label="Voucher"
-              value={parsedContent.voucher_code as string}
+              value={parsedContent.voucher_code}
             />
           )}
         </div>
