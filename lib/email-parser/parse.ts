@@ -5,8 +5,14 @@
  * con prompt strutturato, parsa il JSON di output, valida lo schema.
  *
  * Ritorna ParseResult con success/failure e dati estratti.
+ *
+ * Implementazione: usa il SDK ufficiale `@anthropic-ai/sdk` invece di
+ * fetch raw. In dev mode Next.js ha bug con il global fetch (HTTP agent
+ * issues, "fetch failed" intermittenti); il SDK ufficiale usa un agent
+ * propio che bypassa il problema.
  */
 
+import Anthropic from "@anthropic-ai/sdk";
 import { buildPrompt, detectMerchant } from "./prompts";
 import type {
   InboundEmail,
@@ -15,7 +21,6 @@ import type {
   SupportedMerchant,
 } from "./types";
 
-const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
 const DEFAULT_MODEL = "claude-haiku-4-5-20251001";
 
 /**
@@ -44,49 +49,39 @@ export async function parseEmail(
 
   const startedAt = Date.now();
 
-  let response: Response;
+  // SDK ufficiale Anthropic: gestisce HTTP agent, retry built-in,
+  // timeout configurabili. Robusto in dev mode Next.js.
+  const anthropic = new Anthropic({
+    apiKey,
+    maxRetries: 2, // retry automatico su errori transitori (network, 5xx)
+    timeout: 30_000, // 30s timeout
+  });
+
+  let apiResponse: Awaited<ReturnType<typeof anthropic.messages.create>>;
   try {
-    response = await fetch(ANTHROPIC_API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model,
-        max_tokens: 1024,
-        messages: [{ role: "user", content: prompt }],
-      }),
+    apiResponse = await anthropic.messages.create({
+      model,
+      max_tokens: 1024,
+      messages: [{ role: "user", content: prompt }],
     });
   } catch (e) {
+    const error = e as Error & { status?: number; error?: { message?: string } };
+    const duration = Date.now() - startedAt;
     return {
       content: null,
       status: "failed",
-      error: `Network error calling Anthropic API: ${(e as Error).message}`,
-    };
-  }
-
-  const duration = Date.now() - startedAt;
-
-  if (!response.ok) {
-    const errText = await response.text().catch(() => "no body");
-    return {
-      content: null,
-      status: "failed",
-      error: `Anthropic API error ${response.status}: ${errText.slice(0, 500)}`,
+      error: error.status
+        ? `Anthropic API error ${error.status}: ${error.error?.message || error.message}`
+        : `Anthropic SDK error: ${error.message}`,
       llm_model_used: model,
       duration_ms: duration,
     };
   }
 
-  const apiResponse = (await response.json()) as {
-    content?: Array<{ type: string; text: string }>;
-    usage?: { input_tokens: number; output_tokens: number };
-  };
+  const duration = Date.now() - startedAt;
 
-  const textBlock = apiResponse.content?.find((b) => b.type === "text");
-  if (!textBlock) {
+  const textBlock = apiResponse.content.find((b) => b.type === "text");
+  if (!textBlock || textBlock.type !== "text") {
     return {
       content: null,
       status: "failed",
