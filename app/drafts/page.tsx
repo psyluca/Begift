@@ -69,6 +69,21 @@ export default async function DraftsPage() {
       }}
     >
       <div style={{ maxWidth: 640, margin: "0 auto" }}>
+        {/* Breadcrumb / back nav: senza, dalla pagina /drafts non c'era
+            modo di tornare a Impostazioni (entrambi i CTA puntavano a
+            /forward-mail). Bug segnalato 2026-05-14. */}
+        <div style={{ marginBottom: 16 }}>
+          <Link
+            href="/settings#email-parser"
+            style={{
+              fontSize: 13,
+              color: MUTED,
+              textDecoration: "none",
+            }}
+          >
+            ← Impostazioni
+          </Link>
+        </div>
         <div style={{ marginBottom: 24 }}>
           <h1
             style={{
@@ -158,6 +173,18 @@ function EmptyState() {
       >
         Scopri come funziona →
       </Link>
+      <div style={{ marginTop: 16 }}>
+        <Link
+          href="/settings#email-parser"
+          style={{
+            fontSize: 13,
+            color: MUTED,
+            textDecoration: "underline",
+          }}
+        >
+          Vai a Impostazioni
+        </Link>
+      </div>
     </div>
   );
 }
