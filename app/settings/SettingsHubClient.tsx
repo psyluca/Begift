@@ -1,3 +1,5 @@
+
+import EmailParserSettings from "@/components/EmailParserSettings";
 "use client";
 
 /**
@@ -234,6 +236,8 @@ export default function SettingsHubClient() {
             </Link>
           </div>
         </Section>
+
+<EmailParserSettings />
 
         {/* ── RICORRENZE ───────────────────────────────── */}
         <Section title={t("settings_hub.section_reminders")} id="reminders">
