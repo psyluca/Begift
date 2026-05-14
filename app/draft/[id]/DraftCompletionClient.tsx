@@ -178,7 +178,7 @@ export default function DraftCompletionClient({
           style={textareaStyle}
           placeholder="Scrivi qualcosa di tuo…"
         />
-        {parsedContent?.suggested_message && (
+       {typeof parsedContent?.suggested_message === "string" && (
           <p style={{ fontSize: 12, color: MUTED, marginTop: 4 }}>
             Il messaggio sopra è un suggerimento di BeGift, puoi modificarlo come vuoi.
           </p>
