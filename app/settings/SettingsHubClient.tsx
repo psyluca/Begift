@@ -1,5 +1,6 @@
 
-"use client";                                                          
+"use client";     
+/**                                                     
  * SettingsHubClient — pagina unica...
  */
 import EmailParserSettings from "@/components/EmailParserSettings";   
