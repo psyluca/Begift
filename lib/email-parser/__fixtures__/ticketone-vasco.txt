@@ -1,0 +1,36 @@
+From: noreply@ticketone.it
+Subject: Conferma ordine #87234567 - Vasco Rossi
+Date: Wed, 14 May 2026 10:23:14 +0200
+
+Gentile Cliente,
+
+La sua transazione è andata a buon fine. Di seguito i dettagli del suo ordine:
+
+ORDINE N. 87234567
+DATA ACQUISTO: 14/05/2026
+PAGAMENTO: VISA ****4532 - Totale: € 195,00
+
+EVENTO: VASCO ROSSI - STADI 2026
+LUOGO: STADIO SAN SIRO - MILANO (Piazzale Angelo Moratti)
+DATA EVENTO: SABATO 15 LUGLIO 2026
+APERTURA CANCELLI: ORE 18:00
+INIZIO CONCERTO: ORE 21:00
+
+BIGLIETTI ACQUISTATI:
+Settore: PIT GOLD
+Tipologia: Posto in piedi
+Quantità: 2
+Prezzo unitario: € 87,50
+Diritti di prevendita: € 20,00 (€ 10,00 cad.)
+
+I biglietti elettronici (e-ticket PDF) sono disponibili in allegato a questa email.
+È possibile scaricarli anche dall'area "I miei biglietti" del sito www.ticketone.it.
+
+REGOLAMENTO ACCESSO:
+- Documento di identità obbligatorio
+- E-ticket stampato o su smartphone
+- Apertura cancelli 3 ore prima dell'evento
+
+Per assistenza: assistenza@ticketone.it
+
+Grazie per aver scelto TicketOne.

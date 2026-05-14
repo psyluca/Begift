@@ -1,0 +1,226 @@
+/**
+ * Email parser entry point.
+ *
+ * Prende una InboundEmail, identifica il merchant, chiama Claude API
+ * con prompt strutturato, parsa il JSON di output, valida lo schema.
+ *
+ * Ritorna ParseResult con success/failure e dati estratti.
+ */
+
+import { buildPrompt, detectMerchant } from "./prompts";
+import type {
+  InboundEmail,
+  ParsedEmailContent,
+  ParseResult,
+  SupportedMerchant,
+} from "./types";
+
+const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
+const DEFAULT_MODEL = "claude-haiku-4-5-20251001";
+
+/**
+ * Parsa una email forwardata estraendo dati strutturati.
+ *
+ * @param email - email da parsare
+ * @param opts.model - override modello Claude (default haiku)
+ * @returns ParseResult con content o error
+ */
+export async function parseEmail(
+  email: InboundEmail,
+  opts: { model?: string } = {}
+): Promise<ParseResult> {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    return {
+      content: null,
+      status: "failed",
+      error: "ANTHROPIC_API_KEY not configured",
+    };
+  }
+
+  const merchant = detectMerchant(email);
+  const prompt = buildPrompt(email, merchant);
+  const model = opts.model || process.env.EMAIL_PARSER_MODEL || DEFAULT_MODEL;
+
+  const startedAt = Date.now();
+
+  let response: Response;
+  try {
+    response = await fetch(ANTHROPIC_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: 1024,
+        messages: [{ role: "user", content: prompt }],
+      }),
+    });
+  } catch (e) {
+    return {
+      content: null,
+      status: "failed",
+      error: `Network error calling Anthropic API: ${(e as Error).message}`,
+    };
+  }
+
+  const duration = Date.now() - startedAt;
+
+  if (!response.ok) {
+    const errText = await response.text().catch(() => "no body");
+    return {
+      content: null,
+      status: "failed",
+      error: `Anthropic API error ${response.status}: ${errText.slice(0, 500)}`,
+      llm_model_used: model,
+      duration_ms: duration,
+    };
+  }
+
+  const apiResponse = (await response.json()) as {
+    content?: Array<{ type: string; text: string }>;
+    usage?: { input_tokens: number; output_tokens: number };
+  };
+
+  const textBlock = apiResponse.content?.find((b) => b.type === "text");
+  if (!textBlock) {
+    return {
+      content: null,
+      status: "failed",
+      error: "No text block in Claude response",
+      llm_model_used: model,
+      duration_ms: duration,
+    };
+  }
+
+  // Estrai JSON dalla risposta (potrebbe avere markdown fence o testo extra)
+  const jsonText = extractJson(textBlock.text);
+  if (!jsonText) {
+    return {
+      content: null,
+      status: "failed",
+      error: `No JSON found in response: ${textBlock.text.slice(0, 200)}`,
+      llm_model_used: model,
+      duration_ms: duration,
+    };
+  }
+
+  let parsed: ParsedEmailContent;
+  try {
+    parsed = JSON.parse(jsonText);
+  } catch (e) {
+    return {
+      content: null,
+      status: "failed",
+      error: `Invalid JSON: ${(e as Error).message}`,
+      llm_model_used: model,
+      duration_ms: duration,
+    };
+  }
+
+  // Valida schema minimo
+  const validation = validateContent(parsed, merchant);
+  if (!validation.valid) {
+    return {
+      content: parsed, // restituiamo comunque, marcato come low_confidence
+      status: "low_confidence",
+      error: `Schema validation: ${validation.errors.join("; ")}`,
+      llm_model_used: model,
+      tokens_input: apiResponse.usage?.input_tokens,
+      tokens_output: apiResponse.usage?.output_tokens,
+      duration_ms: duration,
+    };
+  }
+
+  // Override merchant con quello detected (in caso LLM si sbagli)
+  if (merchant !== "unknown" && parsed.merchant !== merchant) {
+    parsed.merchant = merchant;
+    parsed.warnings = [
+      ...(parsed.warnings || []),
+      `Merchant detected from sender (${merchant}) override LLM value (${parsed.merchant})`,
+    ];
+  }
+
+  // Confidence threshold
+  const finalStatus: ParseResult["status"] =
+    typeof parsed.confidence === "number" && parsed.confidence < 0.5
+      ? "low_confidence"
+      : "success";
+
+  return {
+    content: parsed,
+    status: finalStatus,
+    llm_model_used: model,
+    tokens_input: apiResponse.usage?.input_tokens,
+    tokens_output: apiResponse.usage?.output_tokens,
+    duration_ms: duration,
+  };
+}
+
+/**
+ * Estrae il primo blocco JSON valido dal testo di Claude.
+ * Gestisce sia output puri sia output con markdown code fences.
+ */
+function extractJson(text: string): string | null {
+  // Caso 1: JSON puro
+  const trimmed = text.trim();
+  if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+    return trimmed;
+  }
+
+  // Caso 2: dentro markdown code fence
+  const fenceMatch = trimmed.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
+  if (fenceMatch) {
+    return fenceMatch[1].trim();
+  }
+
+  // Caso 3: cerca il primo blocco { ... } bilanciato
+  let depth = 0;
+  let start = -1;
+  for (let i = 0; i < trimmed.length; i++) {
+    if (trimmed[i] === "{") {
+      if (depth === 0) start = i;
+      depth++;
+    } else if (trimmed[i] === "}") {
+      depth--;
+      if (depth === 0 && start >= 0) {
+        return trimmed.slice(start, i + 1);
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Validazione schema minima del parsed content.
+ * Non e' uno schema completo (sarebbe over-engineering per il POC),
+ * controlla solo i campi essenziali.
+ */
+function validateContent(
+  c: Partial<ParsedEmailContent>,
+  expectedMerchant: SupportedMerchant
+): { valid: boolean; errors: string[] } {
+  const errors: string[] = [];
+
+  if (!c.merchant) errors.push("missing 'merchant'");
+  if (!c.type) errors.push("missing 'type'");
+  if (typeof c.confidence !== "number") errors.push("missing or invalid 'confidence'");
+  if (c.confidence !== undefined && (c.confidence < 0 || c.confidence > 1)) {
+    errors.push("'confidence' out of range [0,1]");
+  }
+
+  // Per merchant noti, controlla che ci siano almeno alcuni campi essenziali
+  if (expectedMerchant !== "unknown" && c.confidence !== undefined && c.confidence > 0.5) {
+    if (!c.title) errors.push("missing 'title' for known merchant");
+  }
+
+  return { valid: errors.length === 0, errors };
+}
+
+// Re-export types per consumer comodi
+export type { InboundEmail, ParsedEmailContent, ParseResult, SupportedMerchant } from "./types";
+export { detectMerchant } from "./prompts";
