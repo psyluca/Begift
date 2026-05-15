@@ -1,19 +1,31 @@
 /**
  * /experiences/[id]
  *
- * Pagina dettaglio singola esperienza. Mostra foto, descrizione,
- * prezzo, rating, e CTA "Regalala" che apre il flusso wrap → invio.
+ * Pagina dettaglio singola esperienza con flusso "pay-first":
+ *   1. Sender vede l'esperienza su BeGift (discovery + curatela)
+ *   2. Clicca CTA "Acquista su GetYourGuide" → redirect tramite /r/[token]
+ *      che logga il click affiliate + 302 redirect al partner
+ *   3. Sender paga sul partner (BeGift riceve commissione affiliate)
+ *   4. Partner manda mail di conferma → sender la forwarda a
+ *      plans@plans.begift.app → email parser POC crea draft
+ *   5. Sender apre /drafts/[id] e personalizza pacchetto + messaggio +
+ *      musica/video di apertura, poi invia al destinatario
  *
- * Server component. Se non loggato, "Regala" reindirizza a login con
- * next=questa-pagina (l'utente potra' creare il gift dopo login).
+ * Questa pagina NON crea piu' un gift placeholder. Il gift nasce nel
+ * flusso email parser dopo l'acquisto reale, perche':
+ *   - prima di pagare l'esperienza non e' garantita (disponibilita',
+ *     pagamento, payout)
+ *   - le info reali (codice prenotazione, data, location) arrivano
+ *     dalla mail di conferma, non dal nostro catalogo
+ *   - il wrap personalizzato e' un atto separato che richiede tempo
  *
  * Spec: docs/vendita-esperienze/SPEC.md
  */
 
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { randomBytes } from "crypto";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
-import GiftFromExperienceForm from "./GiftFromExperienceForm";
 import type { ExperienceWithPartner } from "@/types/experiences";
 
 const ACCENT = "#D4537E";
@@ -42,10 +54,22 @@ export default async function ExperiencePage({ params }: Props) {
     .maybeSingle();
 
   if (error || !data) notFound();
-  // Normalizza partner: Supabase la tipa come array anche se 1-1 FK.
+
+  // Normalizza partner (Supabase FK array → object)
   const rawPartner = (data as { partner?: unknown }).partner;
   const partner = Array.isArray(rawPartner) ? rawPartner[0] : rawPartner;
-  const e = { ...(data as Record<string, unknown>), partner } as unknown as ExperienceWithPartner;
+  const e = {
+    ...(data as Record<string, unknown>),
+    partner,
+  } as unknown as ExperienceWithPartner;
+
+  // Genera un tracking_id univoco per questo render della pagina.
+  // Pattern: anon_{8hex}_{ts36}. Se l'utente clicca, /r/[token] logga
+  // con questo id e redirige al partner. Stesso utente che ricarica
+  // genera un nuovo token: ok per il POC, l'attribution lato partner
+  // si basa sul cookie window di 31gg, non sul singolo click ID.
+  const tracking = `anon_${randomBytes(4).toString("hex")}_${Date.now().toString(36)}`;
+  const trackingUrl = `/r/${tracking}?exp=${e.id}&src=pre_purchase`;
 
   const priceLabel = (() => {
     if (!e.price_min_cents) return null;
@@ -125,7 +149,6 @@ export default async function ExperiencePage({ params }: Props) {
             </p>
           )}
 
-          {/* Pricing & rating row */}
           <div
             style={{
               display: "flex",
@@ -136,20 +159,14 @@ export default async function ExperiencePage({ params }: Props) {
             }}
           >
             {priceLabel && (
-              <span
-                style={{
-                  fontSize: 22,
-                  fontWeight: 700,
-                  color: ACCENT,
-                }}
-              >
+              <span style={{ fontSize: 22, fontWeight: 700, color: ACCENT }}>
                 {priceLabel}
               </span>
             )}
             {e.rating != null && e.reviews_count > 0 && (
               <span style={{ fontSize: 13, color: MUTED }}>
-                ★ {e.rating.toFixed(1)} · {e.reviews_count.toLocaleString("it-IT")}{" "}
-                recensioni
+                ★ {e.rating.toFixed(1)} ·{" "}
+                {e.reviews_count.toLocaleString("it-IT")} recensioni
               </span>
             )}
             {e.duration_minutes && (
@@ -177,9 +194,70 @@ export default async function ExperiencePage({ params }: Props) {
             style={{
               border: "none",
               borderTop: `1px solid ${BORDER}`,
-              margin: "20px 0",
+              margin: "24px 0",
             }}
           />
+
+          {/* CTA principale: vai al partner per acquistare */}
+          <a
+            href={trackingUrl}
+            style={{
+              display: "block",
+              width: "100%",
+              textAlign: "center",
+              padding: "16px 18px",
+              background: ACCENT,
+              color: "#fff",
+              fontSize: 15,
+              fontWeight: 700,
+              borderRadius: 50,
+              textDecoration: "none",
+              boxShadow: "0 10px 28px rgba(212,83,126,.28)",
+            }}
+          >
+            Acquista su {e.partner.display_name} →
+          </a>
+
+          {/* 3-step explanation: il sender deve sapere cosa lo aspetta */}
+          <div
+            style={{
+              marginTop: 28,
+              padding: "20px 18px",
+              background: "#fbf9f5",
+              border: `1px solid ${BORDER}`,
+              borderRadius: 14,
+            }}
+          >
+            <h3
+              style={{
+                fontSize: 12,
+                fontWeight: 700,
+                color: INK,
+                margin: "0 0 14px",
+                textTransform: "uppercase",
+                letterSpacing: "0.05em",
+              }}
+            >
+              Come funziona
+            </h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <Step
+                n={1}
+                title={`Acquista su ${e.partner.display_name}`}
+                text={`Il bottone qui sopra ti porta direttamente alla pagina del partner. Completi l'acquisto come al solito${priceLabel ? ` (${priceLabel})` : ""}.`}
+              />
+              <Step
+                n={2}
+                title="Inoltra la conferma a BeGift"
+                text={`Quando ${e.partner.display_name} ti manda la mail di conferma, inoltrala a plans@plans.begift.app. BeGift legge i dettagli e prepara un pacco regalo automaticamente.`}
+              />
+              <Step
+                n={3}
+                title="Personalizza e invia"
+                text="Apri il pacco in BeGift, scegli il packaging, scrivi il messaggio per chi lo riceve, eventualmente aggiungi una musica o un video, e poi invia il link."
+              />
+            </div>
+          </div>
 
           {/* Tags */}
           {e.tags && e.tags.length > 0 && (
@@ -188,7 +266,7 @@ export default async function ExperiencePage({ params }: Props) {
                 display: "flex",
                 gap: 6,
                 flexWrap: "wrap",
-                marginBottom: 24,
+                marginTop: 20,
               }}
             >
               {e.tags.slice(0, 8).map((t) => (
@@ -208,16 +286,9 @@ export default async function ExperiencePage({ params }: Props) {
               ))}
             </div>
           )}
-
-          {/* Gift creation form (client component) */}
-          <GiftFromExperienceForm
-            experienceId={e.id}
-            experienceTitle={e.title}
-            partnerName={e.partner.display_name}
-          />
         </div>
 
-        {/* Disclosure */}
+        {/* Disclosure affiliate */}
         <p
           style={{
             fontSize: 11,
@@ -227,12 +298,51 @@ export default async function ExperiencePage({ params }: Props) {
             textAlign: "center",
           }}
         >
-          Questa esperienza è offerta tramite {e.partner.display_name}.
-          BeGift può ricevere una piccola commissione sull'acquisto, senza
-          alcun costo aggiuntivo per chi riceve.
+          Esperienza offerta tramite {e.partner.display_name}. BeGift può
+          ricevere una piccola commissione sull'acquisto, senza alcun costo
+          aggiuntivo per te.
         </p>
       </div>
     </main>
+  );
+}
+
+function Step({ n, title, text }: { n: number; title: string; text: string }) {
+  return (
+    <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+      <div
+        style={{
+          width: 28,
+          height: 28,
+          borderRadius: "50%",
+          background: ACCENT,
+          color: "#fff",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 13,
+          fontWeight: 800,
+          flexShrink: 0,
+        }}
+      >
+        {n}
+      </div>
+      <div style={{ flex: 1 }}>
+        <h4
+          style={{
+            fontSize: 14,
+            fontWeight: 700,
+            color: INK,
+            margin: "2px 0 4px",
+          }}
+        >
+          {title}
+        </h4>
+        <p style={{ fontSize: 13, color: MUTED, lineHeight: 1.5, margin: 0 }}>
+          {text}
+        </p>
+      </div>
+    </div>
   );
 }
 

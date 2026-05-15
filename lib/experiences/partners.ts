@@ -100,16 +100,23 @@ export function resolveAffiliateUrl(
   const cfg = PARTNERS[partner];
   if (!cfg) return null;
 
+  // env var richiesta SOLO se il template usa il placeholder {affiliate_id}.
+  // Alcuni template (es. GetYourGuide nel seed) hanno il partner_id
+  // hardcoded direttamente nell'URL (es. "?partner_id=BEGIFT&..."), nel
+  // qual caso la env var non e' necessaria e il link funziona comunque.
+  const needsAffiliateId = template.includes("{affiliate_id}");
   const affiliateId = process.env[cfg.affiliateIdEnvVar];
-  if (!affiliateId) {
+  if (needsAffiliateId && !affiliateId) {
     console.warn(
-      `[experiences/partners] missing env ${cfg.affiliateIdEnvVar}`
+      `[experiences/partners] template requires {affiliate_id} but ${cfg.affiliateIdEnvVar} is not set; returning null`
     );
     return null;
   }
 
   let url = template;
-  url = url.split("{affiliate_id}").join(encodeURIComponent(affiliateId));
+  if (affiliateId) {
+    url = url.split("{affiliate_id}").join(encodeURIComponent(affiliateId));
+  }
   url = url.split("{gift_id}").join(encodeURIComponent(ctx.gift_id));
   if (ctx.target_url) {
     url = url.split("{target_url}").join(encodeURIComponent(ctx.target_url));
