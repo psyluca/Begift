@@ -82,22 +82,65 @@ export async function POST(
     );
   }
 
-  // TODO Luca: mappare parsed_content -> schema gift completo
-  // Per ora creiamo un gift minimale con i campi essenziali.
-  // Il mapping vero richiedera' di estendere `gifts` con un campo
-  // `addon_metadata` o di passare attraverso `gift_addons` (tabella
-  // del Pattern B affiliate, da sviluppare).
+  // Mapping parsed_content -> gift schema. Schema reale (vedi
+  // types/index.ts + app/api/gifts/route.ts):
+  //   - creator_id (NOT "created_by")
+  //   - recipient_name, message, packaging (object NOT NULL)
+  //   - content_type, content_text, content_url (nullable)
+  // Per la mail forwardata, mettiamo i dati strutturati come testo
+  // formato readable nel content_text (titolo, data, location, codici),
+  // e usiamo content_type='message' per riusare il render esistente.
   const parsed = (draft.parsed_content || {}) as Record<string, unknown>;
+
+  // Costruisci testo leggibile a partire dai dati parsati
+  const lines: string[] = [];
+  if (typeof parsed.title === "string") lines.push(parsed.title);
+  if (typeof parsed.subtitle === "string") lines.push(parsed.subtitle);
+  if (typeof parsed.event_date === "string") {
+    try {
+      lines.push(
+        "🗓️ " +
+          new Date(parsed.event_date).toLocaleDateString("it-IT", {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+      );
+    } catch {
+      lines.push("🗓️ " + parsed.event_date);
+    }
+  }
+  if (typeof parsed.location === "string") lines.push("📍 " + parsed.location);
+  if (typeof parsed.booking_code === "string")
+    lines.push("Codice prenotazione: " + parsed.booking_code);
+  if (typeof parsed.voucher_code === "string")
+    lines.push("Voucher: " + parsed.voucher_code);
+  const contentText = lines.join("\n\n");
+
+  // Packaging default. Stessi colori di DEFAULT_PKG in
+  // CreateGiftClient.tsx, scelto perche' il flusso di completion
+  // attualmente non chiede all'utente di personalizzare il pacchetto.
+  const defaultPackaging = {
+    paperColor: "#D85A5A",
+    ribbonColor: "#E8C84A",
+    bowColor: "#E8C84A",
+    bowType: "classic",
+    openAnimation: "lift",
+    sound: "bells",
+  };
 
   const { data: gift, error: giftErr } = await admin
     .from("gifts")
     .insert({
-      created_by: userData.user.id,
+      creator_id: userData.user.id,
       recipient_name: recipientName,
-      template_type: "parent_letter", // default temporaneo, da affinare
-      // Salviamo i dati strutturati in una colonna metadata
-      // (assumendo esista; altrimenti questo va in gift_addons quando avremo Pattern B)
-      // Per POC ignoriamo l'integrazione con gift schema e ci limitiamo a creare un gift base
+      message,
+      packaging: defaultPackaging,
+      content_type: contentText ? "message" : null,
+      content_text: contentText || null,
     })
     .select("id")
     .single();
