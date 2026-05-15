@@ -63,10 +63,20 @@ Schema JSON di output:
   "total_paid_cents": int|null,
   "currency": "EUR",
   "suggested_image_urls": ["string"]|null,
+  "suggested_youtube_query": "string|null", // Vedi regole dedicate sotto
   "suggested_message": "string|null", // Vedi regole dedicate sotto
   "confidence": float,              // 0.0-1.0
   "warnings": ["string"]|null
 }
+
+Regole specifiche per suggested_youtube_query:
+- 2-5 parole, in inglese se l'oggetto e' internazionale, italiano se e' italiano
+- Pensa "cosa cercherebbe l'utente su YouTube per vedere un video evocativo del regalo?"
+- Concerti/eventi musicali: "<artista> live <anno>" (es. "Vasco Rossi live 2026", "Coldplay live concert")
+- Hotel/viaggi: "<location> <tipo struttura>" (es. "Shirakawago Japan ryokan", "Maldive overwater bungalow")
+- Esperienze/tour: "<attivita> <luogo>" (es. "cooking class Tuscany", "wine tasting Napa")
+- Cofanetti generici (Smartbox, Wonderbox): query basata sul tipo cofanetto (es. "spa weekend Italy", "gourmet dinner romantic")
+- NULL se proprio non hai abbastanza contesto per una query sensata
 
 Regole specifiche per suggested_message:
 - Italiano, tono caldo e personale (chi forwarda la mail sta facendo un regalo a qualcuno che ama)
@@ -118,6 +128,7 @@ JSON ATTESO:
   "total_paid_cents": 19500,
   "currency": "EUR",
   "suggested_image_urls": null,
+  "suggested_youtube_query": "Vasco Rossi live San Siro",
   "suggested_message": "Ti ho preso 2 biglietti per Vasco Rossi a San Siro: sabato 15 luglio 2026 ore 21:00, PIT GOLD. So che aspettavi questo concerto da una vita. Ordine 87234567.",
   "confidence": 0.95,
   "warnings": null
@@ -156,6 +167,7 @@ JSON ATTESO:
   "total_paid_cents": 14990,
   "currency": "EUR",
   "suggested_image_urls": null,
+  "suggested_youtube_query": "luxury Italian charming hotel weekend",
   "suggested_message": "Ti ho regalato un weekend di charme per due: hotel di charme in tutta Italia, valido fino al 14 settembre 2029. Sceglierai tu dove e quando, ci penso io a tutto il resto. Codice WEEKEND-IT-2456-XYZ.",
   "confidence": 0.92,
   "warnings": null

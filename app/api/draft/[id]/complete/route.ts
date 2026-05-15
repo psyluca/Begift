@@ -148,6 +148,16 @@ export async function POST(
     .slice(1, 9)
     .map((url) => ({ type: "image", url }));
 
+  // Video YouTube fallback (solo se non c'e' immagine hero).
+  // suggested_video_url e' impostato in /api/email-inbox quando il
+  // parser non trova immagini buone nell'HTML mail. Il renderer
+  // BeGift (GiftOpeningClient) detecta automaticamente YouTube e
+  // mostra l'iframe embed.
+  const videoUrl =
+    typeof parsed.suggested_video_url === "string"
+      ? parsed.suggested_video_url
+      : null;
+
   const insertRow: Record<string, unknown> = {
     creator_id: userData.user.id,
     recipient_name: recipientName,
@@ -157,8 +167,11 @@ export async function POST(
   if (heroImage) {
     insertRow.content_type = "image";
     insertRow.content_url = heroImage;
-    // Mettiamo i dettagli testuali comunque, possono essere mostrati
-    // come caption sotto l'immagine se il render lo supporta.
+    if (contentText) insertRow.content_text = contentText;
+  } else if (videoUrl) {
+    // YouTube → BeGift gestisce gli URL link come embed video se YouTube
+    insertRow.content_type = "link";
+    insertRow.content_url = videoUrl;
     if (contentText) insertRow.content_text = contentText;
   } else if (contentText) {
     insertRow.content_type = "message";

@@ -94,6 +94,17 @@ export default function DraftCompletionClient({
       )
     : [];
   const heroImage = imageUrls[0] || null;
+  // Video YouTube fallback se non c'e' immagine (cercato server-side)
+  const videoUrl =
+    !heroImage && typeof parsedContent?.suggested_video_url === "string"
+      ? (parsedContent.suggested_video_url as string)
+      : null;
+  const videoTitle =
+    typeof parsedContent?.suggested_video_title === "string"
+      ? (parsedContent.suggested_video_title as string)
+      : null;
+  // Estrai videoId YouTube per l'iframe embed
+  const youtubeVideoId = videoUrl ? extractYouTubeVideoId(videoUrl) : null;
 
   const submit = async () => {
     if (!recipientName.trim() || !message.trim()) {
@@ -158,6 +169,48 @@ export default function DraftCompletionClient({
               (e.target as HTMLImageElement).style.display = "none";
             }}
           />
+        )}
+
+        {!heroImage && youtubeVideoId && (
+          <div style={{ marginBottom: 16 }}>
+            <div
+              style={{
+                position: "relative",
+                paddingBottom: "56.25%", // 16:9
+                height: 0,
+                overflow: "hidden",
+                borderRadius: 12,
+                background: "#000",
+              }}
+            >
+              <iframe
+                src={`https://www.youtube.com/embed/${youtubeVideoId}?rel=0&modestbranding=1`}
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  height: "100%",
+                  border: "none",
+                }}
+                allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                title={videoTitle || title}
+              />
+            </div>
+            {videoTitle && (
+              <p
+                style={{
+                  fontSize: 11,
+                  color: MUTED,
+                  marginTop: 6,
+                  marginBottom: 0,
+                }}
+              >
+                Video suggerito: {videoTitle}
+              </p>
+            )}
+          </div>
         )}
 
         <div style={detailGridStyle}>
@@ -240,6 +293,29 @@ export default function DraftCompletionClient({
       </div>
     </main>
   );
+}
+
+/**
+ * Estrae l'ID video YouTube da un URL.
+ * Supporta youtube.com/watch?v=ID, youtu.be/ID, youtube.com/embed/ID.
+ * Stessa logica usata in GiftOpeningClient.tsx — duplicata qui per
+ * evitare di esportare/condividere da quel file gigante.
+ */
+function extractYouTubeVideoId(url: string): string | null {
+  try {
+    const u = new URL(url);
+    if (u.hostname.includes("youtu.be")) {
+      return u.pathname.replace(/^\//, "") || null;
+    }
+    if (u.hostname.includes("youtube.com")) {
+      if (u.pathname === "/watch") return u.searchParams.get("v");
+      const m = u.pathname.match(/^\/(?:embed|shorts)\/([\w-]+)/);
+      if (m) return m[1];
+    }
+  } catch {
+    return null;
+  }
+  return null;
 }
 
 function DetailRow({ label, value }: { label: string; value: string }) {

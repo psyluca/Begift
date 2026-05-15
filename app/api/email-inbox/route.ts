@@ -33,6 +33,7 @@ import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { parseEmail } from "@/lib/email-parser/parse";
 import { notifyDraftReady } from "@/lib/email-parser/notify";
 import { pickHeroImages } from "@/lib/email-parser/extract-images";
+import { searchYouTubeTopVideo } from "@/lib/email-parser/youtube-search";
 import type { InboundEmail } from "@/lib/email-parser/types";
 
 export const runtime = "nodejs";
@@ -205,12 +206,36 @@ export async function POST(req: NextRequest) {
       // tipicamente ritorna null per quel campo perche' non puo' navigare;
       // noi le troviamo direttamente nell'HTML embedded della mail.
       const heroImages = email.bodyHtml ? pickHeroImages(email.bodyHtml, 5) : [];
+
+      // Fallback YouTube: se non abbiamo immagini decenti (es. mail
+      // TicketOne con solo logo), cerchiamo su YouTube usando la query
+      // suggerita da Claude. Il render di BeGift (GiftOpeningClient)
+      // supporta gia' l'embed YouTube nativamente.
+      let suggestedVideoUrl: string | null = null;
+      let suggestedVideoTitle: string | null = null;
+      const ytQuery = (result.content as { suggested_youtube_query?: string })
+        ?.suggested_youtube_query;
+      if (heroImages.length === 0 && ytQuery) {
+        const video = await searchYouTubeTopVideo(ytQuery, {
+          minDurationSeconds: 60,
+        }).catch((e) => {
+          console.warn("[email-inbox] youtube search failed", e);
+          return null;
+        });
+        if (video) {
+          suggestedVideoUrl = video.watchUrl;
+          suggestedVideoTitle = video.title;
+        }
+      }
+
       const enrichedContent = {
         ...(result.content || {}),
         suggested_image_urls:
           heroImages.length > 0
             ? heroImages
             : result.content?.suggested_image_urls || null,
+        suggested_video_url: suggestedVideoUrl,
+        suggested_video_title: suggestedVideoTitle,
       };
 
       await admin
