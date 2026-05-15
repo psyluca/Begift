@@ -63,10 +63,18 @@ Schema JSON di output:
   "total_paid_cents": int|null,
   "currency": "EUR",
   "suggested_image_urls": ["string"]|null,
-  "suggested_message": "string|null", // Genera un messaggio italiano emozionale di 1-2 frasi adatto al gift
+  "suggested_message": "string|null", // Vedi regole dedicate sotto
   "confidence": float,              // 0.0-1.0
   "warnings": ["string"]|null
-}`;
+}
+
+Regole specifiche per suggested_message:
+- Italiano, tono caldo e personale (chi forwarda la mail sta facendo un regalo a qualcuno che ama)
+- DEVE includere la data dell'evento/prenotazione in forma leggibile (es. "il 29 novembre 2026" o "sabato 15 luglio")
+- DEVE menzionare esplicitamente che la prenotazione/biglietto e' GIA' confermato (es. "ho prenotato per te", "ti ho preso il biglietto", "e' tutto pronto")
+- Se c'e' un booking_code, voucher_code, o numero ordine, includilo a fine messaggio
+- Lunghezza: 2-4 frasi, max 60 parole
+- Evita formule banali tipo "ho un regalo per te" — sii specifico sul contenuto (ryokan, concerto, weekend benessere...)`;
 
 /**
  * Esempio few-shot per TicketOne.
@@ -110,7 +118,7 @@ JSON ATTESO:
   "total_paid_cents": 19500,
   "currency": "EUR",
   "suggested_image_urls": null,
-  "suggested_message": "So che aspettavi questo concerto da una vita. Tieniti pronto: il 15 luglio andiamo a vedere Vasco insieme.",
+  "suggested_message": "Ti ho preso 2 biglietti per Vasco Rossi a San Siro: sabato 15 luglio 2026 ore 21:00, PIT GOLD. So che aspettavi questo concerto da una vita. Ordine 87234567.",
   "confidence": 0.95,
   "warnings": null
 }`;
@@ -148,7 +156,7 @@ JSON ATTESO:
   "total_paid_cents": 14990,
   "currency": "EUR",
   "suggested_image_urls": null,
-  "suggested_message": "Tu e quella persona speciale meritate un weekend solo per voi. Scegli quando e dove, ci penso io a tutto il resto.",
+  "suggested_message": "Ti ho regalato un weekend di charme per due: hotel di charme in tutta Italia, valido fino al 14 settembre 2029. Sceglierai tu dove e quando, ci penso io a tutto il resto. Codice WEEKEND-IT-2456-XYZ.",
   "confidence": 0.92,
   "warnings": null
 }`;
