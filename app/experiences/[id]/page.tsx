@@ -42,7 +42,10 @@ export default async function ExperiencePage({ params }: Props) {
     .maybeSingle();
 
   if (error || !data) notFound();
-  const e = data as ExperienceWithPartner;
+  // Normalizza partner: Supabase la tipa come array anche se 1-1 FK.
+  const rawPartner = (data as { partner?: unknown }).partner;
+  const partner = Array.isArray(rawPartner) ? rawPartner[0] : rawPartner;
+  const e = { ...(data as Record<string, unknown>), partner } as unknown as ExperienceWithPartner;
 
   const priceLabel = (() => {
     if (!e.price_min_cents) return null;

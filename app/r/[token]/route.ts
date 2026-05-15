@@ -69,8 +69,16 @@ export async function GET(
     return NextResponse.redirect(FALLBACK_URL, 302);
   }
 
-  // Resolve URL affiliate
-  const partnerSlug = (exp.partner as { slug: PartnerSlug } | null)?.slug;
+  // Resolve URL affiliate. Supabase tipa la relazione FK come array
+  // anche se logicamente e' 1-1, quindi normalizziamo prendendo il
+  // primo elemento se array, altrimenti l'oggetto direttamente.
+  const partnerRel = exp.partner as
+    | { slug: PartnerSlug }
+    | { slug: PartnerSlug }[]
+    | null;
+  const partnerSlug = Array.isArray(partnerRel)
+    ? partnerRel[0]?.slug
+    : partnerRel?.slug;
   if (!partnerSlug || !PARTNERS[partnerSlug]) {
     console.warn("[r/token] partner misconfigured", partnerSlug);
     return NextResponse.redirect(FALLBACK_URL, 302);

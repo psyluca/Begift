@@ -68,7 +68,14 @@ export default async function DiscoverPage({ searchParams }: Props) {
   if (Number.isFinite(pmax)) q = q.lte("price_min_cents", pmax * 100);
 
   const { data } = await q;
-  const items = (data || []) as ExperienceWithPartner[];
+  // Normalizza partner (Supabase tipa FK come array anche se 1-1)
+  const items = ((data || []) as unknown as Array<Record<string, unknown>>).map(
+    (row) => {
+      const rawPartner = row.partner;
+      const partner = Array.isArray(rawPartner) ? rawPartner[0] : rawPartner;
+      return { ...row, partner } as unknown as ExperienceWithPartner;
+    }
+  );
 
   return (
     <main

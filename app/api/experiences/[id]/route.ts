@@ -39,7 +39,15 @@ export async function GET(
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
-  return NextResponse.json(data as ExperienceWithPartner, {
+  // Normalizza partner (Supabase array FK -> single object)
+  const rawPartner = (data as { partner?: unknown }).partner;
+  const partner = Array.isArray(rawPartner) ? rawPartner[0] : rawPartner;
+  const normalized = {
+    ...(data as Record<string, unknown>),
+    partner,
+  } as unknown as ExperienceWithPartner;
+
+  return NextResponse.json(normalized, {
     headers: {
       "Cache-Control": "public, max-age=300, s-maxage=600, stale-while-revalidate=300",
     },

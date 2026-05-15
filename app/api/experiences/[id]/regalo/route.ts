@@ -136,8 +136,18 @@ export async function POST(
   // Genera tracking_id e short URL
   const trackingId = generateTrackingId(gift.id);
 
-  // Risolve URL affiliate finale (per validare che la config sia OK)
-  const partnerSlug = exp.partner?.slug as PartnerSlug | undefined;
+  // Risolve URL affiliate finale (per validare che la config sia OK).
+  // Supabase tipa la FK relation come array anche se 1-1, quindi
+  // normalizziamo prima.
+  const partnerRel = exp.partner as
+    | { slug: PartnerSlug; display_name: string }
+    | { slug: PartnerSlug; display_name: string }[]
+    | null
+    | undefined;
+  const partnerObj = Array.isArray(partnerRel)
+    ? partnerRel[0]
+    : partnerRel;
+  const partnerSlug = partnerObj?.slug;
   if (!partnerSlug || !PARTNERS[partnerSlug]) {
     return NextResponse.json(
       { error: "partner_misconfigured" },
@@ -180,7 +190,7 @@ export async function POST(
     gift_id: gift.id,
     tracking_url: trackingUrl,
     experience_title: exp.title as string,
-    partner_display_name: (exp.partner?.display_name as string) || partnerSlug,
+    partner_display_name: partnerObj?.display_name || partnerSlug,
   };
 
   return NextResponse.json(response);

@@ -81,8 +81,18 @@ export async function GET(req: NextRequest) {
     );
   }
 
+  // Normalizza partner: Supabase tipa la FK relation come array
+  // anche se 1-1. Riduciamo a singolo oggetto per consumo client.
+  const normalizedItems = ((data || []) as Array<Record<string, unknown>>).map(
+    (row) => {
+      const rawPartner = row.partner;
+      const partner = Array.isArray(rawPartner) ? rawPartner[0] : rawPartner;
+      return { ...row, partner };
+    }
+  );
+
   const body: ExperienceListResponse = {
-    items: (data as ExperienceListResponse["items"]) || [],
+    items: normalizedItems as unknown as ExperienceListResponse["items"],
     total: count ?? 0,
     filters_applied: {
       city,
