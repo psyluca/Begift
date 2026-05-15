@@ -48,7 +48,7 @@ BEGIN
      'Lucca', 'IT', 'outdoor', 120, 3500,
      ARRAY['outdoor', 'couples', 'family', 'photography', 'half-day', 'local'],
      4.8, 1240,
-     'https://www.getyourguide.com/lucca-l1244/walls-bike-tour-t77001?partner_id=BEGIFT&cmp={gift_id}')
+     'https://www.getyourguide.com/lucca-l1244/walls-bike-tour-t77001?partner_id=17&cmp={gift_id}')
   ON CONFLICT DO NOTHING;
 
   -- Wine tasting villa lucchese
@@ -64,7 +64,7 @@ BEGIN
      'Lucca', 'IT', 'food', 240, 7500,
      ARRAY['foodie', 'wine', 'couples', 'date-night', 'romantic', 'local'],
      4.9, 890,
-     'https://www.getyourguide.com/lucca-l1244/wine-villa-tour-t77002?partner_id=BEGIFT&cmp={gift_id}')
+     'https://www.getyourguide.com/lucca-l1244/wine-villa-tour-t77002?partner_id=17&cmp={gift_id}')
   ON CONFLICT DO NOTHING;
 
   -- Festival Puccini Torre del Lago
@@ -80,7 +80,7 @@ BEGIN
      'Torre del Lago', 'IT', 'show', 180, 4500, 12000,
      ARRAY['music', 'art', 'couples', 'date-night', 'romantic', 'summer', 'local'],
      4.7, 2150,
-     'https://www.getyourguide.com/torre-del-lago-l5589/puccini-festival-t77003?partner_id=BEGIFT&cmp={gift_id}',
+     'https://www.getyourguide.com/torre-del-lago-l5589/puccini-festival-t77003?partner_id=17&cmp={gift_id}',
      'Aggiunta su richiesta Luca 2026-05-15. Stagionale (estate). Disattivare in inverno con UPDATE active=false.')
   ON CONFLICT DO NOTHING;
 

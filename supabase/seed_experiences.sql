@@ -40,7 +40,7 @@ BEGIN
      'Roma', 'IT', 'culture', 180, 4900, 6500,
      ARRAY['couples', 'family', 'history', 'must-see'],
      4.7, 28430,
-     'https://www.getyourguide.com/rome-l33/colosseum-skip-the-line-tour-t44519?partner_id=BEGIFT&cmp={gift_id}')
+     'https://www.getyourguide.com/rome-l33/colosseum-skip-the-line-tour-t44519?partner_id=17&cmp={gift_id}')
   ON CONFLICT DO NOTHING;
 
   INSERT INTO public.experiences
@@ -53,7 +53,7 @@ BEGIN
      'Roma', 'IT', 'food', 240, 8500,
      ARRAY['foodie', 'couples', 'date-night', 'romantic'],
      4.9, 5640,
-     'https://www.getyourguide.com/rome-l33/pasta-cooking-class-t98432?partner_id=BEGIFT&cmp={gift_id}')
+     'https://www.getyourguide.com/rome-l33/pasta-cooking-class-t98432?partner_id=17&cmp={gift_id}')
   ON CONFLICT DO NOTHING;
 
   -- ===== MILANO =====
@@ -67,7 +67,7 @@ BEGIN
      'Milano', 'IT', 'culture', 75, 6900,
      ARRAY['art', 'must-see', 'couples', 'culture'],
      4.6, 8920,
-     'https://www.getyourguide.com/milan-l30/last-supper-skip-the-line-tour-t12345?partner_id=BEGIFT&cmp={gift_id}')
+     'https://www.getyourguide.com/milan-l30/last-supper-skip-the-line-tour-t12345?partner_id=17&cmp={gift_id}')
   ON CONFLICT DO NOTHING;
 
   INSERT INTO public.experiences
@@ -79,7 +79,7 @@ BEGIN
      'https://cdn.getyourguide.com/img/tour/milan-navigli-aperitivo.jpg',
      'Milano', 'IT', 'food', 120, 5500, ARRAY['foodie', 'friends', 'date-night', 'aperitivo'],
      4.8, 1240,
-     'https://www.getyourguide.com/milan-l30/aperitivo-navigli-cruise-t67890?partner_id=BEGIFT&cmp={gift_id}')
+     'https://www.getyourguide.com/milan-l30/aperitivo-navigli-cruise-t67890?partner_id=17&cmp={gift_id}')
   ON CONFLICT DO NOTHING;
 
   -- ===== FIRENZE =====
@@ -93,7 +93,7 @@ BEGIN
      'Firenze', 'IT', 'culture', 150, 5900,
      ARRAY['art', 'must-see', 'culture', 'couples'],
      4.7, 14200,
-     'https://www.getyourguide.com/florence-l59/uffizi-skip-line-t11223?partner_id=BEGIFT&cmp={gift_id}')
+     'https://www.getyourguide.com/florence-l59/uffizi-skip-line-t11223?partner_id=17&cmp={gift_id}')
   ON CONFLICT DO NOTHING;
 
   INSERT INTO public.experiences
@@ -105,7 +105,7 @@ BEGIN
      'https://cdn.getyourguide.com/img/tour/chianti-wine-tour.jpg',
      'Firenze', 'IT', 'food', 480, 9500, ARRAY['foodie', 'wine', 'couples', 'date-night', 'romantic'],
      4.9, 4730,
-     'https://www.getyourguide.com/florence-l59/chianti-wine-tour-t33445?partner_id=BEGIFT&cmp={gift_id}')
+     'https://www.getyourguide.com/florence-l59/chianti-wine-tour-t33445?partner_id=17&cmp={gift_id}')
   ON CONFLICT DO NOTHING;
 
   -- ===== VENEZIA =====
@@ -118,7 +118,7 @@ BEGIN
      'https://cdn.getyourguide.com/img/tour/venice-gondola-serenade.jpg',
      'Venezia', 'IT', 'culture', 30, 4500, ARRAY['romantic', 'couples', 'date-night', 'sunset'],
      4.5, 6890,
-     'https://www.getyourguide.com/venice-l35/gondola-serenade-t55667?partner_id=BEGIFT&cmp={gift_id}')
+     'https://www.getyourguide.com/venice-l35/gondola-serenade-t55667?partner_id=17&cmp={gift_id}')
   ON CONFLICT DO NOTHING;
 
   INSERT INTO public.experiences
@@ -131,7 +131,7 @@ BEGIN
      'Venezia', 'IT', 'travel', 360, 3500,
      ARRAY['family', 'culture', 'photography', 'half-day'],
      4.6, 9120,
-     'https://www.getyourguide.com/venice-l35/islands-tour-t77889?partner_id=BEGIFT&cmp={gift_id}')
+     'https://www.getyourguide.com/venice-l35/islands-tour-t77889?partner_id=17&cmp={gift_id}')
   ON CONFLICT DO NOTHING;
 
   -- ===== NAPOLI =====
@@ -145,7 +145,7 @@ BEGIN
      'Napoli', 'IT', 'culture', 120, 5900,
      ARRAY['history', 'must-see', 'culture', 'couples', 'family'],
      4.8, 11340,
-     'https://www.getyourguide.com/pompeii-l2780/skip-the-line-tour-t99001?partner_id=BEGIFT&cmp={gift_id}')
+     'https://www.getyourguide.com/pompeii-l2780/skip-the-line-tour-t99001?partner_id=17&cmp={gift_id}')
   ON CONFLICT DO NOTHING;
 
   INSERT INTO public.experiences
@@ -158,7 +158,7 @@ BEGIN
      'Napoli', 'IT', 'food', 180, 7500,
      ARRAY['foodie', 'family', 'couples', 'hands-on'],
      4.9, 3210,
-     'https://www.getyourguide.com/naples-l769/pizza-class-t22334?partner_id=BEGIFT&cmp={gift_id}')
+     'https://www.getyourguide.com/naples-l769/pizza-class-t22334?partner_id=17&cmp={gift_id}')
   ON CONFLICT DO NOTHING;
 
   -- ===== WELLNESS (Awin via Smartbox o programmi diretti) =====
@@ -187,7 +187,7 @@ BEGIN
      'La Spezia', 'IT', 'outdoor', 480, 8900,
      ARRAY['outdoor', 'couples', 'friends', 'sea', 'summer'],
      4.8, 5440,
-     'https://www.getyourguide.com/la-spezia-l1071/cinque-terre-boat-tour-t44556?partner_id=BEGIFT&cmp={gift_id}')
+     'https://www.getyourguide.com/la-spezia-l1071/cinque-terre-boat-tour-t44556?partner_id=17&cmp={gift_id}')
   ON CONFLICT DO NOTHING;
 
   INSERT INTO public.experiences
@@ -200,7 +200,7 @@ BEGIN
      'Cortina', 'IT', 'outdoor', 360, 6500,
      ARRAY['outdoor', 'hiking', 'adventure', 'mountains', 'couples', 'friends'],
      4.9, 1830,
-     'https://www.getyourguide.com/cortina-l1234/dolomites-trek-t66778?partner_id=BEGIFT&cmp={gift_id}')
+     'https://www.getyourguide.com/cortina-l1234/dolomites-trek-t66778?partner_id=17&cmp={gift_id}')
   ON CONFLICT DO NOTHING;
 
   -- ===== INTERNATIONAL (per espandere oltre IT eventualmente) =====
@@ -214,7 +214,7 @@ BEGIN
      'Paris', 'FR', 'culture', 150, 7900,
      ARRAY['art', 'must-see', 'couples', 'culture', 'international'],
      4.6, 22100,
-     'https://www.getyourguide.com/paris-l16/louvre-skip-line-t88990?partner_id=BEGIFT&cmp={gift_id}')
+     'https://www.getyourguide.com/paris-l16/louvre-skip-line-t88990?partner_id=17&cmp={gift_id}')
   ON CONFLICT DO NOTHING;
 
   INSERT INTO public.experiences
@@ -227,7 +227,7 @@ BEGIN
      'London', 'GB', 'culture', 90, 4500,
      ARRAY['family', 'must-see', 'international', 'couples'],
      4.4, 18700,
-     'https://www.getyourguide.com/london-l57/london-eye-thames-cruise-t11445?partner_id=BEGIFT&cmp={gift_id}')
+     'https://www.getyourguide.com/london-l57/london-eye-thames-cruise-t11445?partner_id=17&cmp={gift_id}')
   ON CONFLICT DO NOTHING;
 
   RAISE NOTICE 'Seed completed: 15 esperienze inserite (o ON CONFLICT skip se ripetuto).';
