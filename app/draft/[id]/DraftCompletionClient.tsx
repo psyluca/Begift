@@ -16,6 +16,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import ExperiencesCrossSell from "@/components/ExperiencesCrossSell";
 
 const ACCENT = "#D4537E";
 const INK = "#1a1a1a";
@@ -290,9 +291,51 @@ export default function DraftCompletionClient({
           <p style={{ marginTop: 8 }}>Da: {sourceEmailFrom}</p>
           <p>Oggetto: {sourceEmailSubject}</p>
         </details>
+
+        {/* Cross-sell esperienze correlate: collega questo flusso al
+            modulo "vendita esperienze". Hidden se feature flag off o
+            se nessuna esperienza matcha la city/categoria. */}
+        <ExperiencesCrossSell
+          hintCity={extractCityHint(location)}
+          hintCategory={inferCategory(parsedContent)}
+        />
       </div>
     </main>
   );
+}
+
+/** Estrae la prima parola "città-like" dalla location parsata */
+function extractCityHint(location: string | null): string | null {
+  if (!location) return null;
+  // Booking location: "Gifu, Shirakawa, Ijima 908-2, Giappone" → prima parola
+  // TicketOne location: "Stadio San Siro, Milano" → ultima parola
+  const parts = location
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (parts.length === 0) return null;
+  // Euristica: per ora ritorna l'ultima parola della prima parte (split per
+  // spazio) — funziona per "Milano", "Roma", "Stadio San Siro" → "Siro".
+  // Iterazione futura: usare Claude per disambiguare city in parsing time.
+  const candidate = parts[parts.length - 1];
+  // Se l'ultima parte e' un paese (Italia, Giappone), prova la penultima
+  if (/^(italia|italy|giappone|japan|francia|france|spagna|spain)$/i.test(candidate)) {
+    return parts[parts.length - 2] || null;
+  }
+  return candidate;
+}
+
+/** Mappa il type del parser → categoria del catalogo esperienze */
+function inferCategory(
+  pc: Record<string, unknown> | null
+): string | null {
+  if (!pc) return null;
+  const type = typeof pc.type === "string" ? pc.type : "";
+  if (type === "event_ticket") return "music";
+  if (type === "hotel_booking") return "travel";
+  if (type === "experience_voucher") return "wellness";
+  if (type === "tour_booking") return "culture";
+  return null;
 }
 
 /**
