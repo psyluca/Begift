@@ -46,7 +46,7 @@ const CATEGORIES: { value: ExperienceCategory; label: string; emoji: string }[] 
   { value: "music", label: "Musica", emoji: "🎵" },
 ];
 
-const CITIES = ["Roma", "Milano", "Firenze", "Venezia", "Napoli"];
+const CITIES = ["Roma", "Milano", "Firenze", "Venezia", "Napoli", "Lucca"];
 
 export default async function DiscoverPage({ searchParams }: Props) {
   if (process.env.NEXT_PUBLIC_FEATURE_EXPERIENCES_SHOP !== "true") {
