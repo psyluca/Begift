@@ -172,9 +172,12 @@ CREATE INDEX IF NOT EXISTS idx_experience_clicks_gift
 CREATE INDEX IF NOT EXISTS idx_experience_clicks_tracking
   ON public.experience_clicks (tracking_id);
 CREATE INDEX IF NOT EXISTS idx_experience_clicks_ip_recent
-  ON public.experience_clicks (ip_hash, clicked_at DESC)
-  WHERE clicked_at > (now() - interval '1 day');
-  -- ^ partial index per anti-fraud check rapido (ultime 24h)
+  ON public.experience_clicks (ip_hash, clicked_at DESC);
+  -- Nota: avevo originariamente usato WHERE clicked_at > (now() - interval
+  -- '1 day') per partial index, ma now() non e' IMMUTABLE quindi Postgres
+  -- rifiuta (errore 42P17). Full index funziona comunque bene per il
+  -- query pattern anti-fraud (ip_hash + range su clicked_at filtrato lato
+  -- query). Costo extra storage minimo per il volume previsto.
 
 -- ──────────────────────────────────────────────────────────────
 -- RLS — Row Level Security
