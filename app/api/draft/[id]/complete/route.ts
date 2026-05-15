@@ -132,16 +132,45 @@ export async function POST(
     sound: "bells",
   };
 
+  // Prima immagine hero estratta dall'HTML della mail (foto reale del
+  // posto/evento). Vedi lib/email-parser/extract-images.ts. Se presente,
+  // diventa il contenuto principale del gift (image), altrimenti
+  // fallback su content_type=message con solo il testo.
+  const heroImageUrls = Array.isArray(parsed.suggested_image_urls)
+    ? (parsed.suggested_image_urls as string[]).filter(
+        (u) => typeof u === "string"
+      )
+    : [];
+  const heroImage = heroImageUrls[0];
+  // Le altre immagini (se ce ne sono) vanno in extra_media per
+  // mostrarle come gallery secondaria (max 8 oltre la hero).
+  const extraMedia = heroImageUrls
+    .slice(1, 9)
+    .map((url) => ({ type: "image", url }));
+
+  const insertRow: Record<string, unknown> = {
+    creator_id: userData.user.id,
+    recipient_name: recipientName,
+    message,
+    packaging: defaultPackaging,
+  };
+  if (heroImage) {
+    insertRow.content_type = "image";
+    insertRow.content_url = heroImage;
+    // Mettiamo i dettagli testuali comunque, possono essere mostrati
+    // come caption sotto l'immagine se il render lo supporta.
+    if (contentText) insertRow.content_text = contentText;
+  } else if (contentText) {
+    insertRow.content_type = "message";
+    insertRow.content_text = contentText;
+  }
+  if (extraMedia.length > 0) {
+    insertRow.extra_media = extraMedia;
+  }
+
   const { data: gift, error: giftErr } = await admin
     .from("gifts")
-    .insert({
-      creator_id: userData.user.id,
-      recipient_name: recipientName,
-      message,
-      packaging: defaultPackaging,
-      content_type: contentText ? "message" : null,
-      content_text: contentText || null,
-    })
+    .insert(insertRow)
     .select("id")
     .single();
 

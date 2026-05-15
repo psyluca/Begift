@@ -32,6 +32,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { parseEmail } from "@/lib/email-parser/parse";
 import { notifyDraftReady } from "@/lib/email-parser/notify";
+import { pickHeroImages } from "@/lib/email-parser/extract-images";
 import type { InboundEmail } from "@/lib/email-parser/types";
 
 export const runtime = "nodejs";
@@ -199,12 +200,25 @@ export async function POST(req: NextRequest) {
         `[email-inbox] parse failed for draft ${draft.id}: ${result.error}`
       );
     } else {
+      // Estrai immagini hero dal body HTML (foto reale hotel/venue/evento)
+      // e mergeale dentro parsed_content.suggested_image_urls. Claude
+      // tipicamente ritorna null per quel campo perche' non puo' navigare;
+      // noi le troviamo direttamente nell'HTML embedded della mail.
+      const heroImages = email.bodyHtml ? pickHeroImages(email.bodyHtml, 5) : [];
+      const enrichedContent = {
+        ...(result.content || {}),
+        suggested_image_urls:
+          heroImages.length > 0
+            ? heroImages
+            : result.content?.suggested_image_urls || null,
+      };
+
       await admin
         .from("gift_drafts")
         .update({
           status: "ready",
           detected_merchant: result.content?.merchant || "unknown",
-          parsed_content: result.content,
+          parsed_content: enrichedContent,
           parser_confidence: result.content?.confidence ?? 0,
         })
         .eq("id", draft.id);

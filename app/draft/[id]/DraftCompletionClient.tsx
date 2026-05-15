@@ -86,6 +86,14 @@ export default function DraftCompletionClient({
   const location = (parsedContent?.location as string) || null;
   const merchant = detectedMerchant || "merchant";
   const confidence = parserConfidence ?? 0;
+  // Hero image estratta dall'HTML della mail (vedi pickHeroImages in
+  // /api/email-inbox). Se presente la mostriamo come anteprima.
+  const imageUrls = Array.isArray(parsedContent?.suggested_image_urls)
+    ? (parsedContent!.suggested_image_urls as unknown[]).filter(
+        (u): u is string => typeof u === "string"
+      )
+    : [];
+  const heroImage = imageUrls[0] || null;
 
   const submit = async () => {
     if (!recipientName.trim() || !message.trim()) {
@@ -126,6 +134,30 @@ export default function DraftCompletionClient({
         <h1 style={titleStyle}>{title}</h1>
         {subtitle && (
           <p style={{ color: MUTED, marginBottom: 16 }}>{subtitle}</p>
+        )}
+
+        {heroImage && (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img
+            src={heroImage}
+            alt={title}
+            style={{
+              width: "100%",
+              height: "auto",
+              maxHeight: 320,
+              objectFit: "cover",
+              borderRadius: 12,
+              marginBottom: 16,
+              display: "block",
+              background: "#f0ece6",
+            }}
+            onError={(e) => {
+              // Se l'immagine fallisce (link rotto, hotlink protetto),
+              // nasconde silenziosamente l'<img> invece di mostrare icona
+              // rotta. Il flusso prosegue senza immagine.
+              (e.target as HTMLImageElement).style.display = "none";
+            }}
+          />
         )}
 
         <div style={detailGridStyle}>
