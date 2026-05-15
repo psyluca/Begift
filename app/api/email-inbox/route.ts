@@ -179,11 +179,19 @@ export async function POST(req: NextRequest) {
     const result = await parseEmail(email);
 
     if (result.status === "failed") {
+      // Salviamo l'errore in parsed_content per debug (era solo in console
+      // log prima — invisibile senza accesso log Vercel real-time).
       await admin
         .from("gift_drafts")
         .update({
           status: "failed",
-          parsed_content: null,
+          parsed_content: {
+            _debug_error: result.error || "unknown",
+            _debug_body_length: email.bodyText.length,
+            _debug_html_length: email.bodyHtml?.length ?? 0,
+            _debug_model: result.llm_model_used || null,
+            _debug_duration_ms: result.duration_ms || null,
+          },
           parser_confidence: 0,
         })
         .eq("id", draft.id);
@@ -213,10 +221,18 @@ export async function POST(req: NextRequest) {
       });
     }
   } catch (e) {
+    const errMsg = (e as Error).message || String(e);
     console.error("[email-inbox] parser exception", e);
     await admin
       .from("gift_drafts")
-      .update({ status: "failed" })
+      .update({
+        status: "failed",
+        parsed_content: {
+          _debug_error: `EXCEPTION: ${errMsg}`,
+          _debug_body_length: email.bodyText.length,
+          _debug_html_length: email.bodyHtml?.length ?? 0,
+        },
+      })
       .eq("id", draft.id);
   }
 
