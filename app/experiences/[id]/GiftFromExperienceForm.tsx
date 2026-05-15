@@ -74,7 +74,11 @@ export default function GiftFromExperienceForm({
         return;
       }
       const data = (await res.json()) as { gift_id: string };
-      router.push(`/gift/${data.gift_id}/manage`);
+      // Redirect alla pagina del gift creato (route /gift/[id]).
+      // BeGift non ha attualmente una /manage dedicata: il sender vede
+      // la stessa pagina del destinatario, da cui puo' copiare il link
+      // di condivisione.
+      router.push(`/gift/${data.gift_id}`);
     } catch {
       setError("Errore di rete. Riprova fra un momento.");
     } finally {
@@ -94,7 +98,7 @@ export default function GiftFromExperienceForm({
           letterSpacing: "0.05em",
         }}
       >
-        Regalala
+        Completa il regalo
       </h3>
 
       <label style={labelStyle}>A chi vuoi regalarla?</label>
@@ -142,7 +146,7 @@ export default function GiftFromExperienceForm({
           boxShadow: "0 10px 28px rgba(212,83,126,.28)",
         }}
       >
-        {submitting ? "Sto creando il pacco…" : `Regala via ${partnerName} →`}
+        {submitting ? "Sto creando il pacco…" : "Completa il regalo →"}
       </button>
     </div>
   );

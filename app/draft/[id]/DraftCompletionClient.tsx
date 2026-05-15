@@ -129,7 +129,10 @@ export default function DraftCompletionClient({
         return;
       }
       const data = await res.json();
-      router.push(`/gift/${data.gift_id}/manage`);
+      // Route /gift/[id]/manage non esiste in BeGift, esiste solo
+      // /gift/[id] (apertura). Redirect dunque al gift creato come
+      // pagina di "verifica + share link" per il sender.
+      router.push(`/gift/${data.gift_id}`);
     } catch (e) {
       setError("Errore di rete. Riprova tra un momento.");
     } finally {
