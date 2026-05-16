@@ -150,14 +150,18 @@ export default function HomePage() {
             essere accompagnati invece di buttarsi nel CreateGiftClient
             completo. Stile sottile, sotto il bottone principale, non
             ruba focus al CTA primario. */}
-        <Link href="/start" style={{
-          marginTop: 14,
-          display: "inline-block",
-          fontSize: 14,
-          color: ACCENT,
-          textDecoration: "underline",
-          fontWeight: 600,
-        }}>
+        <Link
+          href="/start"
+          onClick={() => track("home_start_cta_clicked")}
+          style={{
+            marginTop: 14,
+            display: "inline-block",
+            fontSize: 14,
+            color: ACCENT,
+            textDecoration: "underline",
+            fontWeight: 600,
+          }}
+        >
           oppure ti accompagniamo passo passo →
         </Link>
         {/* Disclaimer onesto: copy riformulato il 12/05/2026 — rimosso

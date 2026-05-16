@@ -24,6 +24,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { track } from "@/lib/analytics";
 
 const ACCENT = "#D4537E";
 const INK = "#1a1a1a";
@@ -106,6 +107,7 @@ export default function StartFlowClient() {
 
   const handleIntentClick = (value: Intent) => {
     setIntent(value);
+    track("start_intent_picked", { intent: value });
     switch (value) {
       case "music":
         router.push(`/discover?category=music&for=${safeName}`);
@@ -126,6 +128,7 @@ export default function StartFlowClient() {
   };
 
   const handleReadySubtype = (subtype: ReadySubtype) => {
+    track("start_ready_subtype_picked", { subtype });
     if (subtype === "email") {
       // Fix UX 2026-05-16: /settings richiede login + non spiega niente.
       // /forward-mail e' la landing pubblica con i 3 step + indirizzo da
@@ -208,6 +211,11 @@ function StepName({
   onContinue: () => void;
 }) {
   const canContinue = value.trim().length > 0;
+  const handleContinue = () => {
+    if (!canContinue) return;
+    track("start_step1_completed");
+    onContinue();
+  };
   return (
     <div>
       <h1
@@ -240,7 +248,7 @@ function StepName({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={(e) => {
-          if (e.key === "Enter" && canContinue) onContinue();
+          if (e.key === "Enter" && canContinue) handleContinue();
         }}
         autoFocus
         placeholder="Mamma, Lucia, papà, mio fratello…"
@@ -277,7 +285,7 @@ function StepName({
 
       <button
         type="button"
-        onClick={onContinue}
+        onClick={handleContinue}
         disabled={!canContinue}
         style={{
           marginTop: 20,

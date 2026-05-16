@@ -18,6 +18,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import ExperiencesCrossSell from "@/components/ExperiencesCrossSell";
 import { fetchAuthed } from "@/lib/clientAuth";
+import { track } from "@/lib/analytics";
 
 const ACCENT = "#D4537E";
 const INK = "#1a1a1a";
@@ -130,6 +131,9 @@ export default function DraftCompletionClient({
         return;
       }
       const data = await res.json();
+      track("draft_completed", {
+        merchant: detectedMerchant || "unknown",
+      });
       // Dopo il create, vai alla pagina di personalizzazione packaging
       // (colori, fiocco, animazione, suono). Da li' il sender salva e
       // viene rediretto a /gift/[id] per condividere.

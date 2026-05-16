@@ -19,6 +19,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { fetchAuthed } from "@/lib/clientAuth";
+import { track } from "@/lib/analytics";
 import GiftSVG from "@/components/GiftSVG";
 import type { Packaging } from "@/types";
 
@@ -237,6 +238,10 @@ export default function GiftEditClient({ giftId }: { giftId: string }) {
         setSaveError(j.error || `HTTP ${res.status}`);
         return;
       }
+      track("packaging_saved", {
+        bowType: state.pkg.bowType,
+        sound: state.pkg.sound,
+      });
       router.push(`/gift/${giftId}`);
     } catch (e) {
       setSaveError((e as Error).message || "errore di rete");
