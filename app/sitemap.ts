@@ -96,6 +96,43 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly",
       priority: 0.5,
     },
+    // ── Catalogo esperienze + landing SEO dinamiche ─────────
+    {
+      url: `${baseUrl}/discover`,
+      lastModified: now,
+      changeFrequency: "daily",
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/start`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.85,
+    },
+    // /regali-a/[city] - le città principali del catalogo
+    ...["roma", "milano", "firenze", "venezia", "napoli", "lucca"].map(
+      (city) => ({
+        url: `${baseUrl}/regali-a/${city}`,
+        lastModified: now,
+        changeFrequency: "weekly" as const,
+        priority: 0.8,
+      })
+    ),
+    // /regali-per/[occasion] - occasioni mappate a tag catalogo
+    ...[
+      "coppia",
+      "anniversario",
+      "festa-mamma",
+      "festa-papa",
+      "foodie",
+      "compleanno",
+      "amici",
+    ].map((occ) => ({
+      url: `${baseUrl}/regali-per/${occ}`,
+      lastModified: now,
+      changeFrequency: "weekly" as const,
+      priority: 0.8,
+    })),
     {
       url: `${baseUrl}/security`,
       lastModified: now,
