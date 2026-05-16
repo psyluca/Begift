@@ -34,6 +34,8 @@ interface Props {
     city?: string;
     category?: ExperienceCategory;
     priceMax?: string;
+    /** Nome destinatario passato da /start (per preservare nel back link) */
+    for?: string;
   };
 }
 
@@ -87,11 +89,19 @@ export default async function DiscoverPage({ searchParams }: Props) {
       }}
     >
       <div style={{ maxWidth: 980, margin: "0 auto" }}>
-        {/* Back link al picker /start — sempre presente, fix UX feedback
-            Luca 2026-05-16: "una volta cliccato non si torna indietro" */}
+        {/* Back link al picker /start — sempre presente.
+            Se l'utente e' arrivato qui da /start con ?for=NOME, lo
+            preserviamo nel link cosi' /start riapre direttamente lo
+            step 1 (intent picker) col destinatario gia' scelto, invece
+            di farlo ricominciare da step 0 (input nome).
+            Fix UX feedback Luca 2026-05-16. */}
         <div style={{ marginBottom: 12 }}>
           <Link
-            href="/start"
+            href={
+              searchParams.for
+                ? `/start?for=${encodeURIComponent(searchParams.for)}`
+                : "/start"
+            }
             style={{
               fontSize: 13,
               color: MUTED,

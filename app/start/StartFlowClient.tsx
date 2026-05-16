@@ -22,8 +22,8 @@
  * possono ignorarlo (per ora nessuno lo consuma, ma e' future-proof).
  */
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 const ACCENT = "#D4537E";
 const INK = "#1a1a1a";
@@ -83,9 +83,23 @@ const INTENTS: IntentOption[] = [
 
 export default function StartFlowClient() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [step, setStep] = useState<0 | 1 | 2>(0);
   const [recipientName, setRecipientName] = useState("");
   const [, setIntent] = useState<Intent | null>(null);
+
+  // Se l'utente arriva con ?for=NOME (es. da 'Cambia idea' su /discover)
+  // salta direttamente allo step 1 (intent picker) col nome gia' compilato.
+  // Fix UX feedback Luca 2026-05-16: prima 'Cambia idea' faceva hard reset
+  // a step 0 perdendo il destinatario gia' scelto.
+  useEffect(() => {
+    const forParam = searchParams.get("for");
+    if (forParam && forParam.trim().length > 0) {
+      setRecipientName(forParam);
+      setStep(1);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const trimmedName = recipientName.trim();
   const safeName = encodeURIComponent(trimmedName);
