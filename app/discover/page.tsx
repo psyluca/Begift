@@ -87,6 +87,20 @@ export default async function DiscoverPage({ searchParams }: Props) {
       }}
     >
       <div style={{ maxWidth: 980, margin: "0 auto" }}>
+        {/* Back link al picker /start — sempre presente, fix UX feedback
+            Luca 2026-05-16: "una volta cliccato non si torna indietro" */}
+        <div style={{ marginBottom: 12 }}>
+          <Link
+            href="/start"
+            style={{
+              fontSize: 13,
+              color: MUTED,
+              textDecoration: "none",
+            }}
+          >
+            ← Cambia idea
+          </Link>
+        </div>
         <header style={{ marginBottom: 24 }}>
           <h1
             style={{
@@ -99,9 +113,27 @@ export default async function DiscoverPage({ searchParams }: Props) {
           >
             Esperienze da regalare
           </h1>
-          <p style={{ fontSize: 14, color: MUTED, margin: 0, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 14, color: MUTED, margin: "0 0 12px", lineHeight: 1.5 }}>
             Tour, cene, weekend, attività. Scegli cosa regalare in due click.
           </p>
+          {/* Mini-guida del flusso: l'utente deve capire che acquista
+              sul partner, poi torna su BeGift via mail forward */}
+          <div
+            style={{
+              fontSize: 12,
+              color: MUTED,
+              background: "#fbf9f5",
+              border: `1px solid ${BORDER}`,
+              borderRadius: 10,
+              padding: "10px 14px",
+              lineHeight: 1.5,
+            }}
+          >
+            🎁 <strong style={{ color: INK }}>Come funziona:</strong> scegli
+            un'esperienza qui sotto → ti portiamo dal partner (GetYourGuide) per
+            l'acquisto → quando ricevi la conferma via mail, la inoltri a
+            BeGift e prepariamo il pacco regalo emozionale.
+          </div>
         </header>
 
         {/* Filtri città */}

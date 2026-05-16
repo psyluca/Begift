@@ -113,8 +113,15 @@ export default function StartFlowClient() {
 
   const handleReadySubtype = (subtype: ReadySubtype) => {
     if (subtype === "email") {
-      router.push("/settings#email-parser");
+      // Fix UX 2026-05-16: /settings richiede login + non spiega niente.
+      // /forward-mail e' la landing pubblica con i 3 step + indirizzo da
+      // copiare, perfetta per onboarding-soft anche a utenti non loggati.
+      router.push("/forward-mail");
     } else {
+      // file upload → /create con flag per pre-selezionare il path
+      // "carica file" invece di "scrivi messaggio". Il flag mode=upload
+      // viene passato a /create per future iterazioni che potranno
+      // skipparci direttamente all'upload step.
       router.push(`/create?for=${safeName}&mode=upload`);
     }
   };
