@@ -244,6 +244,18 @@ function StepName({
         }}
         autoFocus
         placeholder="Mamma, Lucia, papà, mio fratello…"
+        // Attributi anti-autocomplete: Chrome senza questi vede un input
+        // 'name' generico e propone carte di credito/anagrafica salvate.
+        // Fix UX Luca 2026-05-16. autocomplete="off" da solo non basta
+        // in Chrome — usiamo name unico + data-form-type="other".
+        name="begift-recipient-nickname"
+        autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="words"
+        spellCheck={false}
+        data-form-type="other"
+        data-lpignore="true"
+        data-1p-ignore="true"
         style={{
           width: "100%",
           padding: "16px 18px",
