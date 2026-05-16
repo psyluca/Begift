@@ -145,6 +145,21 @@ export default function HomePage() {
           boxShadow: "0 10px 32px rgba(212,83,126,.35)",
           transition: "transform .15s",
         }}>{t("home.cta_create")}</Link>
+        {/* Secondary CTA: percorso guidato /start (intent picker
+            2-step). Pensato per utenti indecisi/nuovi che preferiscono
+            essere accompagnati invece di buttarsi nel CreateGiftClient
+            completo. Stile sottile, sotto il bottone principale, non
+            ruba focus al CTA primario. */}
+        <Link href="/start" style={{
+          marginTop: 14,
+          display: "inline-block",
+          fontSize: 14,
+          color: ACCENT,
+          textDecoration: "underline",
+          fontWeight: 600,
+        }}>
+          oppure ti accompagniamo passo passo →
+        </Link>
         {/* Disclaimer onesto: copy riformulato il 12/05/2026 — rimosso
             riferimento a "gratis durante la beta" che suggeriva un
             futuro pagamento (decisione di pricing non ancora presa,
