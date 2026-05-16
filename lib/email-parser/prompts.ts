@@ -173,6 +173,93 @@ JSON ATTESO:
   "warnings": null
 }`;
 
+const FEWSHOT_BOOKING = `[ESEMPIO BOOKING.COM]
+
+EMAIL DA: customer.service@booking.com
+OGGETTO: Grazie! La tua prenotazione per Hotel Belvedere, Roma e' confermata
+BODY:
+Gentile Mario,
+
+la tua prenotazione e' confermata.
+
+Hotel Belvedere
+Via Sistina 67, 00187 Roma, Italia
+
+Check-in:  giovedi' 12 marzo 2026 (dalle 14:00)
+Check-out: domenica 15 marzo 2026 (entro le 11:00)
+Durata: 3 notti, 2 ospiti
+
+Camera: Camera Deluxe con vista, letto matrimoniale
+Prezzo totale: EUR 642,00 (tasse incluse)
+Cancellazione gratuita fino al 10 marzo 2026
+
+Codice prenotazione: 6429906044
+PIN: 6931
+
+JSON ATTESO:
+{
+  "merchant": "booking",
+  "type": "hotel_booking",
+  "title": "Hotel Belvedere",
+  "subtitle": "3 notti a Roma con vista",
+  "event_date": "2026-03-12T14:00:00+01:00",
+  "event_end_date": "2026-03-15T11:00:00+01:00",
+  "location": "Via Sistina 67, Roma, Italia",
+  "tickets": null,
+  "voucher_code": null,
+  "booking_code": "6429906044",
+  "total_paid_cents": 64200,
+  "currency": "EUR",
+  "suggested_image_urls": null,
+  "suggested_youtube_query": "Hotel Belvedere Roma centro",
+  "suggested_message": "Ti ho prenotato 3 notti all'Hotel Belvedere a Roma dal 12 al 15 marzo 2026, camera deluxe con vista. Tre giorni per noi, in centro a due passi da Piazza di Spagna. Prenotazione 6429906044.",
+  "confidence": 0.94,
+  "warnings": null
+}`;
+
+const FEWSHOT_GETYOURGUIDE = `[ESEMPIO GETYOURGUIDE]
+
+EMAIL DA: bookings@getyourguide.com
+OGGETTO: Conferma prenotazione: Colosseo, Foro Romano e Palatino — tour saltafila
+BODY:
+Ciao Marco,
+
+la tua attivita' e' confermata. Ecco i dettagli del tuo voucher:
+
+Attivita': Colosseo, Foro Romano e Palatino: tour saltafila
+Localita': Roma, Italia
+Data: martedi' 20 maggio 2026
+Orario: 10:00
+Durata: 3 ore
+Partecipanti: 2 adulti
+Punto d'incontro: Piazza del Colosseo, vicino all'Arco di Costantino
+
+Numero di riferimento booking: GYG-IT-789456
+Voucher allegato in PDF
+
+Importo totale: EUR 98,00
+
+JSON ATTESO:
+{
+  "merchant": "getyourguide",
+  "type": "tour_booking",
+  "title": "Colosseo, Foro Romano e Palatino: tour saltafila",
+  "subtitle": "Tour guidato 3 ore",
+  "event_date": "2026-05-20T10:00:00+02:00",
+  "event_end_date": null,
+  "location": "Piazza del Colosseo, Roma",
+  "tickets": [{"section": null, "row": null, "seat": "Adulti", "quantity": 2}],
+  "voucher_code": null,
+  "booking_code": "GYG-IT-789456",
+  "total_paid_cents": 9800,
+  "currency": "EUR",
+  "suggested_image_urls": null,
+  "suggested_youtube_query": "Colosseo Roma tour virtuale",
+  "suggested_message": "Ti porto al Colosseo: tour guidato saltafila martedi' 20 maggio 2026 alle 10:00, per due adulti. Tre ore tra i monumenti piu' iconici di Roma, senza file. Prenotazione GYG-IT-789456.",
+  "confidence": 0.95,
+  "warnings": null
+}`;
+
 /**
  * Costruisce il prompt finale da inviare a Claude.
  */
@@ -184,9 +271,15 @@ export function buildPrompt(email: InboundEmail, detectedMerchant: SupportedMerc
   if (detectedMerchant === "smartbox" || detectedMerchant === "wonderbox") {
     fewshots.push(FEWSHOT_SMARTBOX);
   }
-  // Se merchant unknown o niente esempi specifici, includi entrambi come hint
+  if (detectedMerchant === "booking") {
+    fewshots.push(FEWSHOT_BOOKING);
+  }
+  if (detectedMerchant === "getyourguide") {
+    fewshots.push(FEWSHOT_GETYOURGUIDE);
+  }
+  // Se merchant unknown o niente esempi specifici, includi un mix come hint
   if (fewshots.length === 0) {
-    fewshots.push(FEWSHOT_TICKETONE, FEWSHOT_SMARTBOX);
+    fewshots.push(FEWSHOT_TICKETONE, FEWSHOT_BOOKING, FEWSHOT_SMARTBOX);
   }
 
   const exampleSection = fewshots.join("\n\n---\n\n");

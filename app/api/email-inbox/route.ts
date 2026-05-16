@@ -206,6 +206,14 @@ export async function POST(req: NextRequest) {
       // tipicamente ritorna null per quel campo perche' non puo' navigare;
       // noi le troviamo direttamente nell'HTML embedded della mail.
       const heroImages = email.bodyHtml ? pickHeroImages(email.bodyHtml, 5) : [];
+      // Diagnostic logging: per capire perche' a volte heroImages.length=0
+      // anche con HTML ricco (es. Booking) — vedere log Vercel
+      console.log(
+        `[email-inbox] draft ${draft.id} merchant=${result.content?.merchant} ` +
+          `htmlLen=${email.bodyHtml?.length ?? 0} ` +
+          `imagesFound=${heroImages.length} ` +
+          `firstImg=${heroImages[0]?.slice(0, 80) || "(none)"}`
+      );
 
       // Fallback YouTube: se non abbiamo immagini decenti (es. mail
       // TicketOne con solo logo), cerchiamo su YouTube usando la query
