@@ -17,6 +17,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import ExperiencesCrossSell from "@/components/ExperiencesCrossSell";
+import { fetchAuthed } from "@/lib/clientAuth";
 
 const ACCENT = "#D4537E";
 const INK = "#1a1a1a";
@@ -115,7 +116,7 @@ export default function DraftCompletionClient({
     setSubmitting(true);
     setError(null);
     try {
-      const res = await fetch(`/api/draft/${draftId}/complete`, {
+      const res = await fetchAuthed(`/api/draft/${draftId}/complete`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ recipientName, message }),

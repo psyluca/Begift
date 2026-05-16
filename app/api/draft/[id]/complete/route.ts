@@ -23,6 +23,26 @@ import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+/**
+ * Risolve user_id da Bearer (Authorization header) o da cookie SSR.
+ * Pattern gemello a /api/profile/me, /api/drafts, /api/draft/[id].
+ * Fix 2026-05-16: senza Bearer support l'utente loggato via
+ * localStorage riceveva 'not_authenticated' al click 'Completa e invia'.
+ */
+async function getUserId(req: NextRequest): Promise<string | null> {
+  const authHeader = req.headers.get("authorization");
+  if (authHeader?.startsWith("Bearer ")) {
+    const token = authHeader.slice(7);
+    const admin = createSupabaseAdmin();
+    const { data, error } = await admin.auth.getUser(token);
+    if (!error && data.user) return data.user.id;
+  }
+  const supabase = createSupabaseServer();
+  const { data } = await supabase.auth.getUser();
+  if (data.user) return data.user.id;
+  return null;
+}
+
 export async function POST(
   req: NextRequest,
   { params }: { params: { id: string } }
@@ -32,10 +52,9 @@ export async function POST(
     return NextResponse.json({ error: "feature_disabled" }, { status: 503 });
   }
 
-  // Auth
-  const supabase = createSupabaseServer();
-  const { data: userData } = await supabase.auth.getUser();
-  if (!userData.user) {
+  // Auth (Bearer o cookies)
+  const userId = await getUserId(req);
+  if (!userId) {
     return NextResponse.json({ error: "not_authenticated" }, { status: 401 });
   }
 
@@ -66,7 +85,7 @@ export async function POST(
   if (draftErr || !draft) {
     return NextResponse.json({ error: "draft_not_found" }, { status: 404 });
   }
-  if (draft.user_id !== userData.user.id) {
+  if (draft.user_id !== userId) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
   if (draft.status === "completed") {
@@ -159,7 +178,7 @@ export async function POST(
       : null;
 
   const insertRow: Record<string, unknown> = {
-    creator_id: userData.user.id,
+    creator_id: userId,
     recipient_name: recipientName,
     message,
     packaging: defaultPackaging,
