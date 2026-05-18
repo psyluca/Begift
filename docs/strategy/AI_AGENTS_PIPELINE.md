@@ -240,15 +240,24 @@ Pagina admin che mostra:
 
 ## Roadmap pragmatica agenti
 
-**Fase 1 (giu-lug 2026) — fondamenta**
-- Agent 5 (Performance Monitor) → first agent, basso rischio, alto valore
-- Agent 3 (Support Concierge) → riduce subito il carico email a Luca
+**Riprioritizzata 2026-05-17 dopo feedback Luca:** Concierge va PRIMA.
+Razionale: BeGift ha pochi utenti iniziali, Performance Monitor con
+~10 utenti produce solo rumore. Concierge invece dà valore dal 1°
+utilizzo (utente bloccato → abbandono silenzioso senza concierge,
+risolto con concierge). Durante user test imminenti, l'agent
+moltiplica la qualità del feedback (utenti che si bloccano vengono
+sbloccati e completano il flow, dando dati piu' attendibili).
 
-**Fase 2 (ago-set 2026) — scaling**
+**Fase 1 (giu 2026) — utenti**
+- Agent 3 (Support Concierge) → FIRST AGENT, sblocca conversion
+- Scope build: vedi docs/strategy/SUPPORT_CONCIERGE_BUILD_PLAN.md
+
+**Fase 2 (lug-ago 2026) — visibilita' e scaling**
+- Agent 5 (Performance Monitor) → quando hai 100+ utenti/mese
 - Agent 1 (Catalog Curator) → catalogo cresce solo
 - Agent 4 (Reel Writer) → marketing in autopilot
 
-**Fase 3 (ott-dic 2026) — qualità + sicurezza**
+**Fase 3 (set-dic 2026) — qualità + sicurezza**
 - Agent 2 (Content Quality) → eleva qualità copy
 - Agent 6 (Anti-fraud) → diventa necessario quando crescerai
 
@@ -285,10 +294,15 @@ Build 72-100h = 2-3 mesi parttime. OpEx <€50/mese = trascurabile vs revenue B2
 
 ---
 
-## Cosa farei IO al posto tuo
+## Cosa farei IO al posto tuo (riprioritizzato 2026-05-17)
 
-1. **Settimana 1**: solo Agent 5 (Performance Monitor) — 1 settimana di build, ti dà subito il "polso" del business
-2. **Settimana 3-4**: Agent 3 (Support Concierge) — appena hai 50+ utenti veri serve per non annegare nelle mail
-3. **Mese 2-3**: tutto il resto, prioritizzando 1 (Catalog) e 4 (Reel) per scaling crescita
+1. **Settimana 1-2**: Agent 3 (Support Concierge) → first agent.
+   Scope tecnico completo in docs/strategy/SUPPORT_CONCIERGE_BUILD_PLAN.md
+2. **Settimana 3-4**: validazione su user test reali. Vedere se
+   risponde bene, se la cassetta postale di Luca si svuota davvero.
+3. **Mese 2**: Agent 5 (Performance Monitor) — quando inizi ad avere
+   100+ utenti/mese, allora il dato e' segnale, non rumore.
+4. **Mese 3+**: tutto il resto, prioritizzando 1 (Catalog) e 4 (Reel)
+   per scaling crescita.
 
 Non implementare TUTTI insieme: ogni agente va validato 2 settimane prima di passare al next, altrimenti diventi schiavo del debug AI invece che del prodotto.
