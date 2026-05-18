@@ -19,14 +19,17 @@ Tutto è committato localmente, devi solo:
 
 2. **Vercel** → aspetta build dell'ultimo commit Ready → **Promote to Production**
 
-3. **Apri Supabase SQL Editor** e lancia 1 query opzionale (vedi sotto, sezione "SQL da eseguire")
+3. **Apri Supabase SQL Editor** e lancia 2 query (vedi sotto, sezione "SQL da eseguire")
 
-4. **Leggi 3 documenti strategici** che ti ho lasciato:
+4. **Leggi 4 documenti strategici** che ti ho lasciato:
    - `docs/strategy/MONETIZATION_2.0.md` — 8 modelli di revenue + roadmap 12 mesi
    - `docs/strategy/AI_AGENTS_PIPELINE.md` — 6 agenti AI per scaling autonomo
+   - `docs/strategy/SUPPORT_CONCIERGE_BUILD_PLAN.md` — scope tecnico del concierge
    - Questo file
 
-Tempo totale tuo: 15-20 minuti.
+5. **Concierge IMPLEMENTATO** durante la notte (commit `09b118e`). Dopo aver detto "fallo", ho costruito tutto il PRIMO agent AI (Support Concierge). Setup richiesto: vedi sezione "ADDENDUM Concierge" in fondo.
+
+Tempo totale tuo: 20-30 minuti.
 
 ---
 
@@ -148,3 +151,70 @@ No, se:
 - Vuoi continuare solo a fixare bug puntuali del POC senza aprire fronti nuovi
 
 Decidi tu. Io ho seminato. Buon mattino. 🌅
+
+---
+
+## ADDENDUM — Support Concierge implementato
+
+Dopo che hai detto "fallo" (alle ~4 del mattino), ho costruito tutto.
+
+**Commit**: `09b118e` (l'ultimo dei 12 notturni).
+
+**File creati**:
+- `supabase/migrations/024_support_chats.sql` — tabella chat + indici + RLS
+- `lib/support/knowledge-base.ts` — KB strutturata (FAQ, flussi, problemi, escalation)
+- `lib/support/system-prompt.ts` — prompt builder con KB inline
+- `app/api/support/chat/route.ts` — endpoint POST Claude Sonnet 4
+- `components/SupportConcierge/index.tsx` — FAB + chat panel
+- `app/layout.tsx` — mount globale
+
+**Setup per attivare (5 min)**:
+
+1. **Migration su Supabase**: SQL Editor → paste contenuto di `024_support_chats.sql` → Run
+
+2. **Env vars su Vercel** (Settings → Environment Variables → Add):
+   - `NEXT_PUBLIC_FEATURE_SUPPORT_CONCIERGE` = `true` (Production + Preview)
+   - `SUPPORT_CONCIERGE_MODEL` = `claude-sonnet-4-5` (opzionale, default funziona)
+   - `SUPPORT_ESCALATION_EMAIL` = `psyluca@gmail.com` (opzionale, default ok)
+   - `ANTHROPIC_API_KEY` + `RESEND_API_KEY` già presenti
+
+3. **Redeploy senza build cache** dopo le env vars
+
+**Test rapido dopo deploy**:
+- Apri `begift.app` in incognito
+- Vedi il FAB rosa 💬 in basso a destra
+- Click → pannello chat con welcome + 3 quick replies
+- Prova: "Come funziona BeGift?" → risposta in italiano caldo + link cliccabili
+- Prova: "non funziona... non funziona..." → escalation, ricevi mail
+- Controlla `support_chats` table su Supabase: vedi le righe
+
+**Costo Anthropic stimato**:
+- Sonnet 4: ~€0.01-0.02 per chat
+- Fase POC (10-20 chat/giorno): **€3-12/mese**
+
+**Cosa NON ho fatto**:
+- Dashboard admin `/admin/support` (Fase 2, dopo validazione)
+- Streaming responses (basta JSON sync per ora)
+- Vector DB / RAG vero (KB inline basta a BeGift attuale)
+- Multi-language (solo italiano, l'algoritmo capisce comunque EN se ti scrivono)
+
+**Per disattivare**: setta `NEXT_PUBLIC_FEATURE_SUPPORT_CONCIERGE=false` su Vercel → ricarica → il FAB sparisce. Nessuna config DB persistente da rimuovere.
+
+---
+
+## Commit definitivo notturno: 12
+
+Lista finale:
+1. `81d1d66` — fix copy "primo regalo gratis"
+2. `75e299a` — fewshot Booking+GYG parser + logging immagini
+3. `a3efe26` — cron cleanup-drafts + CTA home /start
+4. `f5da33d` — SEO landing pages
+5. `6fd6b47` — Plausible event tracking
+6. `f3dada5` — doc Monetization 2.0 + AI Agents Pipeline
+7. `1c4dfe2` — SQL update GYG reali 5 esperienze top
+8. `24a6d59` — handoff doc v1
+9. `dd73842` — riprioritizzo Concierge + build plan
+10. `09b118e` — Support Concierge AI agent **implementato**
+11. (questo addendum) — handoff doc v2
+
+Buon mattino. 🌅
