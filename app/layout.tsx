@@ -11,6 +11,7 @@ import Footer from "@/components/Footer";
 // è ancora in components/ per eventuale riuso futuro.
 import { UsernameOnboarding } from "@/components/UsernameOnboarding";
 import { PushAutoHeal } from "@/components/PushAutoHeal";
+import SupportConcierge from "@/components/SupportConcierge";
 import { baseGraph } from "@/lib/structured-data";
 
 export const viewport: Viewport = {
@@ -162,6 +163,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               il drift "permission granted ma 0 device in DB". Una volta
               per sessione browser. */}
           <PushAutoHeal/>
+          {/* SupportConcierge: FAB chat di aiuto AI. Self-gating via
+              feature flag NEXT_PUBLIC_FEATURE_SUPPORT_CONCIERGE: se
+              false ritorna null senza render del bottone. */}
+          <SupportConcierge/>
         </I18nProvider>
       </body>
     </html>

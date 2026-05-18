@@ -31,6 +31,12 @@
  *   - start_ready_subtype_picked: scelta mail/file step 3 in /start {subtype}
  *   - draft_completed: 'Completa e invia' su /draft/[id] {merchant}
  *   - packaging_saved: 'Salva e condividi' su /gift/[id]/edit {bowType, sound}
+ *
+ * Eventi Support Concierge (aggiunti 2026-05-17):
+ *   - concierge_opened: utente apre il FAB chat
+ *   - concierge_message_sent: utente invia un messaggio
+ *   - concierge_quick_reply_clicked: tap su una delle 3 quick replies {reply}
+ *   - concierge_escalated: l'AI ha escalato a Luca via email
  */
 
 declare global {
