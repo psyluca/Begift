@@ -16,8 +16,7 @@
 --     perche' attivo tutto l'anno (la versione Torre del Lago era
 --     stagionale luglio-agosto).
 --
--- TODO Luca: image_url lasciato NULL — quando hai 30s, prendi un
--- 'tour_img/<hash>.jpg' dal CDN dalla pagina dei due prodotti.
+-- image_url forniti da Luca 2026-05-18.
 -- ============================================================
 
 BEGIN;
@@ -26,6 +25,7 @@ BEGIN;
 UPDATE public.experiences SET
   title = 'Da Pisa o Lucca: tour di mezza giornata sulle colline toscane con degustazione',
   external_url = 'https://www.getyourguide.com/it-it/pisa-l157/tuscan-hills-half-day-wine-tour-from-pisa-or-lucca-t49379/',
+  image_url = 'https://cdn.getyourguide.com/image/format=auto,fit=crop,gravity=auto,quality=60,height=590,dpr=2/tour_img/54d116cccb267.jpeg',
   price_min_cents = 9000,
   price_max_cents = NULL,
   affiliate_url_template = 'https://www.getyourguide.com/it-it/pisa-l157/tuscan-hills-half-day-wine-tour-from-pisa-or-lucca-t49379/?partner_id=17&cmp={gift_id}',
@@ -38,6 +38,7 @@ UPDATE public.experiences SET
   description = 'Concerti pucciniani all''Oratorio di San Giuseppe al Museo della Cattedrale di Lucca (dietro la chiesa di San Giovanni). Repertori diversi ogni sera della settimana: arie di Puccini, opera italiana, brani napoletani. 1 ora circa.',
   city = 'Lucca',
   external_url = 'https://www.getyourguide.com/it-it/lucca-l1517/lucca-puccini-festival-opera-recitals-and-concerts-t262952/',
+  image_url = 'https://cdn.getyourguide.com/image/format=auto,fit=crop,gravity=auto,quality=60,height=555,dpr=2/tour_img/5d133f274ff68.jpeg',
   price_min_cents = 3300,
   price_max_cents = NULL,
   affiliate_url_template = 'https://www.getyourguide.com/it-it/lucca-l1517/lucca-puccini-festival-opera-recitals-and-concerts-t262952/?partner_id=17&cmp={gift_id}',
