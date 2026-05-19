@@ -19,6 +19,9 @@ export interface Profile {
   display_name: string | null;
   avatar_url:   string | null;
   created_at:   string;
+  /** Migration 025: true se ha un business_account attivo. Si setta
+   *  via trigger DB al INSERT business_accounts. */
+  is_business?: boolean;
 }
 
 export interface Gift {
@@ -40,6 +43,31 @@ export interface Gift {
   opened_at?:        string | null;
   /** Timestamp della prima condivisione (migration 003). */
   shared_at?:        string | null;
+  /** Migration 025: business gift fields. */
+  is_business_gift?:    boolean;
+  business_account_id?: string | null;
+  coupon_file_url?:     string | null;
+  open_token?:          string | null;
+}
+
+/**
+ * Migration 025: account B2B (massaggiatrici, estetisti, fotografi, ecc.)
+ * Una riga per profilo (1-to-1). Onboarding manuale da Luca via admin client.
+ */
+export interface BusinessAccount {
+  id:                string;
+  user_id:           string;
+  business_name:    string;
+  contact_email:    string;
+  contact_phone:    string | null;
+  logo_url:         string | null;
+  brand_color:      string | null;
+  status:           "pending" | "active" | "suspended" | "archived";
+  internal_notes:   string | null;
+  pilot_started_at: string | null;
+  pilot_ends_at:    string | null;
+  created_at:       string;
+  updated_at:       string;
 }
 
 export interface Reaction {

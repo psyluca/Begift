@@ -26,7 +26,8 @@ export type FeatureFlagName =
   | "ENABLE_3D_EXPERIENCE"      // Scena 3D in produzione (fallback automatico a 2D se off o device non supportato)
   | "ENABLE_TIERS"              // UI + backend per Free/LowCost/Pro tier
   | "ENABLE_CREDITS_WALLET"     // Wallet di crediti (sezione 11 del MARKET_ROADMAP)
-  | "ENABLE_GIFT_CHAIN";        // CTA "ringrazia con un regalo" dopo l'apertura
+  | "ENABLE_GIFT_CHAIN"         // CTA "ringrazia con un regalo" dopo l'apertura
+  | "FEATURE_BUSINESS_DASHBOARD"; // Dashboard B2B per professionisti (coupon-regalo)
 
 /**
  * Reads a flag synchronously. Works in both client and server components
@@ -61,6 +62,9 @@ export function isFeatureEnabled(name: FeatureFlagName): boolean {
     case "ENABLE_GIFT_CHAIN":
       raw = process.env.NEXT_PUBLIC_ENABLE_GIFT_CHAIN;
       break;
+    case "FEATURE_BUSINESS_DASHBOARD":
+      raw = process.env.NEXT_PUBLIC_FEATURE_BUSINESS_DASHBOARD;
+      break;
   }
   if (!raw) return false;
   const normalised = raw.trim().toLowerCase();
@@ -92,6 +96,7 @@ export function getAllFlags(): Record<FeatureFlagName, boolean> {
     "ENABLE_TIERS",
     "ENABLE_CREDITS_WALLET",
     "ENABLE_GIFT_CHAIN",
+    "FEATURE_BUSINESS_DASHBOARD",
   ];
   const out = {} as Record<FeatureFlagName, boolean>;
   names.forEach((n) => { out[n] = isFeatureEnabled(n); });
