@@ -128,7 +128,7 @@ export default function ForwardMailPage() {
           <Step
             n={1}
             title="Compri qualcosa per qualcuno"
-            text="Biglietti per un concerto, un cofanetto Smartbox, un tour, una notte in hotel. Ricevi la conferma via mail."
+            text="Un'esperienza, un tour, un biglietto, una notte in hotel: ricevi la conferma via mail."
             emoji="🎫"
           />
           <Step
@@ -165,12 +165,12 @@ export default function ForwardMailPage() {
           }}
         >
           {[
-            { icon: "🎤", label: "Concerti TicketOne" },
-            { icon: "⚽", label: "Eventi sportivi Vivaticket" },
-            { icon: "🎁", label: "Cofanetti Smartbox" },
             { icon: "🌍", label: "Esperienze GetYourGuide" },
-            { icon: "🏨", label: "Hotel Booking" },
+            { icon: "🎫", label: "Biglietti per eventi" },
+            { icon: "🎁", label: "Cofanetti esperienza" },
+            { icon: "🏨", label: "Hotel e soggiorni" },
             { icon: "🚄", label: "Treni Trenitalia" },
+            { icon: "✉️", label: "Altre mail di acquisto" },
           ].map(({ icon, label }) => (
             <div
               key={label}

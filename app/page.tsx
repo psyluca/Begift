@@ -102,9 +102,8 @@ export default function HomePage() {
           }
         `}</style>
         {/* Badge "Beta pubblica" rimosso il 12/05/2026 per posizionamento
-            più maturo agli occhi dei partner commerciali (TradeDoubler/
-            Smartbox in fase di approvazione affiliate). Disclaimer onesto
-            mantenuto in versione più morbida sotto il CTA. */}
+            più maturo. Disclaimer onesto mantenuto in versione più
+            morbida sotto il CTA. */}
         <h1 style={{
           fontSize: "clamp(34px,9vw,60px)", fontWeight: 900,
           letterSpacing: "-2px", color: DEEP, margin: "0 0 18px",

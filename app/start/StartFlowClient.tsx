@@ -519,7 +519,7 @@ function StepReadySubtype({
             emoji: "📧",
             title: "Una mail di conferma",
             subtitle:
-              "Hai comprato online (TicketOne, Booking, Smartbox…). La inoltri a BeGift e prepariamo il pacco.",
+              "Hai comprato qualcosa online e ricevuto la conferma via mail. La inoltri a BeGift e prepariamo il pacco.",
             gradient: "linear-gradient(135deg,#3a78c2,#7eb3ed)",
           }}
           onPick={() => onPick("email")}

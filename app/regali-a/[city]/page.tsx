@@ -189,8 +189,8 @@ export default async function CityLandingPage({ params }: Props) {
             }}
           >
             Funziona in tre passaggi: scegli un'esperienza qui sopra,
-            completi l'acquisto sul sito del partner (GetYourGuide,
-            Booking, Smartbox...), poi inoltri la mail di conferma a{" "}
+            completi l'acquisto su GetYourGuide, poi inoltri la mail
+            di conferma a{" "}
             <code style={{ background: SOFT_BG, padding: "1px 6px", borderRadius: 4 }}>
               inbox@plans.begift.app
             </code>{" "}

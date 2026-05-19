@@ -250,9 +250,9 @@ export default async function DiscoverPage({ searchParams }: Props) {
             lineHeight: 1.6,
           }}
         >
-          BeGift mostra esperienze offerte da partner come GetYourGuide,
-          Booking, Smartbox via Awin. Potremmo ricevere una piccola commissione
-          sui regali finalizzati, senza alcun costo aggiuntivo per te.{" "}
+          BeGift mostra esperienze offerte dal partner GetYourGuide.
+          Potremmo ricevere una piccola commissione sui regali finalizzati,
+          senza alcun costo aggiuntivo per te.{" "}
           <Link href="/privacy" style={{ color: ACCENT }}>
             Privacy & partner
           </Link>
