@@ -44,7 +44,9 @@ const CSP = [
   // frame-src: domini consentiti per <iframe> embed dentro i regali.
   // Senza questa direttiva, fallback a default-src 'self' bloccava
   // gli embed YouTube/Spotify/Vimeo (bug riportato 2026-04-25).
-  "frame-src 'self' https://www.youtube.com https://youtube.com https://www.youtube-nocookie.com https://open.spotify.com https://player.vimeo.com https://player.twitch.tv https://w.soundcloud.com",
+  // supabase.co aggiunto 2026-05-18 per anteprima inline PDF coupon
+  // (BeGift Business): senza, l'iframe veniva bloccato in silenzio.
+  "frame-src 'self' https://www.youtube.com https://youtube.com https://www.youtube-nocookie.com https://open.spotify.com https://player.vimeo.com https://player.twitch.tv https://w.soundcloud.com https://*.supabase.co",
   "frame-ancestors 'none'",
   "form-action 'self'",
   "base-uri 'self'",

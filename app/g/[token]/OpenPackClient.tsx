@@ -215,8 +215,17 @@ function Shell({
         }}
       >
         <div>
-          impacchettato da{" "}
-          <strong style={{ color: accent }}>BeGift</strong>
+          Impacchettato da{" "}
+          <a
+            href="/"
+            style={{
+              fontWeight: 800,
+              textDecoration: "none",
+              color: INK,
+            }}
+          >
+            Be<span style={{ color: ACCENT_DEFAULT }}>Gift</span>
+          </a>
         </div>
         <div style={{ fontSize: 10, color: "#bbb", marginTop: 2 }}>
           pacchetti regalo digitali
@@ -239,6 +248,10 @@ function ClosedView({
 }) {
   const paper = data.packaging?.paperColor || "#F4C0D1";
   const ribbon = data.packaging?.ribbonColor || accent;
+  // tonalita' piu' scura per i lati 3D / interno scatola — derivata
+  // mescolando il colore carta con nero al 22%.
+  const paperShade = shadeColor(paper, -0.22);
+  const inside = shadeColor(paper, -0.55);
 
   return (
     <div style={{ textAlign: "center" }}>
@@ -258,7 +271,9 @@ function ClosedView({
         </>
       )}
 
-      {/* PACCO 3D in 2 parti per consentire l'apertura animata */}
+      {/* PACCO 3D in SVG. 2 gruppi raggruppati: lid (coperchio + fiocco)
+          e box (corpo della scatola). Il lid si stacca animato verso
+          l'alto, lasciando vedere il box "aperto". */}
       <button
         type="button"
         onClick={onOpen}
@@ -269,93 +284,108 @@ function ClosedView({
           border: "none",
           cursor: animating ? "default" : "pointer",
           padding: 20,
-          margin: "20px auto",
+          margin: "16px auto",
           display: "block",
-          animation: animating ? "none" : "begiftBoxFloat 2.6s ease-in-out infinite",
+          animation: animating ? "none" : "begiftBoxFloat 2.8s ease-in-out infinite",
         }}
       >
-        <div
-          style={{
-            width: 200,
-            height: 200,
-            position: "relative",
-          }}
+        <svg
+          width="260"
+          height="260"
+          viewBox="0 0 260 260"
+          xmlns="http://www.w3.org/2000/svg"
+          style={{ overflow: "visible", filter: `drop-shadow(0 14px 28px ${accent}33)` }}
         >
-          {/* Base del pacco (parte sotto) */}
-          <div
+          {/* BOX (corpo scatola) — visibile sempre */}
+          <g
             style={{
-              position: "absolute",
-              inset: 0,
-              background: paper,
-              borderRadius: 12,
-              boxShadow: `0 12px 32px ${accent}33`,
               animation: animating
-                ? `begiftBoxBaseFade ${OPENING_MS}ms ease-out forwards`
+                ? `begiftBoxFade ${OPENING_MS}ms ease-out forwards`
                 : "none",
+              transformOrigin: "130px 200px",
             }}
-          />
-          {/* Nastro verticale (stessa base) */}
-          <div
+          >
+            {/* Lato destro (prospettiva) */}
+            <polygon
+              points="210,90 240,70 240,210 210,230"
+              fill={paperShade}
+            />
+            {/* Faccia frontale */}
+            <polygon
+              points="50,90 210,90 210,230 50,230"
+              fill={paper}
+            />
+            {/* Lato superiore aperto (interno scatola, visibile quando il
+                lid e' via) */}
+            <polygon
+              points="50,90 210,90 240,70 80,70"
+              fill={inside}
+            />
+            {/* Nastro verticale (sul fronte) */}
+            <rect x="118" y="90" width="24" height="140" fill={ribbon} />
+            {/* Nastro verticale (sul lato) */}
+            <polygon
+              points="210,160 240,140 240,156 210,176"
+              fill={shadeColor(ribbon, -0.18)}
+            />
+          </g>
+
+          {/* LID (coperchio + fiocco) — vola via in animazione */}
+          <g
             style={{
-              position: "absolute",
-              left: "50%",
-              top: 0,
-              bottom: 0,
-              width: 20,
-              transform: "translateX(-50%)",
-              background: ribbon,
-              animation: animating
-                ? `begiftBoxBaseFade ${OPENING_MS}ms ease-out forwards`
-                : "none",
-            }}
-          />
-          {/* Nastro orizzontale (stessa base) */}
-          <div
-            style={{
-              position: "absolute",
-              top: "50%",
-              left: 0,
-              right: 0,
-              height: 20,
-              transform: "translateY(-50%)",
-              background: ribbon,
-              animation: animating
-                ? `begiftBoxBaseFade ${OPENING_MS}ms ease-out forwards`
-                : "none",
-            }}
-          />
-          {/* COPERCHIO (top half + fiocco) → vola via in opening */}
-          <div
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              height: "50%",
-              background: paper,
-              borderTopLeftRadius: 12,
-              borderTopRightRadius: 12,
-              borderBottom: `2px solid ${ribbon}99`,
               animation: animating
                 ? `begiftLidFly ${OPENING_MS}ms cubic-bezier(0.4, 0.0, 0.6, 1) forwards`
                 : "none",
-              transformOrigin: "50% 100%",
+              transformOrigin: "130px 60px",
             }}
           >
-            {/* Fiocco al centro del coperchio */}
-            <div
-              style={{
-                position: "absolute",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, 0)",
-                fontSize: 46,
-              }}
-            >
-              🎀
-            </div>
-          </div>
-        </div>
+            {/* Lato destro coperchio */}
+            <polygon
+              points="218,55 248,35 248,75 218,95"
+              fill={paperShade}
+            />
+            {/* Faccia frontale coperchio */}
+            <polygon
+              points="42,55 218,55 218,95 42,95"
+              fill={paper}
+            />
+            {/* Top coperchio */}
+            <polygon
+              points="42,55 218,55 248,35 72,35"
+              fill={shadeColor(paper, 0.08)}
+            />
+            {/* Nastro verticale sul coperchio (continuo del nastro box) */}
+            <rect x="118" y="55" width="24" height="40" fill={ribbon} />
+            <polygon
+              points="118,55 142,55 154,45 130,45"
+              fill={shadeColor(ribbon, 0.06)}
+            />
+            <polygon
+              points="142,55 142,95 154,85 154,45"
+              fill={shadeColor(ribbon, -0.18)}
+            />
+            {/* Fiocco — 2 ovali laterali + nodo centrale */}
+            <g transform="translate(130, 38)">
+              {/* loop sinistro */}
+              <ellipse cx="-18" cy="0" rx="20" ry="14" fill={ribbon} />
+              <ellipse cx="-18" cy="0" rx="10" ry="7" fill={shadeColor(ribbon, -0.25)} />
+              {/* loop destro */}
+              <ellipse cx="18" cy="0" rx="20" ry="14" fill={ribbon} />
+              <ellipse cx="18" cy="0" rx="10" ry="7" fill={shadeColor(ribbon, -0.25)} />
+              {/* nodo centrale */}
+              <rect x="-6" y="-9" width="12" height="18" rx="3" fill={shadeColor(ribbon, 0.1)} />
+              {/* code del fiocco che cadono */}
+              <polygon
+                points="-3,8 -12,28 -4,24 0,12"
+                fill={ribbon}
+              />
+              <polygon
+                points="3,8 12,28 4,24 0,12"
+                fill={ribbon}
+              />
+            </g>
+          </g>
+        </svg>
       </button>
 
       {!animating && (
@@ -364,7 +394,7 @@ function ClosedView({
             style={{
               fontSize: 13,
               color: MUTED,
-              marginTop: 20,
+              marginTop: 8,
               marginBottom: 16,
             }}
           >
@@ -389,7 +419,6 @@ function ClosedView({
         </>
       )}
 
-      {/* CSS keyframes — definiti inline, scoped al sub-tree */}
       <style>{`
         @keyframes begiftBoxFloat {
           0%, 100% { transform: translateY(0) rotate(-1deg); }
@@ -397,25 +426,44 @@ function ClosedView({
         }
         @keyframes begiftLidFly {
           0% {
-            transform: translateY(0) rotate(0deg);
+            transform: translateY(0) rotate(0deg) scale(1);
             opacity: 1;
           }
-          40% {
-            transform: translateY(-30px) rotate(-8deg);
+          25% {
+            transform: translateY(-30px) rotate(-6deg) scale(1.02);
             opacity: 1;
           }
           100% {
-            transform: translateY(-220px) rotate(25deg);
+            transform: translateY(-280px) rotate(28deg) scale(0.7);
             opacity: 0;
           }
         }
-        @keyframes begiftBoxBaseFade {
-          0%, 60% { opacity: 1; transform: scale(1); }
-          100% { opacity: 0; transform: scale(0.85); }
+        @keyframes begiftBoxFade {
+          0%, 70% { opacity: 1; transform: translateY(0) scale(1); }
+          100% { opacity: 0; transform: translateY(4px) scale(0.92); }
         }
       `}</style>
     </div>
   );
+}
+
+/**
+ * Shade a hex color toward black (negative percent) or white (positive percent).
+ * Es: shadeColor('#F4C0D1', -0.2) → ~20% piu' scuro.
+ */
+function shadeColor(hex: string, percent: number): string {
+  const m = hex.replace("#", "").match(/^([0-9a-f]{6})$/i);
+  if (!m) return hex;
+  const num = parseInt(m[1], 16);
+  let r = (num >> 16) & 0xff;
+  let g = (num >> 8) & 0xff;
+  let b = num & 0xff;
+  const t = percent < 0 ? 0 : 255;
+  const p = Math.abs(percent);
+  r = Math.round((t - r) * p + r);
+  g = Math.round((t - g) * p + g);
+  b = Math.round((t - b) * p + b);
+  return "#" + [r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("");
 }
 
 function OpenedView({
