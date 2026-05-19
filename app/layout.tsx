@@ -93,15 +93,6 @@ export const metadata: Metadata = {
   },
   verification: {
     google: "auQIQhkfwZJ2ZOCrZJl-TAQmBU5vOT7Lwd405_RU0zQ",
-    other: {
-      // TradeDoubler site verification per attivazione publisher account
-      // (Maria, TradeDoubler IT). Loro chiedevano un commento HTML
-      // <!--Tradedoubler site verification 3483658-->, ma Next.js App
-      // Router non supporta nativamente commenti HTML nel <head>:
-      // usiamo meta tag con stesso site id come variante semanticamente
-      // equivalente. Comunicato a TradeDoubler il 12/05/2026.
-      "tradedoubler-site-verification": "3483658",
-    },
   },
   category: "Lifestyle",
 };
