@@ -12,7 +12,7 @@
  * staccato che lungo.
  */
 
-export const KB_VERSION = "2026-05-17";
+export const KB_VERSION = "2026-05-18";
 
 export const KB_PRODUCT = {
   name: "BeGift",
@@ -36,17 +36,17 @@ export const KB_FLOWS = {
   email_parser: {
     path: "/forward-mail",
     description:
-      "Inoltri una mail di conferma acquisto (TicketOne, Booking, Smartbox, GetYourGuide) a un indirizzo BeGift, ti prepariamo un pacco regalo pre-popolato.",
+      "Inoltri una mail di conferma acquisto (esperienza, biglietto, voucher, hotel) a un indirizzo BeGift, ti prepariamo un pacco regalo pre-popolato.",
     address: "inbox@plans.begift.app",
     activation: "Settings > toggle 'Inoltro mail → regalo automatico'. Senza attivazione le mail vengono droppate per privacy.",
     delay: "Il parsing dura 10-15 secondi. La bozza appare in /drafts.",
-    supported_merchants: "TicketOne, Booking, Smartbox, GetYourGuide, Vivaticket, Wonderbox.",
+    supported_merchants: "BeGift prova a leggere qualsiasi mail di conferma acquisto. Funziona meglio con GetYourGuide (partner ufficiale). Per altre prove a inoltrare la mail, spesso BeGift capisce comunque.",
   },
   experiences_shop: {
     path: "/discover",
     description:
-      "Catalogo curato di esperienze giftabili (tour, cene, weekend). Click esperienza → pagina dettaglio → 'Acquista su <partner>' → vai a partner per pagare. Dopo acquisto, mail di conferma da inoltrare per creare il pacco.",
-    partners: "Principalmente GetYourGuide. Awin per Booking/Smartbox in fase di setup.",
+      "Catalogo curato di esperienze giftabili (tour, cene, weekend). Click esperienza → pagina dettaglio → 'Acquista su GetYourGuide' → vai al partner per pagare. Dopo acquisto, mail di conferma da inoltrare per creare il pacco.",
+    partners: "GetYourGuide e' l'unico partner commerciale attivo.",
   },
   drafts: {
     path: "/drafts",
@@ -81,7 +81,7 @@ export const KB_FAQ_ENTRIES: Array<{ q: string; a: string }> = [
   },
   {
     q: "Come funziona il parser email?",
-    a: "Vai in Settings, attiva 'Inoltro mail', copi l'indirizzo inbox@plans.begift.app. Inoltri lì una mail di conferma (TicketOne, Booking, Smartbox...). In 10-15 secondi appare una bozza in /drafts.",
+    a: "Vai in Settings, attiva 'Inoltro mail', copi l'indirizzo inbox@plans.begift.app. Inoltri lì la mail di conferma di un acquisto fatto online (esperienza, biglietto, voucher, hotel). In 10-15 secondi appare una bozza in /drafts.",
   },
   {
     q: "La mia mail inoltrata non e' arrivata in /drafts. Cosa faccio?",
@@ -89,7 +89,7 @@ export const KB_FAQ_ENTRIES: Array<{ q: string; a: string }> = [
   },
   {
     q: "Quali tipi di mail il parser sa leggere?",
-    a: "TicketOne, Booking, Smartbox, GetYourGuide, Vivaticket, Wonderbox. Per altre prove a inoltrarla, spesso BeGift le capisce comunque.",
+    a: "Funziona meglio con GetYourGuide (partner ufficiale). Per altri merchant prova a inoltrare la mail: spesso BeGift la capisce comunque (concerto, voucher esperienza, hotel, treno, ecc.).",
   },
   {
     q: "Come trovo il regalo che ho creato?",
@@ -131,7 +131,7 @@ export const KB_FAQ_ENTRIES: Array<{ q: string; a: string }> = [
 
 export const KB_PROBLEMI_COMUNI = [
   {
-    sintomo: "Foto del cantante mancante sul draft TicketOne",
+    sintomo: "Foto/immagine mancante sul draft (es. mail con solo logo del merchant)",
     causa: "Il fallback YouTube richiede ~5 secondi. Se la bozza e' molto recente, riprova fra poco.",
   },
   {
@@ -153,7 +153,7 @@ export const KB_ESCALATION_TRIGGERS = [
   "lamentele su contenuto inappropriato (CSAM, abuso, spam)",
   "domande legali / privacy specifiche (rimborso, GDPR diritti, ecc.)",
   "bug specifici riproducibili che non posso diagnosticare",
-  "richieste di rimborso pagamento (BeGift e' gratis, pero' i pagamenti GYG/Booking sono col partner)",
+  "richieste di rimborso pagamento (BeGift e' gratis, pero' i pagamenti per esperienze sono col partner GYG o col merchant esterno)",
   "utente scrive 'non funziona' o 'broken' 2 volte di seguito senza dettaglio risolvibile",
   "utente chiede esplicitamente di parlare con un umano",
 ];
