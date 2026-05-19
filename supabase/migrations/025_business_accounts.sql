@@ -103,6 +103,19 @@ CREATE INDEX IF NOT EXISTS idx_profiles_is_business
 -- 3. gifts — estensione per business gifts
 -- ──────────────────────────────────────────────────────────────
 
+-- gifts.opened_at + gifts.shared_at erano stati pianificati in una
+-- migration 003 che pero' sul DB live non risulta applicata (verificato
+-- 2026-05-18 in onboarding prima cliente B2B). Li aggiungiamo qui in
+-- forma idempotente: cosi' chi parte da DB fresh ha tutto, e chi ha il
+-- DB live esistente vede solo l'ALTER se manca.
+ALTER TABLE public.gifts
+  ADD COLUMN IF NOT EXISTS opened_at timestamptz,
+  ADD COLUMN IF NOT EXISTS shared_at timestamptz;
+
+CREATE INDEX IF NOT EXISTS idx_gifts_opened_at
+  ON public.gifts (opened_at)
+ WHERE opened_at IS NOT NULL;
+
 ALTER TABLE public.gifts
   ADD COLUMN IF NOT EXISTS is_business_gift boolean NOT NULL DEFAULT false;
 
