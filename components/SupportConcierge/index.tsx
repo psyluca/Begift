@@ -81,6 +81,10 @@ export default function SupportConcierge() {
   // Nascondi il FAB sulla pagina apertura cliente BeGift Business:
   // deve essere senza distrazioni, niente assistente in basso a destra.
   if (pathname.startsWith("/g/")) return null;
+  // Nascondi anche in area business: la KB del Concierge e' del flusso
+  // personale BeGift, non aiuta sui flussi B2B. Per supporto la
+  // massaggiatrice scrive a Luca via mail (vedi Settings business).
+  if (pathname.startsWith("/business")) return null;
 
   const sendMessage = async (text: string) => {
     if (!text.trim() || sending) return;

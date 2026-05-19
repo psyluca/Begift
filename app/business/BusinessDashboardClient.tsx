@@ -15,7 +15,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { fetchAuthed } from "@/lib/clientAuth";
+import { createSupabaseClient } from "@/lib/supabase/client";
 
 const ACCENT = "#D4537E";
 const INK = "#1a1a1a";
@@ -57,11 +59,22 @@ type FetchState =
   | { kind: "error"; message: string };
 
 export default function BusinessDashboardClient() {
+  const router = useRouter();
   const [state, setState] = useState<FetchState>({ kind: "loading" });
 
   useEffect(() => {
     void loadData(setState);
   }, []);
+
+  async function handleLogout() {
+    try {
+      const sb = createSupabaseClient();
+      await sb.auth.signOut();
+    } catch {
+      /* ignore — fallback redirect comunque */
+    }
+    router.push("/");
+  }
 
   if (state.kind === "loading") return <LoadingShell />;
   if (state.kind === "unauthorized") return <UnauthShell />;
@@ -80,11 +93,40 @@ export default function BusinessDashboardClient() {
       }}
     >
       {/* Header business */}
-      <header style={{ marginBottom: 20 }}>
-        <p style={{ fontSize: 11, color: MUTED, margin: 0 }}>BeGift Business</p>
-        <h1 style={{ fontSize: 22, fontWeight: 700, margin: "2px 0 0" }}>
-          {business.business_name}
-        </h1>
+      <header
+        style={{
+          marginBottom: 20,
+          display: "flex",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+          gap: 12,
+        }}
+      >
+        <div>
+          <p style={{ fontSize: 11, color: MUTED, margin: 0 }}>
+            BeGift Business
+          </p>
+          <h1 style={{ fontSize: 22, fontWeight: 700, margin: "2px 0 0" }}>
+            {business.business_name}
+          </h1>
+        </div>
+        <button
+          type="button"
+          onClick={handleLogout}
+          aria-label="Logout"
+          style={{
+            background: "transparent",
+            color: MUTED,
+            border: `1px solid ${BORDER}`,
+            borderRadius: 50,
+            padding: "6px 12px",
+            fontSize: 12,
+            cursor: "pointer",
+            whiteSpace: "nowrap",
+          }}
+        >
+          Esci
+        </button>
       </header>
 
       {/* Stats */}

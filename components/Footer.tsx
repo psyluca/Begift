@@ -36,6 +36,10 @@ export default function Footer() {
   // il suo footer interno minimalista ("impacchettato da BeGift").
   if (pathname.startsWith("/g/")) return null;
 
+  // Nascondi anche sulla dashboard business: l'area B2B e' isolata dal
+  // flusso personale, il footer "BeGift personale" non c'entra.
+  if (pathname.startsWith("/business")) return null;
+
   const year = new Date().getFullYear();
 
   // Modalità "discreta" sulla pagina di apertura regalo: stesso footer
