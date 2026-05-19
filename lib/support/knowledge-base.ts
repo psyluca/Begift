@@ -12,7 +12,7 @@
  * staccato che lungo.
  */
 
-export const KB_VERSION = "2026-05-18";
+export const KB_VERSION = "2026-05-18b";
 
 export const KB_PRODUCT = {
   name: "BeGift",
@@ -117,7 +117,7 @@ export const KB_FAQ_ENTRIES: Array<{ q: string; a: string }> = [
   },
   {
     q: "Posso usare BeGift per regali aziendali?",
-    a: "Sì, BeGift e' perfetto per gifting aziendale (Festa Natale, anniversari, welcome kit). Apro una nota a Luca che ti contatta — lascia anche il tuo nome se non sei loggato.",
+    a: "Sì, BeGift e' perfetto per gifting aziendale (Festa Natale, anniversari, welcome kit). Esiste anche una dashboard Business dedicata per professionisti (massaggiatrici, estetisti, fotografi) che inviano coupon-regalo impacchettati ai loro clienti. Apro una nota a Luca che ti contatta — lascia anche il tuo nome se non sei loggato.",
   },
   {
     q: "Il regalo costa qualcosa al destinatario?",

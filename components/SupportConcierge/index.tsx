@@ -78,6 +78,9 @@ export default function SupportConcierge() {
   }, [chat, open, sending]);
 
   if (!flagEnabled) return null;
+  // Nascondi il FAB sulla pagina apertura cliente BeGift Business:
+  // deve essere senza distrazioni, niente assistente in basso a destra.
+  if (pathname.startsWith("/g/")) return null;
 
   const sendMessage = async (text: string) => {
     if (!text.trim() || sending) return;

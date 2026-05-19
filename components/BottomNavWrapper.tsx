@@ -21,5 +21,8 @@ export default function BottomNavWrapper() {
   // Nascondi nav sulla pagina regalo solo se non loggato (immersiva)
   if (pathname.startsWith("/gift/") && !user) return null;
 
+  // Nascondi sempre sulla pagina apertura cliente BeGift Business
+  if (pathname.startsWith("/g/")) return null;
+
   return <BottomNav/>;
 }

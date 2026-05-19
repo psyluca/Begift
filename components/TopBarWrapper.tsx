@@ -6,5 +6,8 @@ export default function TopBarWrapper() {
   const pathname = usePathname();
   // Nascondi su auth pages
   if (pathname.startsWith("/auth/")) return null;
+  // Nascondi sulla pagina apertura cliente BeGift Business: deve essere
+  // pulita, senza branding/navigation dell'app principale.
+  if (pathname.startsWith("/g/")) return null;
   return <TopBar/>;
 }
