@@ -16,7 +16,7 @@ export type ExperienceCategory =
   | "wellness"    // spa, massaggi, yoga retreat
   | "travel"      // tour multi-giorno, esperienze viaggio
   | "gear"        // prodotti esperienziali (es. attrezzatura outdoor da regalare)
-  | "music"       // concerti, festival (overlap parziale con email parser TicketOne)
+  | "music"       // concerti, festival
   | "show";       // teatro, opera, eventi performativi
 
 export type ExperienceTag =
@@ -35,7 +35,7 @@ export type ExperienceTag =
   // Mercato
   | "international" | "local";
 
-export type PartnerSlug = "getyourguide" | "awin" | "tradedoubler";
+export type PartnerSlug = "getyourguide";
 
 // ──────────────────────────────────────────────────────────────
 // DB row types (mirror dello schema in migration 023)

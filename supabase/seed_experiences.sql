@@ -8,7 +8,7 @@
 -- Coverage:
 --   - 5 città top IT: Roma, Milano, Firenze, Venezia, Napoli
 --   - 5 categorie: food, outdoor, culture, wellness, travel
---   - Mix partner: GetYourGuide (premium tours), Awin (Booking/Smartbox)
+--   - Partner: GetYourGuide (unico partner commerciale attivo)
 --
 -- NOTA: i prezzi e i product ID sono PLACEHOLDER realistici.
 -- Sostituire con valori veri prima di andare in produzione (vedi
@@ -18,14 +18,10 @@
 DO $$
 DECLARE
   v_gyg_id   uuid;
-  v_awin_id  uuid;
-  v_td_id    uuid;
 BEGIN
   SELECT id INTO v_gyg_id  FROM public.experience_partners WHERE slug = 'getyourguide';
-  SELECT id INTO v_awin_id FROM public.experience_partners WHERE slug = 'awin';
-  SELECT id INTO v_td_id   FROM public.experience_partners WHERE slug = 'tradedoubler';
 
-  IF v_gyg_id IS NULL OR v_awin_id IS NULL THEN
+  IF v_gyg_id IS NULL THEN
     RAISE EXCEPTION 'Run migration 023 first to create experience_partners.';
   END IF;
 
@@ -161,20 +157,9 @@ BEGIN
      'https://www.getyourguide.com/naples-l769/pizza-class-t22334?partner_id=17&cmp={gift_id}')
   ON CONFLICT DO NOTHING;
 
-  -- ===== WELLNESS (Awin via Smartbox o programmi diretti) =====
-  INSERT INTO public.experiences
-    (partner_id, external_id, title, description, image_url, city, country, category, duration_minutes, price_min_cents, price_max_cents, tags, rating, reviews_count, affiliate_url_template, curator_notes)
-  VALUES
-    (v_awin_id, 'smartbox-spa-couples',
-     'Smartbox "Spa per due": 1 percorso benessere',
-     'Cofanetto Smartbox riscattabile in oltre 200 centri benessere in Italia. Validita 3 anni dalla data di attivazione.',
-     NULL,
-     NULL, 'IT', 'wellness', NULL, 5990, 9990,
-     ARRAY['couples', 'wellness', 'romantic', 'flexible', 'voucher'],
-     4.3, 8900,
-     'https://www.awin1.com/cread.php?awinmid=PLACEHOLDER&awinaffid=PLACEHOLDER&clickref={gift_id}&p=https%3A%2F%2Fwww.smartbox.com%2Fit%2Fspa-per-due',
-     'Awin/Smartbox: aggiornare awinmid + affiliate_id dopo setup partner_id Luca')
-  ON CONFLICT DO NOTHING;
+  -- ===== WELLNESS =====
+  -- (Riga Smartbox/Awin rimossa il 2026-05-18: GYG e' l'unico partner attivo.
+  --  Quando aggiungeremo un'esperienza wellness sara' tramite GYG.)
 
   -- ===== OUTDOOR =====
   INSERT INTO public.experiences

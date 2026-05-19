@@ -30,10 +30,8 @@ WHERE image_url LIKE 'https://cdn.getyourguide.com/%';
 DO $$
 DECLARE
   v_gyg_id  uuid;
-  v_awin_id uuid;
 BEGIN
   SELECT id INTO v_gyg_id  FROM public.experience_partners WHERE slug = 'getyourguide';
-  SELECT id INTO v_awin_id FROM public.experience_partners WHERE slug = 'awin';
 
   -- Tour bici sulle mura
   INSERT INTO public.experiences

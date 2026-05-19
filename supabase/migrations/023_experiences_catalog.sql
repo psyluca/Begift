@@ -5,8 +5,9 @@
 -- Spec: docs/vendita-esperienze/SPEC.md
 --
 -- Aggiunge 3 tabelle per gestire il catalogo "esperienze giftabili":
---   1. experience_partners — i 3 partner affiliate attivi (GetYourGuide,
---      Awin, TradeDoubler)
+--   1. experience_partners — partner affiliate. Allo stato 2026-05-18
+--      l'unico partner attivo e' GetYourGuide. Lo schema rimane
+--      multi-partner per future estensioni.
 --   2. experiences — record catalogo curato (titolo, prezzo, partner,
 --      tracking template)
 --   3. experience_clicks — log di ogni click affiliate (per attribution
@@ -29,7 +30,7 @@
 
 CREATE TABLE IF NOT EXISTS public.experience_partners (
   id                  uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  slug                text NOT NULL UNIQUE,           -- "getyourguide", "awin", "tradedoubler"
+  slug                text NOT NULL UNIQUE,           -- es. "getyourguide"
   display_name        text NOT NULL,
   base_affiliate_url  text,                            -- url radice del network (informativo)
   commission_rate     numeric(4,3),                    -- 0.080 = 8%, NULL se varia
@@ -40,7 +41,7 @@ CREATE TABLE IF NOT EXISTS public.experience_partners (
 );
 
 COMMENT ON TABLE public.experience_partners IS
-'Affiliate partner network attivi per BeGift. Stato 2026-05-15: GetYourGuide, Awin, TradeDoubler. Rakuten terminato.';
+'Affiliate partner network attivi per BeGift. Stato 2026-05-18: solo GetYourGuide. Schema multi-partner mantenuto per future estensioni.';
 
 -- ──────────────────────────────────────────────────────────────
 -- 2. experiences
@@ -219,7 +220,5 @@ GRANT SELECT ON public.experiences         TO anon, authenticated;
 
 INSERT INTO public.experience_partners (slug, display_name, base_affiliate_url, commission_rate, cookie_window_days, active)
 VALUES
-  ('getyourguide',  'GetYourGuide',  'https://www.getyourguide.com', 0.080, 31, true),
-  ('awin',          'Awin Network',  'https://www.awin1.com',         NULL,  30, true),
-  ('tradedoubler',  'TradeDoubler',  'https://clk.tradedoubler.com',  NULL,  30, true)
+  ('getyourguide',  'GetYourGuide',  'https://www.getyourguide.com', 0.080, 31, true)
 ON CONFLICT (slug) DO NOTHING;
