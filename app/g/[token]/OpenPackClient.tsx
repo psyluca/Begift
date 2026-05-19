@@ -1,18 +1,16 @@
 "use client";
 
 /**
- * Client component per /g/[token]. Gestisce 3 stati:
- *  1. closed — pacco non ancora "scartato": mostra l'immagine del
- *     pacco animata + CTA "Apri il regalo"
- *  2. opened — dopo il tap: rivela messaggio + coupon + reazioni
- *  3. not_found / error — token invalido o gift inesistente
+ * Client component per /g/[token]. 4 stati visivi:
+ *  1. loading
+ *  2. closed   — pacco statico che galleggia + CTA "Apri il regalo"
+ *  3. opening  — animazione ~1.4s: coperchio+fiocco volano via, base
+ *                svanisce, contenuto appare in fade-in
+ *  4. opened   — contenuto visibile (messaggio + preview + coupon +
+ *                bottone scarica + reazioni)
  *
  * NO topbar/bottomnav/footer globali (gestiti via path-based gating
  * nei wrapper).
- *
- * Branding: il pacco e' "da Centro Massaggi Aurora" (dal business),
- * BeGift compare solo nel footer minimo "impacchettato da BeGift —
- * pacchetti regalo digitali".
  */
 
 import { useEffect, useState } from "react";
@@ -35,6 +33,7 @@ interface OpenPackData {
     title: string | null;
     validity: string | null;
     file_url: string | null;
+    mime: string | null;
   };
   business: {
     name: string;
@@ -45,13 +44,15 @@ interface OpenPackData {
   created_at: string;
 }
 
+type Phase = "closed" | "opening" | "opened";
 type ViewState =
   | { kind: "loading" }
   | { kind: "not_found" }
   | { kind: "error"; message: string }
-  | { kind: "ready"; data: OpenPackData; opened: boolean };
+  | { kind: "ready"; data: OpenPackData; phase: Phase };
 
 const REACTION_EMOJI = ["❤️", "🙏", "✨", "😍", "🥰", "🎁"];
+const OPENING_MS = 1400;
 
 export default function OpenPackClient({ token }: { token: string }) {
   const [state, setState] = useState<ViewState>({ kind: "loading" });
@@ -73,10 +74,20 @@ export default function OpenPackClient({ token }: { token: string }) {
         return;
       }
       const data = (await res.json()) as OpenPackData;
-      setState({ kind: "ready", data, opened: false });
+      setState({ kind: "ready", data, phase: "closed" });
     } catch (e) {
       setState({ kind: "error", message: (e as Error).message });
     }
+  }
+
+  function startOpening() {
+    if (state.kind !== "ready" || state.phase !== "closed") return;
+    setState({ ...state, phase: "opening" });
+    setTimeout(() => {
+      setState((prev) =>
+        prev.kind === "ready" ? { ...prev, phase: "opened" } : prev
+      );
+    }, OPENING_MS);
   }
 
   async function sendReaction(emoji: string) {
@@ -90,20 +101,29 @@ export default function OpenPackClient({ token }: { token: string }) {
       });
     } catch (e) {
       console.error("[OpenPack] reaction failed", e);
-      // Non revert reactionSent: meglio non far cliccare di nuovo
     }
   }
 
   if (state.kind === "loading") {
-    return <Shell><div style={{ color: MUTED, padding: 40, textAlign: "center" }}>Apertura del pacco…</div></Shell>;
+    return (
+      <Shell>
+        <div style={{ color: MUTED, padding: 40, textAlign: "center" }}>
+          Apertura del pacco…
+        </div>
+      </Shell>
+    );
   }
   if (state.kind === "not_found") {
     return (
       <Shell>
         <div style={{ padding: 40, textAlign: "center", color: INK }}>
           <div style={{ fontSize: 36, marginBottom: 12 }}>🤔</div>
-          <p style={{ fontSize: 14, marginBottom: 6 }}>Questo pacco non esiste più o il link è errato.</p>
-          <p style={{ fontSize: 12, color: MUTED }}>Chiedi a chi te l&apos;ha mandato di rinviartelo.</p>
+          <p style={{ fontSize: 14, marginBottom: 6 }}>
+            Questo pacco non esiste più o il link è errato.
+          </p>
+          <p style={{ fontSize: 12, color: MUTED }}>
+            Chiedi a chi te l&apos;ha mandato di rinviartelo.
+          </p>
         </div>
       </Shell>
     );
@@ -120,27 +140,32 @@ export default function OpenPackClient({ token }: { token: string }) {
 
   const accent = state.data.business?.brand_color || ACCENT_DEFAULT;
 
-  if (!state.opened) {
-    // Stato "closed": mostra il pacco animato + CTA per aprire
-    return (
-      <Shell accent={accent}>
+  return (
+    <Shell accent={accent}>
+      {state.phase === "closed" && (
         <ClosedView
           data={state.data}
           accent={accent}
-          onOpen={() => setState({ ...state, opened: true })}
+          onOpen={startOpening}
+          animating={false}
         />
-      </Shell>
-    );
-  }
-
-  return (
-    <Shell accent={accent}>
-      <OpenedView
-        data={state.data}
-        accent={accent}
-        onReact={sendReaction}
-        reactionSent={reactionSent}
-      />
+      )}
+      {state.phase === "opening" && (
+        <ClosedView
+          data={state.data}
+          accent={accent}
+          onOpen={() => {}}
+          animating={true}
+        />
+      )}
+      {state.phase === "opened" && (
+        <OpenedView
+          data={state.data}
+          accent={accent}
+          onReact={sendReaction}
+          reactionSent={reactionSent}
+        />
+      )}
     </Shell>
   );
 }
@@ -168,7 +193,16 @@ function Shell({
         color: INK,
       }}
     >
-      <div style={{ width: "100%", maxWidth: 420, flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
+      <div
+        style={{
+          width: "100%",
+          maxWidth: 480,
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+        }}
+      >
         {children}
       </div>
       <footer
@@ -196,112 +230,188 @@ function ClosedView({
   data,
   accent,
   onOpen,
+  animating,
 }: {
   data: OpenPackData;
   accent: string;
   onOpen: () => void;
+  animating: boolean;
 }) {
   const paper = data.packaging?.paperColor || "#F4C0D1";
   const ribbon = data.packaging?.ribbonColor || accent;
+
   return (
     <div style={{ textAlign: "center" }}>
-      <p style={{ fontSize: 13, color: MUTED, marginBottom: 6 }}>
-        {data.recipient_name}, hai ricevuto un regalo
-      </p>
-      {data.business && (
-        <p style={{ fontSize: 12, color: MUTED, marginBottom: 24 }}>
-          da{" "}
-          <strong style={{ color: INK, fontSize: 14 }}>
-            {data.business.name}
-          </strong>
-        </p>
+      {!animating && (
+        <>
+          <p style={{ fontSize: 13, color: MUTED, marginBottom: 6 }}>
+            {data.recipient_name}, hai ricevuto un regalo
+          </p>
+          {data.business && (
+            <p style={{ fontSize: 12, color: MUTED, marginBottom: 24 }}>
+              da{" "}
+              <strong style={{ color: INK, fontSize: 14 }}>
+                {data.business.name}
+              </strong>
+            </p>
+          )}
+        </>
       )}
-      {/* Pacco "scatola" semplificato con CSS */}
+
+      {/* PACCO 3D in 2 parti per consentire l'apertura animata */}
       <button
         type="button"
         onClick={onOpen}
+        disabled={animating}
         aria-label="Apri il regalo"
         style={{
           background: "transparent",
           border: "none",
-          cursor: "pointer",
+          cursor: animating ? "default" : "pointer",
           padding: 20,
           margin: "20px auto",
           display: "block",
-          animation: "begiftBoxFloat 2.6s ease-in-out infinite",
+          animation: animating ? "none" : "begiftBoxFloat 2.6s ease-in-out infinite",
         }}
       >
         <div
           style={{
-            width: 180,
-            height: 180,
-            background: paper,
-            borderRadius: 12,
+            width: 200,
+            height: 200,
             position: "relative",
-            boxShadow: `0 12px 32px ${accent}33`,
           }}
         >
-          {/* Nastro verticale */}
+          {/* Base del pacco (parte sotto) */}
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: paper,
+              borderRadius: 12,
+              boxShadow: `0 12px 32px ${accent}33`,
+              animation: animating
+                ? `begiftBoxBaseFade ${OPENING_MS}ms ease-out forwards`
+                : "none",
+            }}
+          />
+          {/* Nastro verticale (stessa base) */}
           <div
             style={{
               position: "absolute",
               left: "50%",
               top: 0,
               bottom: 0,
-              width: 18,
+              width: 20,
               transform: "translateX(-50%)",
               background: ribbon,
+              animation: animating
+                ? `begiftBoxBaseFade ${OPENING_MS}ms ease-out forwards`
+                : "none",
             }}
           />
-          {/* Nastro orizzontale */}
+          {/* Nastro orizzontale (stessa base) */}
           <div
             style={{
               position: "absolute",
               top: "50%",
               left: 0,
               right: 0,
-              height: 18,
+              height: 20,
               transform: "translateY(-50%)",
               background: ribbon,
+              animation: animating
+                ? `begiftBoxBaseFade ${OPENING_MS}ms ease-out forwards`
+                : "none",
             }}
           />
-          {/* Fiocco */}
+          {/* COPERCHIO (top half + fiocco) → vola via in opening */}
           <div
             style={{
               position: "absolute",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              fontSize: 40,
+              top: 0,
+              left: 0,
+              right: 0,
+              height: "50%",
+              background: paper,
+              borderTopLeftRadius: 12,
+              borderTopRightRadius: 12,
+              borderBottom: `2px solid ${ribbon}99`,
+              animation: animating
+                ? `begiftLidFly ${OPENING_MS}ms cubic-bezier(0.4, 0.0, 0.6, 1) forwards`
+                : "none",
+              transformOrigin: "50% 100%",
             }}
           >
-            🎀
+            {/* Fiocco al centro del coperchio */}
+            <div
+              style={{
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, 0)",
+                fontSize: 46,
+              }}
+            >
+              🎀
+            </div>
           </div>
         </div>
       </button>
-      <p style={{ fontSize: 13, color: MUTED, marginTop: 20, marginBottom: 16 }}>
-        Tocca il pacco per aprirlo
-      </p>
-      <button
-        type="button"
-        onClick={onOpen}
-        style={{
-          background: accent,
-          color: "#fff",
-          border: "none",
-          padding: "12px 28px",
-          borderRadius: 50,
-          fontSize: 14,
-          fontWeight: 600,
-          cursor: "pointer",
-        }}
-      >
-        Apri il regalo →
-      </button>
+
+      {!animating && (
+        <>
+          <p
+            style={{
+              fontSize: 13,
+              color: MUTED,
+              marginTop: 20,
+              marginBottom: 16,
+            }}
+          >
+            Tocca il pacco per aprirlo
+          </p>
+          <button
+            type="button"
+            onClick={onOpen}
+            style={{
+              background: accent,
+              color: "#fff",
+              border: "none",
+              padding: "12px 28px",
+              borderRadius: 50,
+              fontSize: 14,
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
+          >
+            Apri il regalo →
+          </button>
+        </>
+      )}
+
+      {/* CSS keyframes — definiti inline, scoped al sub-tree */}
       <style>{`
         @keyframes begiftBoxFloat {
           0%, 100% { transform: translateY(0) rotate(-1deg); }
           50% { transform: translateY(-8px) rotate(1deg); }
+        }
+        @keyframes begiftLidFly {
+          0% {
+            transform: translateY(0) rotate(0deg);
+            opacity: 1;
+          }
+          40% {
+            transform: translateY(-30px) rotate(-8deg);
+            opacity: 1;
+          }
+          100% {
+            transform: translateY(-220px) rotate(25deg);
+            opacity: 0;
+          }
+        }
+        @keyframes begiftBoxBaseFade {
+          0%, 60% { opacity: 1; transform: scale(1); }
+          100% { opacity: 0; transform: scale(0.85); }
         }
       `}</style>
     </div>
@@ -361,13 +471,12 @@ function OpenedView({
         </div>
       )}
 
-      {/* Coupon visual */}
+      {/* Coupon card */}
       <div
         style={{
           border: `2px dashed ${accent}`,
           borderRadius: 10,
-          padding: "20px 16px",
-          textAlign: "center",
+          padding: "16px 14px",
           marginBottom: 16,
           background: "#fff",
         }}
@@ -379,6 +488,7 @@ function OpenedView({
             textTransform: "uppercase",
             letterSpacing: 1,
             margin: "0 0 6px",
+            textAlign: "center",
           }}
         >
           Il tuo coupon
@@ -391,16 +501,30 @@ function OpenedView({
               color: accent,
               margin: "0 0 4px",
               lineHeight: 1.2,
+              textAlign: "center",
             }}
           >
             {data.coupon.title}
           </p>
         )}
         {data.coupon.validity && (
-          <p style={{ fontSize: 12, color: MUTED, margin: 0 }}>
+          <p
+            style={{
+              fontSize: 12,
+              color: MUTED,
+              margin: "0 0 14px",
+              textAlign: "center",
+            }}
+          >
             Validità: {data.coupon.validity}
           </p>
         )}
+
+        {/* Preview inline del file coupon (PDF iframe / img) */}
+        <CouponPreview
+          fileUrl={data.coupon.file_url}
+          mime={data.coupon.mime}
+        />
       </div>
 
       {/* Download CTA */}
@@ -492,6 +616,75 @@ function OpenedView({
           to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
+    </div>
+  );
+}
+
+function CouponPreview({
+  fileUrl,
+  mime,
+}: {
+  fileUrl: string | null;
+  mime: string | null;
+}) {
+  if (!fileUrl) return null;
+
+  const lowerMime = (mime || "").toLowerCase();
+  const lowerUrl = fileUrl.toLowerCase().split("?")[0];
+
+  const isPdf = lowerMime.includes("pdf") || lowerUrl.endsWith(".pdf");
+  const isImage =
+    lowerMime.startsWith("image/") ||
+    /\.(png|jpe?g|webp|gif)$/i.test(lowerUrl);
+
+  if (isImage) {
+    return (
+      <img
+        src={fileUrl}
+        alt="Coupon"
+        style={{
+          width: "100%",
+          maxHeight: 360,
+          objectFit: "contain",
+          borderRadius: 6,
+          border: `1px solid ${BORDER}`,
+          background: "#fafafa",
+          display: "block",
+        }}
+      />
+    );
+  }
+
+  if (isPdf) {
+    return (
+      <iframe
+        src={fileUrl}
+        title="Anteprima coupon"
+        style={{
+          width: "100%",
+          height: 380,
+          border: `1px solid ${BORDER}`,
+          borderRadius: 6,
+          background: "#fafafa",
+        }}
+      />
+    );
+  }
+
+  // Fallback: file format non riconosciuto, mostra solo un placeholder
+  return (
+    <div
+      style={{
+        padding: "20px 14px",
+        textAlign: "center",
+        background: SOFT_BG,
+        border: `1px dashed ${BORDER}`,
+        borderRadius: 6,
+        color: MUTED,
+        fontSize: 12,
+      }}
+    >
+      File coupon allegato. Usa il bottone qui sotto per scaricarlo.
     </div>
   );
 }

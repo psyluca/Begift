@@ -54,7 +54,11 @@ export async function GET(
     message: string | null;
     packaging: unknown;
     coupon_file_url: string | null;
-    template_data: { coupon_title?: string | null; coupon_validity?: string | null } | null;
+    template_data: {
+      coupon_title?: string | null;
+      coupon_validity?: string | null;
+      coupon_mime?: string | null;
+    } | null;
     business_account_id: string | null;
     opened_at: string | null;
     created_at: string;
@@ -101,6 +105,7 @@ export async function GET(
       title: td.coupon_title || null,
       validity: td.coupon_validity || null,
       file_url: gift.coupon_file_url,
+      mime: td.coupon_mime || null,
     },
     business: business
       ? {

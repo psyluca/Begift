@@ -107,7 +107,7 @@ export default function NewPackClient() {
       setState({ kind: "error", message: `upload failed: ${err.error || uploadRes.status}` });
       return;
     }
-    const uploadData = (await uploadRes.json()) as { url: string };
+    const uploadData = (await uploadRes.json()) as { url: string; mime: string };
 
     // 2. Crea pacco
     setState({ kind: "submitting" });
@@ -118,6 +118,7 @@ export default function NewPackClient() {
         recipient_name: recipientName.trim(),
         message: message.trim() || null,
         coupon_file_url: uploadData.url,
+        coupon_mime: uploadData.mime || file.type,
         coupon_title: couponTitle.trim(),
         coupon_validity: couponValidity.trim() || null,
         packaging: selectedPackaging,

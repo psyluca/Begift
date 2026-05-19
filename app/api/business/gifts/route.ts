@@ -20,6 +20,8 @@ interface CreateBusinessGiftBody {
   recipient_name: string;
   message?: string | null;
   coupon_file_url: string;        // URL gia' uploadato via /api/business/upload-coupon
+  /** MIME del file coupon (per render preview inline lato destinatario) */
+  coupon_mime?: string | null;
   packaging: Packaging;
   /** Tipo del coupon (libero, es. "Massaggio 60min", "Buono €50") */
   coupon_title?: string | null;
@@ -133,6 +135,7 @@ export async function POST(req: NextRequest) {
   const templateData = {
     coupon_title: body.coupon_title?.trim().slice(0, 200) || null,
     coupon_validity: body.coupon_validity?.trim().slice(0, 200) || null,
+    coupon_mime: body.coupon_mime?.trim() || null,
   };
 
   const admin = createSupabaseAdmin();
