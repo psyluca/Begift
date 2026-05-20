@@ -137,21 +137,33 @@ export default function HomePage() {
         }}>
           {t("home.hero_subtitle_quote")}
         </p>
-        <Link href="/create" style={{
-          background: ACCENT, color: "#fff", borderRadius: 50,
-          padding: "16px 42px", fontSize: 16, fontWeight: 700,
-          textDecoration: "none", display: "inline-block",
-          boxShadow: "0 10px 32px rgba(212,83,126,.35)",
-          transition: "transform .15s",
-        }}>{t("home.cta_create")}</Link>
-        {/* Secondary CTA: percorso guidato /start (intent picker
-            2-step). Pensato per utenti indecisi/nuovi che preferiscono
-            essere accompagnati invece di buttarsi nel CreateGiftClient
-            completo. Stile sottile, sotto il bottone principale, non
-            ruba focus al CTA primario. */}
+        {/* Primary CTA aggiornato 2026-05-20: il flusso flagship diventa
+            il Smart Gift Picker (/picker). 3 step: destinatario+interessi,
+            occasione+budget, 4 idee curate (mix GetYourGuide + VivaTicket).
+            BeGift si posiziona come consulente regalo intelligente vs
+            marketplace. Il claim della home resta invariato — cambia solo
+            il primo passo che proponiamo. */}
         <Link
-          href="/start"
-          onClick={() => track("home_start_cta_clicked")}
+          href="/picker"
+          onClick={() => track("home_picker_cta_clicked")}
+          style={{
+            background: ACCENT, color: "#fff", borderRadius: 50,
+            padding: "16px 42px", fontSize: 16, fontWeight: 700,
+            textDecoration: "none", display: "inline-block",
+            boxShadow: "0 10px 32px rgba(212,83,126,.35)",
+            transition: "transform .15s",
+          }}
+        >
+          {t("home.cta_picker")}
+        </Link>
+        {/* Secondary CTA: scorciatoia per chi ha gia' un'idea precisa e
+            vuole comporre il regalo da zero (foto, video, messaggio).
+            Il flusso /create rimane intatto — qui ne diamo solo un
+            ingresso meno prominente, cosi' il sender indeciso e' guidato
+            naturalmente verso il picker. */}
+        <Link
+          href="/create"
+          onClick={() => track("home_create_cta_clicked")}
           style={{
             marginTop: 14,
             display: "inline-block",
@@ -161,7 +173,7 @@ export default function HomePage() {
             fontWeight: 600,
           }}
         >
-          oppure ti accompagniamo passo passo →
+          {t("home.cta_create_secondary")}
         </Link>
         {/* Disclaimer onesto: copy riformulato il 12/05/2026 — rimosso
             riferimento a "gratis durante la beta" che suggeriva un
@@ -379,7 +391,11 @@ export default function HomePage() {
         <p style={{ fontSize: 15, color: MUTED, margin: "0 0 28px", lineHeight: 1.6 }}>
           {t("home.final_cta_desc")}
         </p>
-        <Link href="/create" style={{
+        {/* Final CTA allineato alla nuova entrata principale (/picker).
+            Coerenza con l'hero: il sender che e' arrivato fino in fondo
+            scorrendo la home arriva qui pronto a iniziare — meglio non
+            cambiargli destinazione rispetto al primo bottone visto. */}
+        <Link href="/picker" style={{
           background: ACCENT, color: "#fff", borderRadius: 50,
           padding: "17px 46px", fontSize: 17, fontWeight: 800,
           textDecoration: "none", display: "inline-block",
