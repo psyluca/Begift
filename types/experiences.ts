@@ -11,13 +11,14 @@
 
 export type ExperienceCategory =
   | "food"        // cooking class, wine tasting, food tour, ristoranti
-  | "outdoor"     // trekking, kayak, bici, mare, montagna
+  | "outdoor"     // trekking, kayak, bici, mare, montagna, parchi divertimento
   | "culture"     // musei, tour storico-artistici, monumenti
   | "wellness"    // spa, massaggi, yoga retreat
   | "travel"      // tour multi-giorno, esperienze viaggio
   | "gear"        // prodotti esperienziali (es. attrezzatura outdoor da regalare)
   | "music"       // concerti, festival
-  | "show";       // teatro, opera, eventi performativi
+  | "show"        // teatro, opera, musical, eventi performativi
+  | "sport";      // partite, biglietti sportivi (calcio, basket, ecc.)
 
 export type ExperienceTag =
   // Profilo destinatario

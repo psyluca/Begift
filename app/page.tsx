@@ -137,15 +137,14 @@ export default function HomePage() {
         }}>
           {t("home.hero_subtitle_quote")}
         </p>
-        {/* Primary CTA aggiornato 2026-05-20: il flusso flagship diventa
-            il Smart Gift Picker (/picker). 3 step: destinatario+interessi,
-            occasione+budget, 4 idee curate (mix GetYourGuide + VivaTicket).
-            BeGift si posiziona come consulente regalo intelligente vs
-            marketplace. Il claim della home resta invariato — cambia solo
-            il primo passo che proponiamo. */}
+        {/* Primary CTA aggiornato 2026-05-21: il flusso flagship e' ora
+            /regalo, hub unificato con 4 entry path (catalogo, file,
+            messaggio, mail). Da li il sender sceglie il modo preferito
+            di partire — il claim della home resta intatto, cambia solo
+            il primo passo concreto che proponiamo. */}
         <Link
-          href="/picker"
-          onClick={() => track("home_picker_cta_clicked")}
+          href="/regalo"
+          onClick={() => track("home_regalo_cta_clicked")}
           style={{
             background: ACCENT, color: "#fff", borderRadius: 50,
             padding: "16px 42px", fontSize: 16, fontWeight: 700,
@@ -154,27 +153,51 @@ export default function HomePage() {
             transition: "transform .15s",
           }}
         >
-          {t("home.cta_picker")}
+          {t("home.cta_inizia")}
         </Link>
-        {/* Secondary CTA: scorciatoia per chi ha gia' un'idea precisa e
-            vuole comporre il regalo da zero (foto, video, messaggio).
-            Il flusso /create rimane intatto — qui ne diamo solo un
-            ingresso meno prominente, cosi' il sender indeciso e' guidato
-            naturalmente verso il picker. */}
-        <Link
-          href="/create"
-          onClick={() => track("home_create_cta_clicked")}
+        {/* Mini hint dei 4 modi sotto il CTA primario. Non e' un altro
+            bottone — e' una micro-rassicurazione visiva che dice "puoi
+            iniziare in piu' modi". 4 emoji + label essenziali, click
+            su ciascuno entra direttamente in quella path saltando il hub. */}
+        <div
           style={{
-            marginTop: 14,
-            display: "inline-block",
-            fontSize: 14,
-            color: ACCENT,
-            textDecoration: "underline",
-            fontWeight: 600,
+            marginTop: 22,
+            display: "flex",
+            gap: 6,
+            flexWrap: "wrap",
+            justifyContent: "center",
+            maxWidth: 460,
           }}
         >
-          {t("home.cta_create_secondary")}
-        </Link>
+          {[
+            { href: "/regalo/catalogo", emoji: "🎁", label: "Catalogo" },
+            { href: "/regalo/file",      emoji: "📁", label: "File" },
+            { href: "/regalo/messaggio", emoji: "💌", label: "Messaggio" },
+            { href: "/regalo/mail",      emoji: "📧", label: "Mail" },
+          ].map((p) => (
+            <Link
+              key={p.href}
+              href={p.href}
+              onClick={() => track("home_path_hint_clicked", { path: p.label })}
+              style={{
+                background: "#fff",
+                border: "1px solid #e8e4de",
+                borderRadius: 999,
+                padding: "7px 13px",
+                fontSize: 12.5,
+                color: DEEP,
+                fontWeight: 600,
+                textDecoration: "none",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              <span aria-hidden style={{ fontSize: 14 }}>{p.emoji}</span>
+              {p.label}
+            </Link>
+          ))}
+        </div>
         {/* Disclaimer onesto: copy riformulato il 12/05/2026 — rimosso
             riferimento a "gratis durante la beta" che suggeriva un
             futuro pagamento (decisione di pricing non ancora presa,
@@ -391,11 +414,10 @@ export default function HomePage() {
         <p style={{ fontSize: 15, color: MUTED, margin: "0 0 28px", lineHeight: 1.6 }}>
           {t("home.final_cta_desc")}
         </p>
-        {/* Final CTA allineato alla nuova entrata principale (/picker).
-            Coerenza con l'hero: il sender che e' arrivato fino in fondo
-            scorrendo la home arriva qui pronto a iniziare — meglio non
-            cambiargli destinazione rispetto al primo bottone visto. */}
-        <Link href="/picker" style={{
+        {/* Final CTA allineato all'entrata principale /regalo: il sender
+            arrivato a fondo pagina dopo aver letto tutto trova un bottone
+            coerente con quello in alto. Niente di nuovo da decidere. */}
+        <Link href="/regalo" style={{
           background: ACCENT, color: "#fff", borderRadius: 50,
           padding: "17px 46px", fontSize: 17, fontWeight: 800,
           textDecoration: "none", display: "inline-block",

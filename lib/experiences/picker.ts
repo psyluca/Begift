@@ -73,16 +73,28 @@ const INTEREST_CATEGORIES: Record<PickerInterest, ExperienceCategory[]> = {
   travel:   ["travel", "outdoor"],
   culture:  ["culture", "show"],
   wellness: ["wellness"],
-  sport:    ["outdoor"],
+  // sport interest deve includere category "sport" (partite VivaTicket
+  // hanno category="sport"). Bug fix 2026-05-20: prima mappava solo a
+  // "outdoor" e i biglietti calcio non comparivano mai. Adesso entrambi.
+  sport:    ["sport", "outdoor"],
 };
 
+// NB: cast a ExperienceTag[] perche' "culture" e "sport" non sono nel
+// type union ufficiale (vedi types/experiences.ts) ma sono PRESENTI
+// nei tag del seed VVT — il DB e' text[] senza CHECK constraint, quindi
+// accetta qualunque stringa. Allargare il type union sarebbe ideale ma
+// per ora ci accontentiamo del cast: l'algoritmo confronta stringhe.
 const INTEREST_TAGS: Record<PickerInterest, ExperienceTag[]> = {
   music:    ["music"],
   food:     ["foodie", "wine"],
   travel:   ["multi-day", "full-day", "adventure"],
-  culture:  ["art", "history", "must-see"],
+  // "culture" come tag e' presente nei seed VVT (arena-opera, notre-dame).
+  culture:  ["art", "history", "must-see", "culture" as ExperienceTag],
   wellness: ["relax"],
-  sport:    ["hiking", "adventure", "sea", "mountains"],
+  // "sport" come tag e' presente nei seed VVT (milan-juventus, bologna-fc).
+  // Senza questa entry, l'utente che sceglie "sport" non vedeva mai le
+  // partite (categoria si', tag no — quindi 0 bonus tag).
+  sport:    ["hiking", "adventure", "sea", "mountains", "sport" as ExperienceTag],
 };
 
 // ──────────────────────────────────────────────────────────────
@@ -252,7 +264,11 @@ export function rankAndMix(
     mixThresholdRatio?: number;
   } = {}
 ): ScoredExperience[] {
-  const threshold = opts.mixThresholdRatio ?? 0.6;
+  // Soglia abbassata da 0.6 → 0.35 dopo feedback "VivaTicket non si vede".
+  // 0.35 = consideriamo un candidato sufficientemente pertinente se il
+  // suo score e' almeno il 35% del top. In pratica garantisce che,
+  // appena un partner ha QUALCHE pertinenza, appare nei 4 risultati.
+  const threshold = opts.mixThresholdRatio ?? 0.35;
 
   // Ordine base per score desc, tie-break per reviews_count desc
   const sorted = [...scored].sort((a, b) => {
@@ -266,8 +282,8 @@ export function rankAndMix(
   const rest = sorted.slice(targetCount);
   const topScore = top[0]?.score ?? 0;
 
-  // Mix-quota: per ogni partner che NON appare nel top ma ha
-  // candidati nel rest con score >= threshold * topScore, force-swap
+  // Mix-quota: per ogni partner che NON appare nel top ma ha candidati
+  // nel rest con score >= threshold * topScore (default 35%), force-swap
   // l'ultimo elemento del top con il miglior candidato dell'other-partner.
   const partnersInTop = new Set(top.map((s) => s.experience.partner.slug));
   const partnersInPool: PartnerSlug[] = Array.from(
@@ -276,14 +292,17 @@ export function rankAndMix(
 
   for (const partner of partnersInPool) {
     if (partnersInTop.has(partner)) continue;
+    // Cerco il miglior candidato del partner mancante. Soglia 35% se
+    // topScore > 0; se topScore e' <= 0 (utente con criteri vaghi che
+    // non scattano nessuna affinita'), accetto QUALSIASI score per
+    // garantire varieta'.
+    const minScore = topScore > 0 ? threshold * topScore : -Infinity;
     const candidate = rest.find(
-      (s) =>
-        s.experience.partner.slug === partner &&
-        s.score >= threshold * topScore
+      (s) => s.experience.partner.slug === partner && s.score >= minScore
     );
     if (!candidate) continue;
-    // Swap: rimuovi l'ultimo del top, inserisci il candidato in penultima
-    // posizione cosi' che il mix sia visibile ma non rompi l'ordine perfetto.
+    // Swap: rimuovi l'ultimo del top, push del candidato in fondo.
+    // Cosi' il mix e' visibile ma manteniamo i top match in cima.
     top.pop();
     top.push(candidate);
     partnersInTop.add(partner);
