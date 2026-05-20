@@ -17,6 +17,20 @@
 
 BEGIN;
 
+-- Step 0: aggiungi UNIQUE constraint su experiences.external_id (era solo
+-- INDEX, non UNIQUE; servirebbe per ON CONFLICT). Idempotente: se gia'
+-- presente, lo skippa silenziosamente.
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+     WHERE conname = 'experiences_external_id_unique'
+  ) THEN
+    ALTER TABLE public.experiences
+      ADD CONSTRAINT experiences_external_id_unique UNIQUE (external_id);
+  END IF;
+END $$;
+
 -- Step 1: reinserisci awin in experience_partners (era stato cancellato
 -- dal cleanup_non_gyg_partners.sql del 2026-05-18, ma ora e' attivo).
 INSERT INTO public.experience_partners
