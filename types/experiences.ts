@@ -35,7 +35,7 @@ export type ExperienceTag =
   // Mercato
   | "international" | "local";
 
-export type PartnerSlug = "getyourguide";
+export type PartnerSlug = "getyourguide" | "awin";
 
 // ──────────────────────────────────────────────────────────────
 // DB row types (mirror dello schema in migration 023)

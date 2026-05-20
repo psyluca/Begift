@@ -55,6 +55,24 @@ export const PARTNERS: Record<PartnerSlug, PartnerConfig> = {
     cookieWindowDays: 31,
     disclosureLabel: "Esperienza offerta tramite GetYourGuide.",
   },
+  awin: {
+    slug: "awin",
+    displayName: "Awin Network",
+    affiliateIdEnvVar: "AWIN_AFFILIATE_ID",
+    // Awin deep link wrapper. {awinmid} = merchant ID (es. VivaTicket).
+    // {awinaffid} = publisher ID Luca dalla env. {gift_id} = clickref.
+    // {target_url} = URL dell'evento specifico, url-encoded.
+    // Esempio reale:
+    //   https://www.awin1.com/cread.php?awinmid=12345&awinaffid=PXXXXXX
+    //     &clickref={gift_id}&ued={target_url}
+    // Riattivato 2026-05-20 dopo approvazione VivaTicket IT (06/12/22 lancio).
+    trackingPattern: "wrapper",
+    wrapperUrlTemplate:
+      "https://www.awin1.com/cread.php?awinmid={awinmid}&awinaffid={affiliate_id}&clickref={gift_id}&ued={target_url}",
+    defaultCommissionRate: 0.067,
+    cookieWindowDays: 30,
+    disclosureLabel: "Evento offerto tramite VivaTicket via Awin.",
+  },
 };
 
 /**

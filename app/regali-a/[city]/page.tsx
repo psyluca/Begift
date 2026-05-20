@@ -188,9 +188,9 @@ export default async function CityLandingPage({ params }: Props) {
               lineHeight: 1.7,
             }}
           >
-            Funziona in tre passaggi: scegli un'esperienza qui sopra,
-            completi l'acquisto su GetYourGuide, poi inoltri la mail
-            di conferma a{" "}
+            Funziona in tre passaggi: scegli un'esperienza o un evento
+            qui sopra, completi l'acquisto su GetYourGuide o VivaTicket,
+            poi inoltri la mail di conferma a{" "}
             <code style={{ background: SOFT_BG, padding: "1px 6px", borderRadius: 4 }}>
               inbox@plans.begift.app
             </code>{" "}

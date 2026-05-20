@@ -166,7 +166,9 @@ export default function ForwardMailPage() {
         >
           {[
             { icon: "🌍", label: "Esperienze GetYourGuide" },
-            { icon: "🎫", label: "Biglietti per eventi" },
+            { icon: "🎤", label: "Concerti VivaTicket" },
+            { icon: "⚽", label: "Eventi sportivi VivaTicket" },
+            { icon: "🎭", label: "Teatro e musical" },
             { icon: "🎁", label: "Cofanetti esperienza" },
             { icon: "🏨", label: "Hotel e soggiorni" },
             { icon: "🚄", label: "Treni Trenitalia" },

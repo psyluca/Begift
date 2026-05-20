@@ -250,9 +250,11 @@ export default async function DiscoverPage({ searchParams }: Props) {
             lineHeight: 1.6,
           }}
         >
-          BeGift mostra esperienze offerte dal partner GetYourGuide.
-          Potremmo ricevere una piccola commissione sui regali finalizzati,
-          senza alcun costo aggiuntivo per te.{" "}
+          BeGift mostra esperienze e biglietti offerti dai partner ufficiali
+          GetYourGuide (tour ed esperienze) e VivaTicket (concerti, sport,
+          spettacoli) tramite la rete affiliate Awin. Potremmo ricevere una
+          piccola commissione sui regali finalizzati, senza alcun costo
+          aggiuntivo per te.{" "}
           <Link href="/privacy" style={{ color: ACCENT }}>
             Privacy & partner
           </Link>

@@ -12,7 +12,7 @@
  * staccato che lungo.
  */
 
-export const KB_VERSION = "2026-05-18b";
+export const KB_VERSION = "2026-05-20";
 
 export const KB_PRODUCT = {
   name: "BeGift",
@@ -36,17 +36,17 @@ export const KB_FLOWS = {
   email_parser: {
     path: "/forward-mail",
     description:
-      "Inoltri una mail di conferma acquisto (esperienza, biglietto, voucher, hotel) a un indirizzo BeGift, ti prepariamo un pacco regalo pre-popolato.",
+      "Inoltri una mail di conferma acquisto (esperienza, concerto, partita, voucher, hotel) a un indirizzo BeGift, ti prepariamo un pacco regalo pre-popolato.",
     address: "inbox@plans.begift.app",
     activation: "Settings > toggle 'Inoltro mail → regalo automatico'. Senza attivazione le mail vengono droppate per privacy.",
     delay: "Il parsing dura 10-15 secondi. La bozza appare in /drafts.",
-    supported_merchants: "BeGift prova a leggere qualsiasi mail di conferma acquisto. Funziona meglio con GetYourGuide (partner ufficiale). Per altre prove a inoltrare la mail, spesso BeGift capisce comunque.",
+    supported_merchants: "Funziona meglio con i partner ufficiali GetYourGuide (esperienze) e VivaTicket (concerti, sport, teatro). Prova comunque a inoltrare mail da TicketOne, Booking, Smartbox, Trenitalia: spesso BeGift le capisce.",
   },
   experiences_shop: {
     path: "/discover",
     description:
-      "Catalogo curato di esperienze giftabili (tour, cene, weekend). Click esperienza → pagina dettaglio → 'Acquista su GetYourGuide' → vai al partner per pagare. Dopo acquisto, mail di conferma da inoltrare per creare il pacco.",
-    partners: "GetYourGuide e' l'unico partner commerciale attivo.",
+      "Catalogo curato di esperienze e biglietti giftabili. Esperienze (tour, cene, weekend) via GetYourGuide; eventi (concerti, sport, teatro, opera) via VivaTicket. Click → pagina dettaglio → 'Acquista su partner' → vai a pagare. Dopo acquisto, mail di conferma da inoltrare per creare il pacco.",
+    partners: "GetYourGuide (esperienze) e VivaTicket via Awin (eventi). Due partner ufficiali, scope distinto.",
   },
   drafts: {
     path: "/drafts",
@@ -89,7 +89,7 @@ export const KB_FAQ_ENTRIES: Array<{ q: string; a: string }> = [
   },
   {
     q: "Quali tipi di mail il parser sa leggere?",
-    a: "Funziona meglio con GetYourGuide (partner ufficiale). Per altri merchant prova a inoltrare la mail: spesso BeGift la capisce comunque (concerto, voucher esperienza, hotel, treno, ecc.).",
+    a: "Funziona meglio con i due partner ufficiali: GetYourGuide (esperienze, tour) e VivaTicket (concerti, sport, teatro, opera). Prova comunque con altri merchant: BeGift spesso li capisce (TicketOne, Booking, Smartbox, Trenitalia, voucher esperienza).",
   },
   {
     q: "Come trovo il regalo che ho creato?",
