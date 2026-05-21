@@ -27,6 +27,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 import type { ExperienceWithPartner } from "@/types/experiences";
+import CatalogCardImage from "./CatalogCardImage";
 
 const ACCENT = "#D4537E";
 const INK = "#1a1a1a";
@@ -134,6 +135,22 @@ export default async function CatalogoPage({ searchParams }: Props) {
     const partner = Array.isArray(rawPartner) ? rawPartner[0] : rawPartner;
     return { ...row, partner } as unknown as ExperienceWithPartner;
   });
+
+  // Diagnostica per Vercel Logs: vediamo immediatamente quanti record
+  // per partner ci sono nel DB (utile se /regalo/catalogo torna vuoto).
+  // Se uno dei due partner ha 0 record, lo script seed corrispondente
+  // (supabase/seed_vivaticket_events.sql) non e' stato lanciato in prod.
+  {
+    const counts = items.reduce<Record<string, number>>((acc, it) => {
+      const slug = it.partner?.slug || "unknown";
+      acc[slug] = (acc[slug] || 0) + 1;
+      return acc;
+    }, {});
+    console.log(
+      `[catalogo] tipo=${tipoSlug} citta=${city || "—"} budget=${budgetSlug} → ` +
+        `${items.length} items, partner=${JSON.stringify(counts)}`
+    );
+  }
 
   // Filtro tag lato JS (Supabase array overlap richiede sintassi
   // .overlaps() che non sempre indicizza bene; per cataloghi <100
@@ -529,7 +546,8 @@ function CatalogCard({ experience: e }: { experience: ExperienceWithPartner }) {
       : null;
 
   const placeholder = categoryPlaceholder(e.category);
-  const partnerLabel = partnerHuman(e.partner?.slug || "");
+  const partnerSlug = e.partner?.slug || "";
+  const partnerLabel = partnerHuman(partnerSlug);
 
   return (
     <Link
@@ -547,67 +565,33 @@ function CatalogCard({ experience: e }: { experience: ExperienceWithPartner }) {
       }}
       className="catalog-card"
     >
+      {/*
+        Immagine + un solo badge categoria piccolo in alto a destra.
+        Il badge partner NON sta piu' sopra l'immagine (si sovrapponeva
+        al titolo quando le card collassavano stretta + l'image_url era
+        assente o falliva il caricamento). Ora il partner compare come
+        label discreta SOTTO il titolo, dove non puo' mai coprire nulla.
+      */}
       <div style={{ position: "relative" }}>
-        {e.image_url ? (
-          /* eslint-disable-next-line @next/next/no-img-element */
-          <img
-            src={e.image_url}
-            alt={e.title}
-            style={{
-              width: "100%",
-              height: 170,
-              objectFit: "cover",
-              background: "#f0ece6",
-              display: "block",
-            }}
-          />
-        ) : (
-          <div
-            style={{
-              width: "100%",
-              height: 170,
-              background: placeholder.gradient,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 56,
-            }}
-            aria-hidden
-          >
-            {placeholder.emoji}
-          </div>
-        )}
-        {/* Partner badge top-left */}
+        <CatalogCardImage
+          src={e.image_url || null}
+          alt={e.title}
+          placeholderEmoji={placeholder.emoji}
+          placeholderGradient={placeholder.gradient}
+        />
         <span
           style={{
             position: "absolute",
-            top: 12,
-            left: 12,
-            background: "rgba(255,255,255,.94)",
-            color: INK,
-            fontSize: 10.5,
-            fontWeight: 800,
-            letterSpacing: "0.04em",
-            textTransform: "uppercase",
-            padding: "4px 10px",
-            borderRadius: 999,
-            backdropFilter: "blur(4px)",
-          }}
-        >
-          {partnerLabel}
-        </span>
-        {/* Categoria badge top-right (subtle) */}
-        <span
-          style={{
-            position: "absolute",
-            top: 12,
-            right: 12,
+            top: 10,
+            right: 10,
             background: "rgba(26,26,26,.78)",
             color: "#fff",
             fontSize: 10.5,
             fontWeight: 700,
-            padding: "4px 10px",
+            padding: "3px 9px",
             borderRadius: 999,
+            backdropFilter: "blur(4px)",
+            pointerEvents: "none",
           }}
         >
           {categoryHuman(e.category)}
@@ -633,6 +617,21 @@ function CatalogCard({ experience: e }: { experience: ExperienceWithPartner }) {
         >
           {e.title}
         </h3>
+        {/* Partner come testo discreto SOTTO il titolo, mai sovrapposto. */}
+        {partnerLabel && (
+          <p
+            style={{
+              fontSize: 10.5,
+              color: MUTED,
+              margin: 0,
+              textTransform: "uppercase",
+              letterSpacing: "0.06em",
+              fontWeight: 600,
+            }}
+          >
+            via {partnerLabel}
+          </p>
+        )}
         <div
           style={{
             marginTop: "auto",
