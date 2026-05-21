@@ -113,8 +113,12 @@ export default async function ExperiencePage({ params, searchParams }: Props) {
         {e.image_url && (
           /* eslint-disable-next-line @next/next/no-img-element */
           <img
-            src={e.image_url}
+            // Passa per il nostro image proxy /api/img-proxy per
+            // bypassare l'hotlinking block dei CDN partner (GYG, VVT).
+            // Vedi app/api/img-proxy/route.ts.
+            src={`/api/img-proxy?u=${encodeURIComponent(e.image_url)}`}
             alt={e.title}
+            referrerPolicy="no-referrer"
             style={{
               width: "100%",
               maxHeight: 420,

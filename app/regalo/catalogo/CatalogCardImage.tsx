@@ -3,21 +3,35 @@
 /**
  * Immagine card del catalogo con fallback automatico.
  *
- * Problema riscontrato 2026-05-21: le immagini delle esperienze (sia GYG
- * che VVT) talvolta non si caricano in produzione perche':
- *   - l'image_url e' null (seed senza immagine)
- *   - l'host blocca hotlinking (403/CORS) verso il dominio Vercel
- *   - l'URL e' temporaneamente fuori uso
+ * Problema riscontrato 2026-05-21: le immagini delle esperienze (GYG, VVT,
+ * Awin, ecc.) NON si caricavano in produzione perche' i CDN dei partner
+ * bloccano l'hotlinking — un browser su begift.app riceve 403/403 quando
+ * chiede direttamente cdn.getyourguide.com/...jpg.
  *
- * In tutti questi casi vogliamo che la card NON resti vuota o con un'area
- * trasparente che fa "scappare" il titolo: mostriamo un placeholder
- * categoria-specifico (emoji su gradient) cosi' la card mantiene comunque
- * un'identita' visiva forte e leggibile.
+ * Fix 2026-05-21: tutti gli URL esterni passano per il nostro image proxy
+ * (/api/img-proxy?u=...) che fa fetch lato server (dove non c'e' Referer
+ * problematico) e ritorna i bytes col caching giusto. Vedi la route per
+ * dettagli sicurezza (whitelist host, max size, timeout).
  *
- * Il fallback gira anche lato server (SSR) quando src e' null/empty:
- * partiamo subito col placeholder e non chiediamo nemmeno il caricamento.
+ * Fallback rimane: se anche il proxy fallisce (host non whitelisted,
+ * immagine 404, ecc.) mostriamo il placeholder categoria-specifico
+ * (emoji su gradient) cosi' la card resta presentabile.
  */
 import { useState } from "react";
+
+function proxify(url: string): string {
+  // Se l'URL e' interno (relativo o stesso dominio) lo usiamo diretto.
+  // Se e' esterno, lo passiamo per /api/img-proxy.
+  try {
+    const u = new URL(url, "https://begift.app");
+    if (u.hostname === "begift.app" || u.pathname.startsWith("/api/")) {
+      return url;
+    }
+    return `/api/img-proxy?u=${encodeURIComponent(u.toString())}`;
+  } catch {
+    return url;
+  }
+}
 
 export default function CatalogCardImage({
   src,
@@ -55,9 +69,10 @@ export default function CatalogCardImage({
   return (
     /* eslint-disable-next-line @next/next/no-img-element */
     <img
-      src={src!}
+      src={proxify(src!)}
       alt={alt}
       loading="lazy"
+      referrerPolicy="no-referrer"
       onError={() => setFailed(true)}
       style={{
         width: "100%",
