@@ -140,7 +140,7 @@ export default async function DiscoverPage({ searchParams }: Props) {
             }}
           >
             🎁 <strong style={{ color: INK }}>Come funziona:</strong> scegli
-            un'esperienza qui sotto → ti portiamo dal partner (GetYourGuide) per
+            un'esperienza qui sotto → ti portiamo sul sito del partner per
             l'acquisto → quando ricevi la conferma via mail, la inoltri a
             BeGift e prepariamo il pacco regalo emozionale.
           </div>
