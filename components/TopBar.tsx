@@ -25,10 +25,15 @@ export default function TopBar() {
   // via /api/profile/me, quindi il client non vede la lista degli
   // admin (niente leak nel bundle).
   const [isAdmin, setIsAdmin] = useState(false);
+  // Count delle bozze pending (forward mail in attesa di personalizzazione).
+  // Solo per loggedIn. Se >0 mostra un badge sul bottone Bozze, cosi'
+  // l'utente vede a colpo d'occhio quante mail gli stanno aspettando.
+  const [draftsCount, setDraftsCount] = useState<number>(0);
   useEffect(() => {
     if (!loggedIn) {
       setHandle(null);
       setIsAdmin(false);
+      setDraftsCount(0);
       return;
     }
     let cancelled = false;
@@ -40,6 +45,18 @@ export default function TopBar() {
         if (cancelled) return;
         if (p?.username) setHandle(p.username);
         if (p?.is_admin) setIsAdmin(true);
+      } catch { /* ignore */ }
+    })();
+    // Fetch count bozze in parallelo. Endpoint /api/drafts ritorna la lista
+    // delle bozze utente — usiamo array.length per il badge.
+    (async () => {
+      try {
+        const res = await fetchAuthed("/api/drafts");
+        if (!res.ok) return;
+        const body = await res.json();
+        if (cancelled) return;
+        const list = Array.isArray(body) ? body : (body?.drafts || []);
+        setDraftsCount(list.length || 0);
       } catch { /* ignore */ }
     })();
     const onSet = (e: Event) => {
@@ -131,6 +148,52 @@ export default function TopBar() {
                 📊
               </a>
             )}
+            {/* Bottone Bozze: shortcut diretto a /drafts dal hub TopBar.
+                Aggiunto 2026-05-21: prima /drafts era raggiungibile SOLO
+                dalle impostazioni — troppo nascosto per un flusso (mail
+                forward) che e' uno dei 3 path principali di BeGift.
+                Badge col count se > 0 per stimolare l'azione. */}
+            <a
+              href="/drafts"
+              title={draftsCount > 0 ? `${draftsCount} bozze in attesa` : "Bozze"}
+              aria-label={draftsCount > 0 ? `Bozze (${draftsCount} in attesa)` : "Bozze"}
+              style={{
+                background: "transparent",
+                border: "1.5px solid #e0dbd5",
+                borderRadius: 20,
+                width: 32, height: 32,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                textDecoration: "none",
+                flexShrink: 0,
+                lineHeight: 1,
+                position: "relative",
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={DEEP} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                {/* mail-icon: rettangolo con linguetta superiore */}
+                <rect x="3" y="5" width="18" height="14" rx="2" />
+                <path d="M3 7l9 6 9-6" />
+              </svg>
+              {draftsCount > 0 && (
+                <span
+                  aria-hidden
+                  style={{
+                    position: "absolute",
+                    top: -3, right: -3,
+                    background: ACCENT, color: "#fff",
+                    borderRadius: 999,
+                    minWidth: 16, height: 16,
+                    fontSize: 10, fontWeight: 800,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    padding: "0 4px",
+                    border: "2px solid #fff",
+                    lineHeight: 1,
+                  }}
+                >
+                  {draftsCount > 9 ? "9+" : draftsCount}
+                </span>
+              )}
+            </a>
             {/* Bottone Impostazioni esplicito — visibile e scopribile.
                 Aggiunto 2026-04-27 dopo che la voce "Settings" e' stata
                 rimossa dalla bottom nav (sostituita da Ricorrenze).

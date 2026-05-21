@@ -14,6 +14,7 @@ import { RemindersWidget } from "@/components/RemindersWidget";
 import { MonthlySuggestionsWidget } from "@/components/MonthlySuggestionsWidget";
 import { OneYearAgoWidget } from "@/components/OneYearAgoWidget";
 import { SeasonalBanner } from "@/components/SeasonalBanner";
+import DraftsAwaitingCard from "@/components/DraftsAwaitingCard";
 
 const ACCENT = "#D4537E", DEEP = "#1a1a1a", MUTED = "#888", LIGHT = "#f7f5f2";
 
@@ -513,6 +514,14 @@ export default function DashboardClient({ user: initialUser, initialSentGifts, i
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Bozze in attesa dal flusso email parser — visibile SOLO se ci sono
+          bozze pending (progressive disclosure, vedi DraftsAwaitingCard).
+          Posizionato in cima per intercettare chi ha inoltrato una mail
+          e si chiede dove la trova. */}
+      <div style={{maxWidth:640,margin:"0 auto",padding:"0 20px"}}>
+        <DraftsAwaitingCard/>
       </div>
 
       {/* Push permission card — appare SOLO se l'utente ha già
