@@ -148,6 +148,20 @@ VALUES
 ON CONFLICT (slug) DO NOTHING;
 ```
 
+### Soglia di accesso GYG Partner API (importante)
+
+GYG ha pubblicato i requirements ufficiali su https://partner.getyourguide.support/hc/en-us/articles/13981133907613-API-integration-and-requirements :
+
+| Access Level | Cosa permette | Soglia minima |
+|---|---|---|
+| **Basic (Teaser)** | descrizioni generiche, immagini, rating, prezzi | 100,000 monthly visits (web) o downloads (app) |
+| **Reading** | descrizioni complete, prezzi, opzioni, availability | 1M visits + 300 monthly bookings |
+| **Masterbill** | come Reading + merchant of record | partner manager review |
+
+**Implicazione per BeGift (stato 2026-05-21):** finche' non supera 100k visits/mese, la Partner API GYG e' bloccata. Lo scaffold dell'importer resta pronto in mock mode + e' funzionante a livello tecnico — semplicemente non si potra' attivare con una chiave reale finche' il traffico non cresce.
+
+Alternativa immediata: provare **Awin Product Feed per GetYourGuide (advertiser 18715)** che non ha soglie di traffico (vedi sezione VivaTicket sopra per il pattern Create-a-Feed).
+
 ### Tour importati con prezzo NULL o categoria sbagliata
 
 Apri `/admin/catalog` → click sull'ultima run → guarda `notes.log` per il primo record GYG. Il parser è difensivo (campi opzionali) ma il mapping categoria potrebbe avere bisogno di aggiunte in `GYG_CATEGORY_MAP` (vedi `lib/catalog/gyg_importer.ts`).
