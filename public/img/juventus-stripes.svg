@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Strisce bianche e nere Juventus FC">
+  <title>Juventus FC — strisce bianconere</title>
+  <!-- 5 strisce nere alternate a 5 bianche, larghezza 60px ciascuna, totale 600 -->
+  <rect x="0"   y="0" width="60" height="400" fill="#fff"/>
+  <rect x="60"  y="0" width="60" height="400" fill="#0d0d0d"/>
+  <rect x="120" y="0" width="60" height="400" fill="#fff"/>
+  <rect x="180" y="0" width="60" height="400" fill="#0d0d0d"/>
+  <rect x="240" y="0" width="60" height="400" fill="#fff"/>
+  <rect x="300" y="0" width="60" height="400" fill="#0d0d0d"/>
+  <rect x="360" y="0" width="60" height="400" fill="#fff"/>
+  <rect x="420" y="0" width="60" height="400" fill="#0d0d0d"/>
+  <rect x="480" y="0" width="60" height="400" fill="#fff"/>
+  <rect x="540" y="0" width="60" height="400" fill="#0d0d0d"/>
+  <!-- Etichetta discreta a centro per chiarezza identificativa.
+       Font generico per evitare dipendenze. Drop-shadow leggera per
+       leggibilita' sopra le strisce. -->
+  <g transform="translate(300 200)" font-family="system-ui, -apple-system, Helvetica, Arial, sans-serif" font-weight="900" text-anchor="middle">
+    <text y="0" font-size="44" fill="#0d0d0d" opacity="0.5">
+      <tspan x="0" dy="-10">JUVENTUS</tspan>
+      <tspan x="0" dy="40" font-size="22" letter-spacing="6">FC</tspan>
+    </text>
+  </g>
+</svg>

@@ -36,6 +36,7 @@ const ALLOWED_HOST_SUFFIXES = [
   "gyg.com",
   "vivaticket.com",
   "vivaticket.it",
+  "cloudinary.com",      // CDN ottimizzato usato da VVT per fetch images
   "awin1.com",
   "awinmid.com",
   "ticketmaster.it",
