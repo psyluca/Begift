@@ -184,9 +184,6 @@ export default function RegaloHubPage() {
             margin: "0 auto",
           }}
         >
-          <p style={{ fontSize: 13, color: INK, margin: "0 0 6px", fontWeight: 600 }}>
-            Tutto gratis durante il lancio
-          </p>
           <p style={{ fontSize: 13, color: MUTED, margin: 0, lineHeight: 1.6 }}>
             BeGift e' la confezione digitale. Se compri un'esperienza dal
             catalogo, paghi sul sito del partner: il prezzo e' lo stesso che
