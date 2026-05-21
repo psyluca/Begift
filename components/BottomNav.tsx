@@ -136,7 +136,7 @@ export default function BottomNav() {
   void SettingsIcon;
   const items = [
     { id: "home",       label: t("nav.home"),                onClick: () => router.push("/"),            icon: (a: boolean) => <HomeIcon active={a}/>,           active: pathname === "/" },
-    { id: "create",     label: t("nav.create"),              onClick: () => router.push("/create"),      icon: (a: boolean) => <PlusIcon active={a}/>,           active: pathname === "/create" },
+    { id: "create",     label: t("nav.create"),              onClick: () => router.push("/regalo"),      icon: (a: boolean) => <PlusIcon active={a}/>,           active: pathname === "/regalo" || pathname.startsWith("/regalo/") || pathname === "/create" },
     { id: "dashboard",  label: t("nav.gifts"),               onClick: handleGiftClick,                   icon: (a: boolean) => <GiftIcon active={a}/>,           active: pathname === "/dashboard",   giftBadge: true },
     { id: "reactions",  label: t("nav.reactions"),           onClick: handleReactionsClick,              icon: (a: boolean) => <BellIcon active={a}/>,           active: pathname === "/reactions",   reactionBadge: true },
     { id: "ricorrenze", label: t("nav.reminders"),  onClick: () => router.push("/ricorrenze"),  icon: (a: boolean) => <CalendarHeartIcon active={a}/>,  active: pathname.startsWith("/ricorrenze") },

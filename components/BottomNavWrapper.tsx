@@ -21,5 +21,13 @@ export default function BottomNavWrapper() {
   // Nascondi nav sulla pagina regalo solo se non loggato (immersiva)
   if (pathname.startsWith("/gift/") && !user) return null;
 
+  // Nascondi sempre sulla pagina apertura cliente BeGift Business
+  if (pathname.startsWith("/g/")) return null;
+
+  // Nascondi nella dashboard business: i link "home / drafts / dashboard
+  // / settings" del flusso personale non hanno senso per un utente in
+  // area B2B e creano confusione (l'aveva segnalato la prima cliente).
+  if (pathname.startsWith("/business")) return null;
+
   return <BottomNav/>;
 }

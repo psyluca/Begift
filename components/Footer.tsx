@@ -32,6 +32,14 @@ export default function Footer() {
   // Nascondi su create (ha il suo flow dedicato).
   if (pathname === "/create") return null;
 
+  // Nascondi su pagina apertura cliente BeGift Business: la pagina ha
+  // il suo footer interno minimalista ("impacchettato da BeGift").
+  if (pathname.startsWith("/g/")) return null;
+
+  // Nascondi anche sulla dashboard business: l'area B2B e' isolata dal
+  // flusso personale, il footer "BeGift personale" non c'entra.
+  if (pathname.startsWith("/business")) return null;
+
   const year = new Date().getFullYear();
 
   // Modalità "discreta" sulla pagina di apertura regalo: stesso footer

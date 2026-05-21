@@ -11,6 +11,7 @@ import Footer from "@/components/Footer";
 // è ancora in components/ per eventuale riuso futuro.
 import { UsernameOnboarding } from "@/components/UsernameOnboarding";
 import { PushAutoHeal } from "@/components/PushAutoHeal";
+import SupportConcierge from "@/components/SupportConcierge";
 import { baseGraph } from "@/lib/structured-data";
 
 export const viewport: Viewport = {
@@ -92,15 +93,6 @@ export const metadata: Metadata = {
   },
   verification: {
     google: "auQIQhkfwZJ2ZOCrZJl-TAQmBU5vOT7Lwd405_RU0zQ",
-    other: {
-      // TradeDoubler site verification per attivazione publisher account
-      // (Maria, TradeDoubler IT). Loro chiedevano un commento HTML
-      // <!--Tradedoubler site verification 3483658-->, ma Next.js App
-      // Router non supporta nativamente commenti HTML nel <head>:
-      // usiamo meta tag con stesso site id come variante semanticamente
-      // equivalente. Comunicato a TradeDoubler il 12/05/2026.
-      "tradedoubler-site-verification": "3483658",
-    },
   },
   category: "Lifestyle",
 };
@@ -162,6 +154,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               il drift "permission granted ma 0 device in DB". Una volta
               per sessione browser. */}
           <PushAutoHeal/>
+          {/* SupportConcierge: FAB chat di aiuto AI. Self-gating via
+              feature flag NEXT_PUBLIC_FEATURE_SUPPORT_CONCIERGE: se
+              false ritorna null senza render del bottone. */}
+          <SupportConcierge/>
         </I18nProvider>
       </body>
     </html>

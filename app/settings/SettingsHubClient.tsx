@@ -1,14 +1,9 @@
-"use client";
 
-/**
- * SettingsHubClient — pagina unica con tutte le impostazioni utente.
- * Progettata per sostituire /settings/profile e /settings/reminders
- * (che ora redirectano qui con scroll all'anchor relativa).
- *
- * Struttura a sezioni card. Ogni sezione è autonoma (può ricaricarsi)
- * e usa fetchAuthed per robust auth.
+"use client";     
+/**                                                     
+ * SettingsHubClient — pagina unica...
  */
-
+import EmailParserSettings from "@/components/EmailParserSettings";   
 import { useEffect, useState } from "react";
 import { useI18n } from "@/lib/i18n";
 import { fetchAuthed } from "@/lib/clientAuth";
@@ -234,6 +229,8 @@ export default function SettingsHubClient() {
             </Link>
           </div>
         </Section>
+
+<EmailParserSettings />
 
         {/* ── RICORRENZE ───────────────────────────────── */}
         <Section title={t("settings_hub.section_reminders")} id="reminders">

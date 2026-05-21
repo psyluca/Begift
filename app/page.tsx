@@ -102,9 +102,8 @@ export default function HomePage() {
           }
         `}</style>
         {/* Badge "Beta pubblica" rimosso il 12/05/2026 per posizionamento
-            più maturo agli occhi dei partner commerciali (TradeDoubler/
-            Smartbox in fase di approvazione affiliate). Disclaimer onesto
-            mantenuto in versione più morbida sotto il CTA. */}
+            più maturo. Disclaimer onesto mantenuto in versione più
+            morbida sotto il CTA. */}
         <h1 style={{
           fontSize: "clamp(34px,9vw,60px)", fontWeight: 900,
           letterSpacing: "-2px", color: DEEP, margin: "0 0 18px",
@@ -138,13 +137,69 @@ export default function HomePage() {
         }}>
           {t("home.hero_subtitle_quote")}
         </p>
-        <Link href="/create" style={{
-          background: ACCENT, color: "#fff", borderRadius: 50,
-          padding: "16px 42px", fontSize: 16, fontWeight: 700,
-          textDecoration: "none", display: "inline-block",
-          boxShadow: "0 10px 32px rgba(212,83,126,.35)",
-          transition: "transform .15s",
-        }}>{t("home.cta_create")}</Link>
+        {/* Primary CTA aggiornato 2026-05-21: il flusso flagship e' ora
+            /regalo, hub unificato con 4 entry path (catalogo, file,
+            messaggio, mail). Da li il sender sceglie il modo preferito
+            di partire — il claim della home resta intatto, cambia solo
+            il primo passo concreto che proponiamo. */}
+        <Link
+          href="/regalo"
+          onClick={() => track("home_regalo_cta_clicked")}
+          style={{
+            background: ACCENT, color: "#fff", borderRadius: 50,
+            padding: "16px 42px", fontSize: 16, fontWeight: 700,
+            textDecoration: "none", display: "inline-block",
+            boxShadow: "0 10px 32px rgba(212,83,126,.35)",
+            transition: "transform .15s",
+          }}
+        >
+          {t("home.cta_inizia")}
+        </Link>
+        {/* Mini hint dei 3 modi sotto il CTA primario. Non e' un altro
+            bottone — e' una micro-rassicurazione visiva che dice "puoi
+            iniziare in piu' modi". 3 emoji + label essenziali, click
+            su ciascuno entra direttamente in quella path saltando il hub.
+            (Update 2026-05-21: file e messaggio accorpati in "Contenuto"
+            perche' atterravano sulla stessa schermata /create — separarli
+            era percepito come duplicazione del flusso.) */}
+        <div
+          style={{
+            marginTop: 22,
+            display: "flex",
+            gap: 6,
+            flexWrap: "wrap",
+            justifyContent: "center",
+            maxWidth: 460,
+          }}
+        >
+          {[
+            { href: "/regalo/catalogo",  emoji: "🎁", label: "Catalogo" },
+            { href: "/regalo/contenuto", emoji: "💌", label: "Qualcosa di tuo" },
+            { href: "/regalo/mail",      emoji: "📧", label: "Mail" },
+          ].map((p) => (
+            <Link
+              key={p.href}
+              href={p.href}
+              onClick={() => track("home_path_hint_clicked", { path: p.label })}
+              style={{
+                background: "#fff",
+                border: "1px solid #e8e4de",
+                borderRadius: 999,
+                padding: "7px 13px",
+                fontSize: 12.5,
+                color: DEEP,
+                fontWeight: 600,
+                textDecoration: "none",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              <span aria-hidden style={{ fontSize: 14 }}>{p.emoji}</span>
+              {p.label}
+            </Link>
+          ))}
+        </div>
         {/* Disclaimer onesto: copy riformulato il 12/05/2026 — rimosso
             riferimento a "gratis durante la beta" che suggeriva un
             futuro pagamento (decisione di pricing non ancora presa,
@@ -361,7 +416,10 @@ export default function HomePage() {
         <p style={{ fontSize: 15, color: MUTED, margin: "0 0 28px", lineHeight: 1.6 }}>
           {t("home.final_cta_desc")}
         </p>
-        <Link href="/create" style={{
+        {/* Final CTA allineato all'entrata principale /regalo: il sender
+            arrivato a fondo pagina dopo aver letto tutto trova un bottone
+            coerente con quello in alto. Niente di nuovo da decidere. */}
+        <Link href="/regalo" style={{
           background: ACCENT, color: "#fff", borderRadius: 50,
           padding: "17px 46px", fontSize: 17, fontWeight: 800,
           textDecoration: "none", display: "inline-block",

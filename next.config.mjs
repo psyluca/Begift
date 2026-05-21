@@ -25,7 +25,10 @@ const CSP = [
   // Plausible Analytics: script servito da plausible.io.
   // Le chiamate di ingestione eventi vanno in connect-src (vedi sotto).
   "script-src 'self' 'unsafe-inline' https://plausible.io",
-  "style-src 'self' 'unsafe-inline'",
+  // fonts.googleapis.com serve per i fogli di stile di Google Fonts
+  // (es. font Caveat caricato in alcune pagine). Senza, il CSP blocca
+  // il <link rel="stylesheet"> verso fonts.googleapis.com.
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   // img-src include i.ytimg.com per thumbnails YouTube nei link gift.
   "img-src 'self' data: blob: https://*.supabase.co https://lh3.googleusercontent.com https://i.ytimg.com https://*.ytimg.com https://i.scdn.co",
   // media-src include p.scdn.co per i preview audio 30s di Spotify
@@ -33,13 +36,17 @@ const CSP = [
   // p.scdn.co/mp3-preview/...). Senza, il tag <audio> verrebbe bloccato
   // dal CSP e gli utenti vedrebbero un player muto.
   "media-src 'self' blob: https://*.supabase.co https://p.scdn.co",
-  "font-src 'self' data:",
+  // fonts.gstatic.com e' il CDN da cui Google Fonts serve i file .woff2.
+  // Va in coppia con fonts.googleapis.com in style-src.
+  "font-src 'self' data: https://fonts.gstatic.com",
   // connect-src include plausible.io per il POST /api/event degli eventi custom.
   "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://plausible.io",
   // frame-src: domini consentiti per <iframe> embed dentro i regali.
   // Senza questa direttiva, fallback a default-src 'self' bloccava
   // gli embed YouTube/Spotify/Vimeo (bug riportato 2026-04-25).
-  "frame-src 'self' https://www.youtube.com https://youtube.com https://www.youtube-nocookie.com https://open.spotify.com https://player.vimeo.com https://player.twitch.tv https://w.soundcloud.com",
+  // supabase.co aggiunto 2026-05-18 per anteprima inline PDF coupon
+  // (BeGift Business): senza, l'iframe veniva bloccato in silenzio.
+  "frame-src 'self' https://www.youtube.com https://youtube.com https://www.youtube-nocookie.com https://open.spotify.com https://player.vimeo.com https://player.twitch.tv https://w.soundcloud.com https://*.supabase.co",
   "frame-ancestors 'none'",
   "form-action 'self'",
   "base-uri 'self'",
