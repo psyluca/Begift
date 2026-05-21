@@ -172,6 +172,55 @@ export default function RegaloHubPage() {
           ))}
         </section>
 
+        {/* Banda "Hai gia' inoltrato una mail?" — porta a /drafts senza
+            dover entrare nelle impostazioni. Visibile sempre nel hub
+            /regalo perche' il flusso mail e' uno dei 3 path principali
+            e va comunicato esplicitamente.
+            Update UX 2026-05-21 — prima /drafts era raggiungibile solo
+            dalle impostazioni email parser, troppo nascosto. */}
+        <section
+          style={{
+            background: "linear-gradient(135deg,#FFF3E0 0%,#FCE4EC 100%)",
+            border: `1px solid ${BORDER}`,
+            borderRadius: 16,
+            padding: "16px 22px",
+            maxWidth: 720,
+            margin: "0 auto 18px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+            flexWrap: "wrap",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 12, flex: "1 1 auto" }}>
+            <span style={{ fontSize: 28 }} aria-hidden>📬</span>
+            <div>
+              <p style={{ fontSize: 14, color: INK, margin: 0, fontWeight: 700, lineHeight: 1.35 }}>
+                Hai gia&apos; inoltrato una mail di conferma?
+              </p>
+              <p style={{ fontSize: 12.5, color: MUTED, margin: "2px 0 0", lineHeight: 1.4 }}>
+                Le tue bozze ti aspettano, pronte da personalizzare e inviare.
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/drafts"
+            style={{
+              background: ACCENT,
+              color: "#fff",
+              fontSize: 13,
+              fontWeight: 700,
+              padding: "9px 16px",
+              borderRadius: 999,
+              textDecoration: "none",
+              flexShrink: 0,
+            }}
+          >
+            Vedi le tue bozze →
+          </Link>
+        </section>
+
         {/* Footer note + cross-link rassicurante */}
         <section
           style={{
