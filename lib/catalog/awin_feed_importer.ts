@@ -33,6 +33,7 @@
 import crypto from "node:crypto";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 import type { ExperienceCategory, ExperienceTag } from "@/types/experiences";
+import { parseCsv } from "@/lib/catalog/csv_parser";
 
 // ───────────────────────────────────────────────────────────────
 // Configurazione merchant Awin
@@ -101,79 +102,6 @@ export interface AwinImportStats {
   partner_id: string | null;
   mock_mode: boolean;
   merchant: string;
-}
-
-// ───────────────────────────────────────────────────────────────
-// CSV parser minimale (RFC 4180 subset: gestisce quote + comma)
-// ───────────────────────────────────────────────────────────────
-
-function parseCsv(content: string): Record<string, string>[] {
-  const rows: string[][] = [];
-  let cur: string[] = [];
-  let field = "";
-  let inQuote = false;
-  let i = 0;
-
-  while (i < content.length) {
-    const ch = content[i];
-
-    if (inQuote) {
-      if (ch === '"') {
-        if (content[i + 1] === '"') {
-          field += '"';
-          i += 2;
-          continue;
-        }
-        inQuote = false;
-        i += 1;
-        continue;
-      }
-      field += ch;
-      i += 1;
-      continue;
-    }
-
-    if (ch === '"') {
-      inQuote = true;
-      i += 1;
-      continue;
-    }
-    if (ch === ",") {
-      cur.push(field);
-      field = "";
-      i += 1;
-      continue;
-    }
-    if (ch === "\n" || ch === "\r") {
-      if (field !== "" || cur.length > 0) {
-        cur.push(field);
-        rows.push(cur);
-      }
-      cur = [];
-      field = "";
-      // gestisci CRLF
-      if (ch === "\r" && content[i + 1] === "\n") i += 2;
-      else i += 1;
-      continue;
-    }
-    field += ch;
-    i += 1;
-  }
-  // Flush last
-  if (field !== "" || cur.length > 0) {
-    cur.push(field);
-    rows.push(cur);
-  }
-
-  if (rows.length === 0) return [];
-  const header = rows[0].map((h) => h.trim().toLowerCase());
-  return rows.slice(1).map((row) => {
-    const obj: Record<string, string> = {};
-    header.forEach((h, idx) => {
-      obj[h] = (row[idx] ?? "").trim();
-    });
-    return obj;
-  });
 }
 
 // ───────────────────────────────────────────────────────────────

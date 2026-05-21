@@ -5,7 +5,7 @@
  * fetchAuthed → gestisce 403 → renderizza dashboard.
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { fetchAuthed } from "@/lib/clientAuth";
 
 const ACCENT = "#D4537E";
@@ -47,6 +47,12 @@ export default function AdminCatalogClient() {
   );
   const [syncing, setSyncing] = useState(false);
   const [lastResult, setLastResult] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadResult, setUploadResult] = useState<{
+    msg: string;
+    errors?: { row: number; message: string }[];
+  } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   async function load() {
     try {
@@ -99,6 +105,56 @@ export default function AdminCatalogClient() {
       setLastResult(`Errore: ${(e as Error).message}`);
     } finally {
       setSyncing(false);
+    }
+  }
+
+  async function handleUpload(file: File) {
+    setUploading(true);
+    setUploadResult(null);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetchAuthed("/api/admin/catalog/upload", {
+        method: "POST",
+        body: form,
+      });
+      const body = await res.json();
+      if (res.ok) {
+        setUploadResult({
+          msg: `OK — ${body.stats.inserted} inseriti, ${body.stats.updated} aggiornati, ${body.stats.skipped} skip, ${body.stats.errors} errori (${body.stats.fetched} righe processate)`,
+          errors: body.errors,
+        });
+        await load();
+      } else {
+        setUploadResult({
+          msg: `Errore: ${body.message || body.error || res.statusText}`,
+          errors: body.errors,
+        });
+      }
+    } catch (e) {
+      setUploadResult({ msg: `Errore: ${(e as Error).message}` });
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
+  async function downloadTemplate() {
+    try {
+      const res = await fetchAuthed("/api/admin/catalog/template");
+      if (!res.ok) {
+        alert("Errore scaricamento template (sei admin?)");
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "begift_catalog_template.csv";
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      alert(`Errore: ${(e as Error).message}`);
     }
   }
 
@@ -208,6 +264,78 @@ export default function AdminCatalogClient() {
           {lastResult}
         </p>
       )}
+
+      {/* Upload manuale CSV */}
+      <Section title="Upload manuale (CSV)">
+        <p style={{ fontSize: 13, color: MUTED, margin: "0 0 12px", lineHeight: 1.55 }}>
+          Carica un CSV con eventi/esperienze curate a mano (utile per
+          VivaTicket finché Awin non offre un feed, o per qualsiasi partner
+          futuro). Le righe verranno scritte con <code>source=&apos;manual&apos;</code>
+          e <strong>non verranno mai sovrascritte</strong> dai cron GYG/VVT.
+        </p>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+          <button onClick={downloadTemplate} style={secondaryBtn(false)}>
+            Scarica template CSV
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".csv,text/csv"
+            disabled={uploading}
+            onChange={(ev) => {
+              const f = ev.target.files?.[0];
+              if (f) handleUpload(f);
+            }}
+            style={{ fontSize: 13 }}
+          />
+          {uploading && <span style={{ color: MUTED, fontSize: 13 }}>Upload…</span>}
+        </div>
+        {uploadResult && (
+          <div style={{ marginTop: 12 }}>
+            <p
+              style={{
+                padding: "10px 14px",
+                background: uploadResult.msg.startsWith("OK") ? "#ecfdf5" : "#fef2f2",
+                color: uploadResult.msg.startsWith("OK") ? OK : ERR,
+                borderRadius: 8,
+                fontSize: 13,
+                fontFamily: "ui-monospace, monospace",
+                margin: 0,
+              }}
+            >
+              {uploadResult.msg}
+            </p>
+            {uploadResult.errors && uploadResult.errors.length > 0 && (
+              <details style={{ marginTop: 10, fontSize: 12.5 }}>
+                <summary
+                  style={{ cursor: "pointer", color: MUTED, fontWeight: 600 }}
+                >
+                  Mostra dettaglio errori ({uploadResult.errors.length})
+                </summary>
+                <ul
+                  style={{
+                    marginTop: 6,
+                    paddingLeft: 18,
+                    fontFamily: "ui-monospace, monospace",
+                    color: ERR,
+                  }}
+                >
+                  {uploadResult.errors.map((e, i) => (
+                    <li key={i}>
+                      Riga {e.row}: {e.message}
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            )}
+          </div>
+        )}
+        <p style={{ fontSize: 11.5, color: MUTED, marginTop: 10 }}>
+          Suggerimento: apri il template in Numbers/Excel/Sheets, compila le righe,
+          esporta come CSV UTF-8, carica qui. L'upload è idempotente: ricarica
+          quante volte vuoi.
+        </p>
+      </Section>
 
       {/* Ultimo run highlight */}
       {lastRun && (
