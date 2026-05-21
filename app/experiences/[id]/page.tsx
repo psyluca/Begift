@@ -38,9 +38,10 @@ export const dynamic = "force-dynamic";
 
 interface Props {
   params: { id: string };
+  searchParams?: { from?: string };
 }
 
-export default async function ExperiencePage({ params }: Props) {
+export default async function ExperiencePage({ params, searchParams }: Props) {
   if (process.env.NEXT_PUBLIC_FEATURE_EXPERIENCES_SHOP !== "true") {
     notFound();
   }
@@ -92,8 +93,17 @@ export default async function ExperiencePage({ params }: Props) {
     >
       <div style={{ maxWidth: 720, margin: "0 auto" }}>
         <div style={{ marginBottom: 12 }}>
+          {/* Back link: torna al catalogo unificato /regalo/catalogo
+              (entry point primario). Se l'utente e' arrivato da
+              /discover (legacy) torna comunque al nuovo catalogo,
+              che contiene le stesse esperienze + VVT in piu'.
+              Update 2026-05-21 — flow coerente con il nuovo hub /regalo. */}
           <Link
-            href="/discover"
+            href={
+              searchParams?.from === "discover"
+                ? "/discover"
+                : "/regalo/catalogo"
+            }
             style={{ fontSize: 13, color: MUTED, textDecoration: "none" }}
           >
             ← Esperienze

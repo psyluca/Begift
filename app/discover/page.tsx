@@ -94,14 +94,14 @@ export default async function DiscoverPage({ searchParams }: Props) {
             preserviamo nel link cosi' /start riapre direttamente lo
             step 1 (intent picker) col destinatario gia' scelto, invece
             di farlo ricominciare da step 0 (input nome).
-            Fix UX feedback Luca 2026-05-16. */}
+            Fix UX feedback Luca 2026-05-16.
+            Update 2026-05-21: "Cambia idea" ora porta a /regalo (hub
+            unificato a 3 path) invece che a /start (vecchio flusso) —
+            cosi' chi naviga back dal catalogo torna nel posto giusto
+            del nuovo flow. */}
         <div style={{ marginBottom: 12 }}>
           <Link
-            href={
-              searchParams.for
-                ? `/start?for=${encodeURIComponent(searchParams.for)}`
-                : "/start"
-            }
+            href="/regalo"
             style={{
               fontSize: 13,
               color: MUTED,
