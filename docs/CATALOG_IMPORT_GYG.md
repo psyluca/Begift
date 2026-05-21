@@ -174,6 +174,127 @@ SELECT source, count(*)
 
 - **Cap geo**: filtri client-side per countries via query param (`?countries=IT,FR,ES`).
 - **Backfill iniziale**: prima run completa in modalità reale potrebbe importare 2-5k record. Considerare batch insert (chunked) per ridurre round-trip.
-- **Awin Product Feed fallback**: se GYG Partner API non si sblocca in tempi ragionevoli, esiste un Awin XML feed con il catalogo GYG (più povero ma accessibile subito). Si aggiunge come `lib/catalog/awin_feed_importer.ts`.
 - **Image hosting proxy**: alcune immagini GYG potrebbero bloccare hotlinking. Valutare cache via Vercel image optimization o un mirror su Supabase Storage.
 - **Quality scoring**: oltre a rating + reviews, aggiungere "freshness" (last_updated) per ordinare il catalogo `/regalo/catalogo`.
+
+---
+
+# VivaTicket — Awin Product Feed
+
+VivaTicket NON ha una Partner API pubblica. L'unico canale automatizzato per importarne il catalogo è il **Product Feed Awin** (CSV/XML giornaliero per merchant ID 32283).
+
+## Architettura simmetrica a GYG
+
+```
+              ┌──────────────────────────────────┐
+              │  Vercel cron 30 2 * * *           │
+              │  GET /api/cron/catalog-sync-vvt   │
+              │  + Authorization: Bearer SECRET    │
+              └────────────────┬──────────────────┘
+                               │
+              ┌────────────────▼───────────────────┐
+              │  runAwinImportWithAudit(            │
+              │    "cron", "vivaticket")            │
+              │  lib/catalog/awin_feed_importer.ts  │
+              └────────────────┬───────────────────┘
+                               │
+              ┌────────────────▼────────────────┐
+              │  HTTP GET ${AWIN_VVT_FEED_URL}  │
+              │  CSV con header standard Awin   │
+              └────────────────┬────────────────┘
+                               │
+              ┌────────────────▼─────────────────┐
+              │  Filter in_stock + min_price      │
+              │  Infer category (concerti/sport/  │
+              │    opera/cultura) da titolo+desc  │
+              │  Extract city (whitelist IT)      │
+              │  Compute import_hash              │
+              └────────────────┬─────────────────┘
+                               │
+              ┌────────────────▼──────────────────┐
+              │  Upsert experiences                │
+              │  source='imported_vvt_awin_feed'   │
+              │  Mai sovrascrive 'manual'          │
+              └────────────────────────────────────┘
+```
+
+## Setup VVT in produzione
+
+### 1. Ottieni l'URL del Product Feed Awin
+
+Loggati su https://ui.awin.com → menu **Toolbox → Create-a-Feed** (o **Product Feeds**).
+
+1. Filtra per **Advertiser ID = 32283** (VivaTicket Italia).
+2. Seleziona le colonne minime richieste dal parser (tutte case-insensitive):
+   - `aw_deep_link`
+   - `aw_product_id`
+   - `merchant_product_id`
+   - `product_name`
+   - `description`
+   - `aw_image_url`
+   - `search_price`
+   - `currency`
+   - `merchant_category`
+   - `delivery_country`
+   - `in_stock`
+3. Format: **CSV**, delimiter virgola, NO compressione (più semplice da parsare lato server senza dipendenze).
+4. Genera l'URL feed → copia.
+
+### 2. Configura su Vercel
+
+| Variabile | Valore |
+|-----------|--------|
+| `AWIN_VVT_FEED_URL` | l'URL CSV di step 1 |
+
+Stesse env già richieste per GYG: `NEXT_PUBLIC_FEATURE_CATALOG_IMPORT=true`, `CRON_SECRET`.
+
+### 3. Verifica
+
+```bash
+curl -X POST \
+  -H "Authorization: Bearer $CRON_SECRET" \
+  "https://begift.com/api/admin/catalog/sync?dryRun=1&merchant=vvt"
+```
+
+Oppure da browser: `/admin/catalog` → "Sync VVT ora".
+
+## Mock mode VVT (senza URL feed)
+
+Se `AWIN_VVT_FEED_URL` non è settata, l'importer ritorna 3 eventi finti:
+- Coldplay Music of the Spheres — Milano
+- Aida — Arena di Verona
+- Bologna FC — partite casa
+
+Stessa logica del mock GYG: utile per validare la pipeline E2E prima di avere il feed reale.
+
+## Troubleshooting VVT
+
+### "Awin feed HTTP 401" o "Awin feed HTTP 403"
+URL feed con API key sbagliata o publisher non autorizzato a quell'advertiser. Verifica nel pannello Awin che il programma VivaTicket sia in stato "Joined" e che la API key in URL sia valida.
+
+### Feed scaricato ma 0 record filtrati
+Probabile: parser non trova le colonne attese. Apri `/admin/catalog` → ultima run VVT → `notes.log` → cerca "Prima riga del feed (debug shape)" → confronta i nomi colonna con quelli che il parser cerca (vedi commenti in `awin_feed_importer.ts`). Se sono diversi (es. `productName` invece di `product_name`), modifica `AWIN_MERCHANTS` o estendi il fallback nel parser.
+
+### Tour importati con città NULL
+La heuristica di city extraction cerca solo nomi di città italiane note (whitelist in `extractCity()`). Per concerti tipo "Coldplay Music of the Spheres" senza città esplicita, la city sarà NULL. Per il catalogo `/regalo/catalogo` la riga compare comunque ma senza il subtext città. Si può estendere la whitelist o passare a un'inferenza più sofisticata (geocoding partial).
+
+## Aggiungere altri merchant Awin
+
+Il codice è progettato per scalare oltre VivaTicket. Per importare un altro advertiser Awin (es. un programma food/wine):
+
+1. In `lib/catalog/awin_feed_importer.ts` aggiungi una entry a `AWIN_MERCHANTS`:
+   ```typescript
+   foodwine: {
+     partnerSlug: "awin",
+     awinmid: 12345,
+     feedUrlEnv: "AWIN_FOODWINE_FEED_URL",
+     displayName: "Food & Wine Italia",
+     defaultCategory: "food",
+     defaultCountry: "IT",
+     sourceTag: "imported_foodwine_awin_feed",
+   },
+   ```
+2. Crea `/api/cron/catalog-sync-foodwine/route.ts` (copia da `catalog-sync-vvt`).
+3. Aggiungi entry a `vercel.json`.
+4. (Opzionale) Estendi il bottone in `AdminCatalogClient.tsx`.
+

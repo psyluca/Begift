@@ -14,6 +14,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdmin, createSupabaseServer } from "@/lib/supabase/server";
 import { isAdminEmail } from "@/lib/admin";
 import { runImportWithAudit } from "@/lib/catalog/gyg_importer";
+import { runAwinImportWithAudit } from "@/lib/catalog/awin_feed_importer";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -92,13 +93,27 @@ export async function POST(req: NextRequest) {
 
   const url = new URL(req.url);
   const dryRun = url.searchParams.get("dryRun") === "1";
+  // ?merchant=gyg → import GetYourGuide via Partner API
+  // ?merchant=vvt → import VivaTicket via Awin Product Feed
+  // default → gyg (back-compat con bottone unico precedente)
+  const merchant = (url.searchParams.get("merchant") || "gyg").toLowerCase();
 
   try {
-    const result = await runImportWithAudit(
-      "manual",
-      { dryRun },
-      auth.userId || null
-    );
+    let result;
+    if (merchant === "vvt" || merchant === "vivaticket") {
+      result = await runAwinImportWithAudit(
+        "manual",
+        "vivaticket",
+        { dryRun },
+        auth.userId || null
+      );
+    } else {
+      result = await runImportWithAudit(
+        "manual",
+        { dryRun },
+        auth.userId || null
+      );
+    }
     return NextResponse.json(result, { status: 200 });
   } catch (e) {
     return NextResponse.json(

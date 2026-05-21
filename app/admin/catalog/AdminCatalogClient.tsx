@@ -70,22 +70,26 @@ export default function AdminCatalogClient() {
     load();
   }, []);
 
-  async function triggerSync(dryRun: boolean) {
+  async function triggerSync(merchant: "gyg" | "vvt", dryRun: boolean) {
     setSyncing(true);
     setLastResult(null);
     try {
-      const url = dryRun
-        ? "/api/admin/catalog/runs?dryRun=1"
-        : "/api/admin/catalog/runs";
+      const params = new URLSearchParams();
+      params.set("merchant", merchant);
+      if (dryRun) params.set("dryRun", "1");
+      const url = `/api/admin/catalog/runs?${params.toString()}`;
       const res = await fetchAuthed(url, { method: "POST" });
       const body = await res.json();
       if (res.ok) {
+        const label = merchant === "gyg" ? "GYG" : "VVT";
         setLastResult(
-          `OK — ${body.stats?.inserted || 0} inseriti, ${
-            body.stats?.updated || 0
-          } aggiornati, ${body.stats?.skipped || 0} skip, ${
-            body.stats?.errors || 0
-          } errori${body.stats?.mock_mode ? " (MOCK)" : ""}.`
+          `OK ${label}${dryRun ? " (dry)" : ""} — ${
+            body.stats?.inserted || 0
+          } inseriti, ${body.stats?.updated || 0} aggiornati, ${
+            body.stats?.skipped || 0
+          } skip, ${body.stats?.errors || 0} errori${
+            body.stats?.mock_mode ? " · MOCK MODE" : ""
+          }.`
         );
         await load();
       } else {
@@ -142,44 +146,68 @@ export default function AdminCatalogClient() {
         </div>
       </Section>
 
-      {/* Azione sync */}
-      <Section title="Trigger manuale">
+      {/* Azione sync GetYourGuide */}
+      <Section title="Sync GetYourGuide (Partner API)">
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           <button
-            onClick={() => triggerSync(false)}
+            onClick={() => triggerSync("gyg", false)}
             disabled={syncing}
             style={primaryBtn(syncing)}
           >
-            {syncing ? "Sync in corso…" : "Sync ora"}
+            {syncing ? "Sync in corso…" : "Sync GYG ora"}
           </button>
           <button
-            onClick={() => triggerSync(true)}
+            onClick={() => triggerSync("gyg", true)}
             disabled={syncing}
             style={secondaryBtn(syncing)}
           >
-            Dry run (no write)
+            Dry run GYG
           </button>
         </div>
-        {lastResult && (
-          <p
-            style={{
-              marginTop: 12,
-              padding: "10px 14px",
-              background: lastResult.startsWith("OK") ? "#ecfdf5" : "#fef2f2",
-              color: lastResult.startsWith("OK") ? OK : ERR,
-              borderRadius: 8,
-              fontSize: 13,
-              fontFamily: "ui-monospace, monospace",
-            }}
-          >
-            {lastResult}
-          </p>
-        )}
         <p style={{ fontSize: 11.5, color: MUTED, marginTop: 8 }}>
-          Trigger anche via cron (Vercel daily 02:00 UTC) o via curl con
-          Bearer CRON_SECRET su <code>/api/admin/catalog/sync</code>.
+          Senza <code>GYG_PARTNER_API_KEY</code> gira in mock mode (3 tour finti).
         </p>
       </Section>
+
+      {/* Azione sync VivaTicket */}
+      <Section title="Sync VivaTicket (Awin Product Feed)">
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <button
+            onClick={() => triggerSync("vvt", false)}
+            disabled={syncing}
+            style={primaryBtn(syncing)}
+          >
+            {syncing ? "Sync in corso…" : "Sync VVT ora"}
+          </button>
+          <button
+            onClick={() => triggerSync("vvt", true)}
+            disabled={syncing}
+            style={secondaryBtn(syncing)}
+          >
+            Dry run VVT
+          </button>
+        </div>
+        <p style={{ fontSize: 11.5, color: MUTED, marginTop: 8 }}>
+          Senza <code>AWIN_VVT_FEED_URL</code> gira in mock mode (3 eventi finti:
+          Coldplay Milano, Aida Verona, Bologna FC).
+        </p>
+      </Section>
+
+      {lastResult && (
+        <p
+          style={{
+            padding: "10px 14px",
+            background: lastResult.startsWith("OK") ? "#ecfdf5" : "#fef2f2",
+            color: lastResult.startsWith("OK") ? OK : ERR,
+            borderRadius: 8,
+            fontSize: 13,
+            fontFamily: "ui-monospace, monospace",
+            marginBottom: 24,
+          }}
+        >
+          {lastResult}
+        </p>
+      )}
 
       {/* Ultimo run highlight */}
       {lastRun && (
