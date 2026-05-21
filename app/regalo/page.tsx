@@ -2,17 +2,22 @@
  * /regalo
  *
  * Hub unificato del flusso "fai un regalo con BeGift". Una sola pagina
- * che presenta i 4 modi di entrare nel flow:
+ * che presenta i 3 modi di entrare nel flow:
  *
  *   1. Catalogo  — scegli un'esperienza da regalare (GYG + VVT)
- *   2. File      — impacchetta qualcosa che hai sul computer
- *   3. Messaggio — scrivi un pensiero e lo presentiamo come regalo
- *   4. Mail      — inoltra una mail di conferma acquisto
+ *   2. Contenuto — qualcosa di tuo (file, foto, audio, PDF, messaggio scritto)
+ *   3. Mail      — inoltra una mail di conferma acquisto
  *
- * Tutti e 4 i path arrivano al medesimo "stato pacco regalo" che poi
+ * Tutti e 3 i path arrivano al medesimo "stato pacco regalo" che poi
  * passa per packaging customization e share link. Il valore di BeGift
  * non sta nel contenuto (il sender lo porta lui) ma nella confezione
  * digitale emozionale.
+ *
+ * Nota storica: c'erano 4 path. File e Messaggio sono stati accorpati
+ * il 2026-05-21 perche' atterravano sulla stessa schermata /create —
+ * separarli creava aspettativa di 2 flussi diversi che poi diventava
+ * confusione. Le rotte /regalo/file e /regalo/messaggio restano per
+ * back-compat dei link condivisi (entrambe redirect a /create).
  *
  * Server component minimale: niente client JS, niente fetch DB.
  * Render statico = primo paint istantaneo. SEO-friendly: titolo,
@@ -36,7 +41,7 @@ const CARD = "#fff";
 export const metadata: Metadata = {
   title: "Fai un regalo · BeGift",
   description:
-    "Scegli un'esperienza, impacchetta un file, scrivi un messaggio o inoltra una mail di conferma — BeGift trasforma qualsiasi cosa in un regalo emozionale.",
+    "Scegli un'esperienza, impacchetta qualcosa di tuo, o inoltra una mail di conferma — BeGift trasforma qualsiasi cosa in un regalo emozionale.",
 };
 
 interface PathCard {
@@ -63,26 +68,15 @@ const PATHS: PathCard[] = [
     accentLine: "#D4537E",
   },
   {
-    href: "/regalo/file",
-    emoji: "📁",
-    badge: "Carica",
-    title: "Un file dal tuo computer",
-    description:
-      "Una foto, un video, un audio, un PDF. Lo carichi, scegli la confezione, e diventa un regalo digitale.",
-    details: ["Foto", "Video", "Audio", "PDF e voucher"],
-    gradient: "linear-gradient(135deg, #EDE7F6 0%, #E1F5FE 100%)",
-    accentLine: "#6B5BCC",
-  },
-  {
-    href: "/regalo/messaggio",
+    href: "/regalo/contenuto",
     emoji: "💌",
-    badge: "Scrivi",
-    title: "Un messaggio scritto da te",
+    badge: "Crea",
+    title: "Qualcosa di tuo",
     description:
-      "A volte la parola giusta vale più di un regalo. Scrivila e gliela consegniamo dentro un pacco animato.",
-    details: ["Lettera digitale", "Dedica con foto", "Pensiero last-minute", "Auguri animati"],
-    gradient: "linear-gradient(135deg, #FFF8E1 0%, #FCE4EC 100%)",
-    accentLine: "#E8A04A",
+      "Una foto, un audio, un video, un PDF, oppure un messaggio scritto da te. Lo trasformiamo in un pacco animato pronto da aprire.",
+    details: ["Foto e video", "Audio e voce", "PDF e voucher", "Messaggi e lettere"],
+    gradient: "linear-gradient(135deg, #EDE7F6 0%, #FCE4EC 100%)",
+    accentLine: "#6B5BCC",
   },
   {
     href: "/regalo/mail",
@@ -159,12 +153,12 @@ export default function RegaloHubPage() {
               margin: "0 auto",
             }}
           >
-            Quattro modi diversi, una sola magia. Qualunque contenuto scegli,
+            Tre vie diverse, una sola magia. Qualunque contenuto scegli,
             la confezione la prepari poi insieme a noi.
           </p>
         </header>
 
-        {/* 4 path cards. Grid 2x2 desktop, 1 col mobile. */}
+        {/* 3 path cards. Grid auto-fit, 1 col mobile. */}
         <section
           style={{
             display: "grid",

@@ -155,10 +155,13 @@ export default function HomePage() {
         >
           {t("home.cta_inizia")}
         </Link>
-        {/* Mini hint dei 4 modi sotto il CTA primario. Non e' un altro
+        {/* Mini hint dei 3 modi sotto il CTA primario. Non e' un altro
             bottone — e' una micro-rassicurazione visiva che dice "puoi
-            iniziare in piu' modi". 4 emoji + label essenziali, click
-            su ciascuno entra direttamente in quella path saltando il hub. */}
+            iniziare in piu' modi". 3 emoji + label essenziali, click
+            su ciascuno entra direttamente in quella path saltando il hub.
+            (Update 2026-05-21: file e messaggio accorpati in "Contenuto"
+            perche' atterravano sulla stessa schermata /create — separarli
+            era percepito come duplicazione del flusso.) */}
         <div
           style={{
             marginTop: 22,
@@ -170,9 +173,8 @@ export default function HomePage() {
           }}
         >
           {[
-            { href: "/regalo/catalogo", emoji: "🎁", label: "Catalogo" },
-            { href: "/regalo/file",      emoji: "📁", label: "File" },
-            { href: "/regalo/messaggio", emoji: "💌", label: "Messaggio" },
+            { href: "/regalo/catalogo",  emoji: "🎁", label: "Catalogo" },
+            { href: "/regalo/contenuto", emoji: "💌", label: "Qualcosa di tuo" },
             { href: "/regalo/mail",      emoji: "📧", label: "Mail" },
           ].map((p) => (
             <Link
