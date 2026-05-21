@@ -8,27 +8,39 @@
  * Coldplay, ecc.) — le 'manual' vincono in conflitto perche' l'upsert filtra
  * per source='imported_gyg_api'.
  *
- * Auth GYG: API key in header X-ACCESS-TOKEN (vedi env GYG_PARTNER_API_KEY).
- * Per ottenerla:
- *   1. Login al partner portal https://supplier.getyourguide.com
- *   2. Sezione "Connectivity → Partner API"
- *   3. (Se non disponibile) richiedi accesso scrivendo a
- *      partner-api@getyourguide.com con descrizione caso d'uso
+ * Riferimento ufficiale: https://github.com/getyourguide/partner-api-spec/wiki
  *
- * Strategia:
- *   - Paginazione: offset 0, +100 per pagina, max MAX_PAGES (safety).
- *   - Filtri client-side: rating>=4.0, reviews>=50 (popolarita').
+ * Auth GYG: API key in header X-ACCESS-TOKEN (vedi env GYG_PARTNER_API_KEY).
+ * Per ottenerla scrivere a partner-api@getyourguide.com richiedendo access
+ * level "BASIC/LIMITED_READ" (sufficiente per popolare il catalogo BeGift —
+ * vedi docs/CATALOG_IMPORT_GYG.md per il template email).
+ *
+ * Endpoint usato: GET /1/tours (search by query/coords).
+ * Query params OBBLIGATORI su ogni request (da spec ufficiale):
+ *   - currency        (es. EUR)
+ *   - cnt_language    (es. it)
+ *   - preformatted    (teaser per access level LIMITED_READ)
+ *
+ * Rate limit GYG: 130 calls/min con ban 5 min se superato. Per sicurezza
+ * applichiamo un cap conservativo di 60 calls/min lato nostro tramite
+ * sleep tra le richieste.
+ *
+ * Strategia di import:
+ *   - Search paginato per ogni "destination of interest" (citta IT principali).
+ *   - Filtri client-side: rating>=4.0, reviews>=50.
  *   - Dedup: ON CONFLICT (external_id) DO UPDATE solo se import_hash cambia.
  *   - Audit: ogni run crea una riga in catalog_sync_runs con stats finali.
  *
- * Mock mode: se GYG_PARTNER_API_KEY non e' settata, l'importer ritorna
- * mock data (10 tour finti) per testare la pipeline E2E senza credenziali.
+ * NOTA importante sui ToS GYG: la documentazione dice "do not scrape the
+ * API in an attempt to cache its output. We encourage to access the API in
+ * real-time." Il nostro pattern e' un compromesso: refresh del catalogo
+ * 1 volta al giorno (non scrape massivo continuo), e per la pagina detail
+ * di un tour ci appoggiamo a un re-fetch live (vedi /experiences/[id]).
+ * Da chiarire con GYG al momento dell'onboarding — possibile vincolo a
+ * cache TTL piu' breve.
  *
- * NOTA shape API: la struttura JSON usata qui rispecchia la documentazione
- * pubblica della Partner API (https://partner-api.getyourguide.com).
- * Al primo run reale potrebbe servire un piccolo aggiustamento se il
- * formato risponde leggermente diverso. Il parser e' difensivo (campi
- * opzionali) e logga il primo record per facilitare il debug.
+ * Mock mode: se GYG_PARTNER_API_KEY non e' settata, l'importer ritorna
+ * mock data (3 tour finti) per testare la pipeline E2E senza credenziali.
  */
 
 import crypto from "node:crypto";
@@ -236,35 +248,49 @@ function makeImportHash(input: {
 // ───────────────────────────────────────────────────────────────
 
 const GYG_API_BASE = process.env.GYG_API_BASE || "https://api.getyourguide.com";
+const GYG_API_VERSION = "1"; // da spec ufficiale: base URL e' https://api.getyourguide.com/1/
 
-async function fetchPage(
+// Rate limit conservativo: 60 calls/min lato nostro (limite GYG = 130/min,
+// ban 5 min se superato). 1000ms tra richieste = max 60/min.
+const MIN_DELAY_MS = 1000;
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function fetchTours(
   apiKey: string,
-  offset: number,
-  limit: number,
+  params: { query?: string; offset: number; limit: number },
   log: NonNullable<GygImportOptions["log"]>
 ): Promise<GygTour[]> {
-  // Endpoint Partner API search. Param exatti possono variare per versione
-  // (v1 vs v2). Usiamo v2 come default per coerenza con la doc piu' recente.
-  const url = new URL(`${GYG_API_BASE}/2/tours`);
-  url.searchParams.set("limit", String(limit));
-  url.searchParams.set("offset", String(offset));
-  url.searchParams.set("sort", "popularity");
+  // Spec ufficiale GYG: GET /{version}/tours con query params obbligatori.
+  // Vedi https://github.com/getyourguide/partner-api-spec/wiki/Getting-started
+  const url = new URL(`${GYG_API_BASE}/${GYG_API_VERSION}/tours`);
+  url.searchParams.set("currency", "EUR");      // obbligatorio
+  url.searchParams.set("cnt_language", "it");   // obbligatorio
+  url.searchParams.set("preformatted", "teaser"); // l'unico valido per LIMITED_READ
+  url.searchParams.set("limit", String(params.limit));
+  url.searchParams.set("offset", String(params.offset));
+  if (params.query) url.searchParams.set("q", params.query);
 
   const res = await fetch(url.toString(), {
     method: "GET",
     headers: {
       "X-ACCESS-TOKEN": apiKey,
       "Accept": "application/json",
-      "Accept-Language": "it",
-      "User-Agent": "BeGift-catalog-importer/1.0",
+      "User-Agent": "BeGift-catalog-importer/1.0 (contact: psyluca@gmail.com)",
     },
     cache: "no-store",
   });
 
+  if (res.status === 429) {
+    log("error", "GYG rate limit hit (HTTP 429) — abort");
+    throw new Error("GYG rate limit: 429 — pausa 5 min per evitare ban prolungato");
+  }
   if (!res.ok) {
     const body = await res.text().catch(() => "");
     log("error", `GYG API ${res.status} ${res.statusText}`, {
-      url: url.toString(),
+      url: url.toString().replace(apiKey, "REDACTED"),
       body: body.slice(0, 500),
     });
     throw new Error(`GYG API HTTP ${res.status}`);
@@ -376,31 +402,61 @@ export async function importFromGyg(
   stats.partner_id = partner.id;
 
   // 2. Fetch pagine
+  // Strategia: il search GYG accetta un parametro "q" (testuale). Per
+  // popolare un catalogo italiano iteriamo su un set di "destination
+  // queries" (citta principali IT) e aggreghiamo i risultati. Senza q
+  // alcuni cluster GYG ritornano poco/niente.
+  const ITALIAN_QUERIES = [
+    "Rome", "Florence", "Venice", "Milan", "Naples",
+    "Bologna", "Verona", "Lucca", "Cinque Terre", "Amalfi",
+    "Sicily", "Sardinia", "Tuscany",
+  ];
   const allTours: GygTour[] = [];
+  const seenIds = new Set<string>();
   if (mockMode) {
     allTours.push(...mockTours());
     stats.pages = 1;
     log("warn", "Running in MOCK mode (no API key). 3 finti tour caricati.");
   } else {
-    for (let page = 0; page < maxPages; page += 1) {
-      const offset = page * 100;
-      try {
-        const tours = await fetchPage(apiKey, offset, 100, log);
-        stats.pages = page + 1;
-        if (page === 0 && tours[0]) {
-          log("info", "First GYG record (per debug shape)", { sample: tours[0] });
+    let totalCalls = 0;
+    outer: for (const query of ITALIAN_QUERIES) {
+      for (let page = 0; page < maxPages; page += 1) {
+        const offset = page * 100;
+        try {
+          if (totalCalls > 0) await sleep(MIN_DELAY_MS);
+          const tours = await fetchTours(
+            apiKey,
+            { query, offset, limit: 100 },
+            log
+          );
+          totalCalls += 1;
+          stats.pages = totalCalls;
+          if (totalCalls === 1 && tours[0]) {
+            log("info", "First GYG record (per debug shape)", {
+              sample: tours[0],
+            });
+          }
+          if (tours.length === 0) break; // no more for this query
+          // Dedup tra queries (un tour Roma puo' apparire anche in "Lazio")
+          for (const t of tours) {
+            const id = t.id != null ? String(t.id) : "";
+            if (id && !seenIds.has(id)) {
+              seenIds.add(id);
+              allTours.push(t);
+            }
+          }
+          if (tours.length < 100) break; // ultima pagina per questa query
+        } catch (e) {
+          log("error", "Page fetch failed, abort import", {
+            query,
+            page,
+            err: (e as Error).message,
+          });
+          stats.errors += 1;
+          stats.duration_ms = Date.now() - startTs;
+          return stats;
         }
-        if (tours.length === 0) break;
-        allTours.push(...tours);
-        if (tours.length < 100) break; // ultima pagina
-      } catch (e) {
-        log("error", "Page fetch failed, abort import", {
-          page,
-          err: (e as Error).message,
-        });
-        stats.errors += 1;
-        stats.duration_ms = Date.now() - startTs;
-        return stats;
+        if (totalCalls >= maxPages * ITALIAN_QUERIES.length) break outer;
       }
     }
   }
