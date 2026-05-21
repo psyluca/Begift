@@ -73,6 +73,22 @@ export const PARTNERS: Record<PartnerSlug, PartnerConfig> = {
     cookieWindowDays: 30,
     disclosureLabel: "Evento offerto tramite VivaTicket via Awin.",
   },
+  tradedoubler: {
+    slug: "tradedoubler",
+    displayName: "TradeDoubler Network",
+    affiliateIdEnvVar: "TRADEDOUBLER_PUBLISHER_ID",
+    // TradeDoubler wrapper. {td_program_id} = program ID merchant
+    // specifico (es. 24Bottles). {affiliate_id} = publisher ID Luca da
+    // env TRADEDOUBLER_PUBLISHER_ID. {gift_id} = epi clickref.
+    // {target_url} = URL prodotto, url-encoded.
+    // Onboarded 2026-05-21 per regali fisici (primo: 24Bottles).
+    trackingPattern: "wrapper",
+    wrapperUrlTemplate:
+      "https://clk.tradedoubler.com/click?p={td_program_id}&a={affiliate_id}&epi={gift_id}&url={target_url}",
+    defaultCommissionRate: 0.06,
+    cookieWindowDays: 30,
+    disclosureLabel: "Prodotto offerto tramite il network TradeDoubler.",
+  },
 };
 
 /**

@@ -580,6 +580,33 @@ function CatalogCard({ experience: e }: { experience: ExperienceWithPartner }) {
         >
           {categoryHuman(e.category)}
         </span>
+        {/* Badge "spedito a casa" per regali fisici (24Bottles, ecc.).
+            Posizionato in basso-sinistra per non sovrapporsi al badge
+            categoria. Aggiunto 2026-05-21 con integrazione 24Bottles. */}
+        {e.is_physical_gift && (
+          <span
+            style={{
+              position: "absolute",
+              bottom: 10,
+              left: 10,
+              background: "rgba(255,255,255,0.96)",
+              color: INK,
+              fontSize: 10.5,
+              fontWeight: 800,
+              padding: "4px 9px",
+              borderRadius: 999,
+              backdropFilter: "blur(4px)",
+              pointerEvents: "none",
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+              boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
+            }}
+          >
+            <span aria-hidden>📦</span>
+            <span>a casa</span>
+          </span>
+        )}
       </div>
 
       <div style={{ padding: "14px 16px 16px", display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
