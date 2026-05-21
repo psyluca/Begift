@@ -333,30 +333,14 @@ export default async function CatalogoPage({ searchParams }: Props) {
         </p>
       </div>
 
-      {/* Floating CTA: aiutami a scegliere (apre il picker concierge) */}
-      <Link
-        href="/picker"
-        style={{
-          position: "fixed",
-          bottom: 24,
-          right: 24,
-          background: ACCENT,
-          color: "#fff",
-          borderRadius: 999,
-          padding: "13px 20px",
-          fontSize: 14,
-          fontWeight: 700,
-          textDecoration: "none",
-          boxShadow: "0 14px 36px rgba(212,83,126,.4)",
-          zIndex: 50,
-          display: "inline-flex",
-          alignItems: "center",
-          gap: 8,
-        }}
-      >
-        <span style={{ fontSize: 18 }}>✨</span>
-        Aiutami a scegliere
-      </Link>
+      {/* Floating CTA "Aiutami a scegliere" → /picker RIMOSSO 2026-05-21
+          (feedback Luca: creava confusione perche' l'utente era gia' nel
+          catalogo a scegliere — un altro bottone permanente che porta
+          a un altro flusso di scelta era ridondante).
+          La rotta /picker resta funzionante e raggiungibile via URL
+          diretto se serve in futuro reintrodurla come link discreto
+          in cima al catalogo (es. "Non sai cosa scegliere? Prova il
+          consiglio guidato"). */}
     </main>
   );
 }
