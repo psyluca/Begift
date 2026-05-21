@@ -146,7 +146,47 @@ export default function DraftsClient() {
           ) : (
             <div style={{ display: "grid", gap: 12 }}>
               {state.drafts.map((d) => (
-                <DraftCard key={d.id} draft={d} />
+                <DraftCard
+                  key={d.id}
+                  draft={d}
+                  onDelete={async () => {
+                    if (
+                      !window.confirm(
+                        "Eliminare questa bozza? L'azione non si puo' annullare."
+                      )
+                    ) {
+                      return;
+                    }
+                    try {
+                      const res = await fetchAuthed(`/api/draft/${d.id}`, {
+                        method: "DELETE",
+                      });
+                      if (!res.ok) {
+                        const body = (await res.json().catch(() => ({}))) as {
+                          error?: string;
+                          hint?: string;
+                        };
+                        alert(
+                          `Impossibile eliminare: ${body.hint || body.error || res.statusText}`
+                        );
+                        return;
+                      }
+                      // Rimuove la bozza dalla lista locale senza dover ricaricare
+                      setState((prev) =>
+                        prev.kind === "ready"
+                          ? {
+                              kind: "ready",
+                              drafts: prev.drafts.filter((x) => x.id !== d.id),
+                            }
+                          : prev
+                      );
+                      // Notifica TopBar (badge count) di rinfrescare il count
+                      window.dispatchEvent(new Event("begift:drafts-changed"));
+                    } catch (e) {
+                      alert(`Errore di rete: ${(e as Error).message}`);
+                    }
+                  }}
+                />
               ))}
             </div>
           ))}
@@ -279,7 +319,13 @@ function EmptyState() {
   );
 }
 
-function DraftCard({ draft }: { draft: Draft }) {
+function DraftCard({
+  draft,
+  onDelete,
+}: {
+  draft: Draft;
+  onDelete: () => void;
+}) {
   const parsed = draft.parsed_content || {};
   const title = (parsed.title as string) || "(Pacco in lavorazione)";
   const merchant = draft.detected_merchant || "merchant";
@@ -324,6 +370,7 @@ function DraftCard({ draft }: { draft: Draft }) {
         textDecoration: "none",
         color: INK,
         transition: "transform .14s, box-shadow .14s",
+        position: "relative",
       }}
     >
       <div
@@ -360,6 +407,41 @@ function DraftCard({ draft }: { draft: Draft }) {
         >
           {statusBadge.text}
         </span>
+        {/* Bottone elimina bozza — overlay sopra il Link.
+            stopPropagation + preventDefault per non triggerare il Link
+            parent quando l'utente clicca il cestino. */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onDelete();
+          }}
+          title="Elimina questa bozza"
+          aria-label="Elimina questa bozza"
+          style={{
+            background: "transparent",
+            border: "1px solid #e8e4de",
+            borderRadius: 8,
+            width: 30,
+            height: 30,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            color: "#999",
+            flexShrink: 0,
+            padding: 0,
+            lineHeight: 1,
+          }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <polyline points="3 6 5 6 21 6" />
+            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+            <path d="M10 11v6M14 11v6" />
+            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+          </svg>
+        </button>
       </div>
       <p style={{ fontSize: 13, color: MUTED, margin: "0 0 8px" }}>
         Da <strong style={{ color: INK }}>{merchant}</strong>

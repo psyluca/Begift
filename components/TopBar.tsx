@@ -49,7 +49,7 @@ export default function TopBar() {
     })();
     // Fetch count bozze in parallelo. Endpoint /api/drafts ritorna la lista
     // delle bozze utente — usiamo array.length per il badge.
-    (async () => {
+    const refreshDrafts = async () => {
       try {
         const res = await fetchAuthed("/api/drafts");
         if (!res.ok) return;
@@ -58,13 +58,22 @@ export default function TopBar() {
         const list = Array.isArray(body) ? body : (body?.drafts || []);
         setDraftsCount(list.length || 0);
       } catch { /* ignore */ }
-    })();
+    };
+    refreshDrafts();
+    // Listener custom event "begift:drafts-changed" emesso dopo create/delete
+    // di una bozza, per rinfrescare il badge senza reload.
+    const onDraftsChanged = () => { refreshDrafts(); };
+    window.addEventListener("begift:drafts-changed", onDraftsChanged);
     const onSet = (e: Event) => {
       const u = (e as CustomEvent<{ username: string }>).detail?.username;
       if (u) setHandle(u);
     };
     window.addEventListener("begift:username-set", onSet);
-    return () => { cancelled = true; window.removeEventListener("begift:username-set", onSet); };
+    return () => {
+      cancelled = true;
+      window.removeEventListener("begift:username-set", onSet);
+      window.removeEventListener("begift:drafts-changed", onDraftsChanged);
+    };
   }, [loggedIn]);
 
   // Stringa da mostrare: preferisci @handle se impostato, altrimenti

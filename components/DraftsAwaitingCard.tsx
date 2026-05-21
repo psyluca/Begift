@@ -27,7 +27,7 @@ export default function DraftsAwaitingCard() {
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
+    const refresh = async () => {
       try {
         const res = await fetchAuthed("/api/drafts");
         if (!res.ok) return;
@@ -38,9 +38,15 @@ export default function DraftsAwaitingCard() {
       } catch {
         /* silent: card non si mostra se fetch fallisce */
       }
-    })();
+    };
+    refresh();
+    // Listener custom event: ascolta delete/create bozze per aggiornare
+    // il count senza dover ricaricare la dashboard.
+    const onChange = () => refresh();
+    window.addEventListener("begift:drafts-changed", onChange);
     return () => {
       cancelled = true;
+      window.removeEventListener("begift:drafts-changed", onChange);
     };
   }, []);
 
