@@ -208,6 +208,41 @@ export default async function ExperiencePage({ params, searchParams }: Props) {
             </p>
           )}
 
+          {/* Banner regalo fisico — se is_physical_gift=true, comunica
+              chiaramente al sender che (a) il regalo verra' SPEDITO al
+              destinatario, (b) i tempi stimati di consegna, (c) il
+              pacco digitale BeGift mostrera' immagine + data al
+              destinatario prima che il pacco fisico arrivi.
+              Aggiunto 2026-05-21 per integrazione 24Bottles. */}
+          {e.is_physical_gift && (
+            <div
+              style={{
+                background: "linear-gradient(135deg,#FFF8E1 0%,#FCE4EC 100%)",
+                border: `1px solid ${BORDER}`,
+                borderRadius: 12,
+                padding: "14px 18px",
+                marginBottom: 24,
+                display: "flex",
+                gap: 14,
+                alignItems: "flex-start",
+              }}
+            >
+              <span style={{ fontSize: 26, lineHeight: 1, flexShrink: 0 }} aria-hidden>
+                📦
+              </span>
+              <div>
+                <p style={{ fontSize: 14, fontWeight: 700, color: INK, margin: 0, lineHeight: 1.35 }}>
+                  Regalo fisico — spedito direttamente al destinatario
+                </p>
+                <p style={{ fontSize: 13, color: MUTED, margin: "4px 0 0", lineHeight: 1.5 }}>
+                  Compri sul partner, BeGift impacchetta il pacco digitale con immagine prodotto + data consegna stimata.
+                  Il destinatario apre BeGift e scopre cosa sta arrivando per posta
+                  {e.shipping_estimated_days ? `, entro circa ${e.shipping_estimated_days} giorni dall'acquisto.` : "."}
+                </p>
+              </div>
+            </div>
+          )}
+
           <hr
             style={{
               border: "none",

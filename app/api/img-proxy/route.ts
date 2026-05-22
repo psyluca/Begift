@@ -42,7 +42,8 @@ const ALLOWED_HOST_SUFFIXES = [
   "ticketmaster.it",
   "ticketmaster.com",
   "ticketone.it",
-  // partner futuri da aggiungere qui (24bottles.com, ecc.)
+  "24bottles.com",       // brand regalo fisico — onboarded 2026-05-21
+  // partner futuri da aggiungere qui
 ];
 
 const MAX_BYTES = 10 * 1024 * 1024; // 10 MB safety

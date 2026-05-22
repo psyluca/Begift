@@ -6,11 +6,148 @@
    via fontface-observer del browser). */
 @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&display=swap');
 
+/* ═══════════════════════════════════════════════════════════════
+   Design tokens BeGift (CSS Custom Properties)
+   ═══════════════════════════════════════════════════════════════
+   Introdotti nel revamp 2026-05-21 per consolidare 24+ valori di
+   spacing, 6 shadow ad-hoc, 12 radius e 15+ font-size sparsi nel
+   codice. Pattern progressivo: i file inline-styles esistenti
+   continuano a funzionare con i loro hex hard-coded; nuovi
+   componenti usano le CSS vars. Migrazione graduale.
+   Doc completa: docs/strategy/UX_REVAMP_AUDIT.md.
+   ═══════════════════════════════════════════════════════════════ */
+:root {
+  /* ── Colors ──────────────────────────────────────────── */
+  --color-accent: #D4537E;
+  --color-accent-soft: #FCE4EC;
+  --color-accent-hover: #B83D69;
+
+  --color-ink: #1a1a1a;
+  --color-ink-soft: #4a4a4a;
+
+  --color-muted: #7a7a7a;
+  --color-muted-soft: #aaa;
+
+  --color-bg: #f7f5f2;
+  --color-card: #ffffff;
+  --color-border: #e8e4de;
+  --color-border-soft: #f0ece6;
+
+  --color-ok: #3b8c5a;
+  --color-ok-soft: #ecfdf5;
+  --color-err: #dc2626;
+  --color-err-soft: #fef2f2;
+  --color-warn: #d97706;
+  --color-warn-soft: #fff8e1;
+
+  /* ── Spacing scale (4-pt) ────────────────────────────── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* ── Radius scale ────────────────────────────────────── */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 22px;
+  --radius-full: 999px;
+
+  /* ── Shadow scale ────────────────────────────────────── */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.06);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,0.08);
+  --shadow-brand: 0 10px 28px rgba(212,83,126,0.35);
+
+  /* ── Typography scale ────────────────────────────────── */
+  --text-xs: 11px;
+  --text-sm: 13px;
+  --text-base: 15px;
+  --text-lg: 17px;
+  --text-xl: 20px;
+  --text-2xl: 24px;
+  --text-3xl: 32px;
+  --text-4xl: 44px;
+  --text-5xl: 60px;
+
+  --leading-tight: 1.2;
+  --leading-snug: 1.35;
+  --leading-normal: 1.55;
+  --leading-relaxed: 1.7;
+
+  /* ── Transition ──────────────────────────────────────── */
+  --transition-fast: 120ms ease;
+  --transition-base: 180ms ease;
+  --transition-slow: 320ms ease;
+
+  /* ── Z-index scale ───────────────────────────────────── */
+  --z-base: 1;
+  --z-sticky: 50;
+  --z-overlay: 80;
+  --z-modal: 100;
+  --z-toast: 200;
+}
+
 *, *::before, *::after { box-sizing: border-box; }
 body { margin: 0; font-family: system-ui, -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
 button { font-family: inherit; }
 input, textarea, select { font-family: inherit; }
 a { color: inherit; }
+
+/* ═══ Focus accessibility universale ════════════════════════════
+   Tutti gli elementi interattivi (button, link, input, textarea,
+   select, summary) ricevono un focus ring visibile quando navigati
+   con tastiera (focus-visible, non focus generico). Color rosa
+   brand per coerenza visiva. Outline-offset di 2px crea respiro.
+   Implementato 2026-05-21 — prima nessun focus ring uniforme.
+   ═══════════════════════════════════════════════════════════════ */
+:focus-visible {
+  outline: 2.5px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+button:focus-visible,
+a:focus-visible {
+  outline-offset: 3px;
+}
+
+/* ═══ Skeleton shimmer animation ════════════════════════════════
+   Usato dai componenti Skeleton (loading states). Pattern shimmer
+   diagonale, 1.5s loop, opacity sottile per non distrarre.
+   ═══════════════════════════════════════════════════════════════ */
+@keyframes skeleton-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-border-soft) 0%,
+    var(--color-border) 50%,
+    var(--color-border-soft) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}
+
+/* ═══ Reduced motion ═════════════════════════════════════════════
+   Rispetta prefers-reduced-motion: utenti con vestibolar/migraine
+   ricevono solo transizioni minime. WCAG AAA conformance.
+   ═══════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
 
 /* ─── Responsive helpers ──────────────────────────────────────────
    Utility class usate da TopBar e dalla griglia card regali nella

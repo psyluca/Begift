@@ -36,7 +36,7 @@ export type ExperienceTag =
   // Mercato
   | "international" | "local";
 
-export type PartnerSlug = "getyourguide" | "awin";
+export type PartnerSlug = "getyourguide" | "awin" | "tradedoubler";
 
 // ──────────────────────────────────────────────────────────────
 // DB row types (mirror dello schema in migration 023)
@@ -88,6 +88,14 @@ export interface Experience {
   last_synced_at: string | null;
   created_at: string;
   updated_at: string;
+
+  // Physical gift fields (migration 028 — 2026-05-21).
+  // Per regali fisici (es. 24Bottles, libri, gadget): l'oggetto viene
+  // spedito al destinatario, BeGift mostra in apertura l'immagine
+  // prodotto + data consegna stimata.
+  is_physical_gift?: boolean;
+  shipping_estimated_days?: number | null;
+  product_image_url?: string | null;
 }
 
 export interface ExperienceClick {

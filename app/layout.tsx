@@ -12,6 +12,7 @@ import Footer from "@/components/Footer";
 import { UsernameOnboarding } from "@/components/UsernameOnboarding";
 import { PushAutoHeal } from "@/components/PushAutoHeal";
 import SupportConcierge from "@/components/SupportConcierge";
+import { ToastProvider } from "@/components/ToastProvider";
 import { baseGraph } from "@/lib/structured-data";
 
 export const viewport: Viewport = {
@@ -139,25 +140,27 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body style={{ margin: 0, padding: 0, paddingBottom: 64 }}>
         <I18nProvider>
-          <TopBarWrapper/>
-          {children}
-          <Footer/>
-          <BottomNavWrapper/>
-          <CookieBanner/>
-          <GiftReceivedNotification/>
-          {/* IOSInstallBanner disabilitato a livello globale: l'info
-              "installa BeGift" è ora disponibile in /settings → sezione
-              Installazione. Banner sticky fisso è invasivo sui primi
-              visitatori; chi cerca info le trova nelle impostazioni. */}
-          <UsernameOnboarding/>
-          {/* PushAutoHeal: ghost component che ripara automaticamente
-              il drift "permission granted ma 0 device in DB". Una volta
-              per sessione browser. */}
-          <PushAutoHeal/>
-          {/* SupportConcierge: FAB chat di aiuto AI. Self-gating via
-              feature flag NEXT_PUBLIC_FEATURE_SUPPORT_CONCIERGE: se
-              false ritorna null senza render del bottone. */}
-          <SupportConcierge/>
+          <ToastProvider>
+            <TopBarWrapper/>
+            {children}
+            <Footer/>
+            <BottomNavWrapper/>
+            <CookieBanner/>
+            <GiftReceivedNotification/>
+            {/* IOSInstallBanner disabilitato a livello globale: l'info
+                "installa BeGift" è ora disponibile in /settings → sezione
+                Installazione. Banner sticky fisso è invasivo sui primi
+                visitatori; chi cerca info le trova nelle impostazioni. */}
+            <UsernameOnboarding/>
+            {/* PushAutoHeal: ghost component che ripara automaticamente
+                il drift "permission granted ma 0 device in DB". Una volta
+                per sessione browser. */}
+            <PushAutoHeal/>
+            {/* SupportConcierge: FAB chat di aiuto AI. Self-gating via
+                feature flag NEXT_PUBLIC_FEATURE_SUPPORT_CONCIERGE: se
+                false ritorna null senza render del bottone. */}
+            <SupportConcierge/>
+          </ToastProvider>
         </I18nProvider>
       </body>
     </html>

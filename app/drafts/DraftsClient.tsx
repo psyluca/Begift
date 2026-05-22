@@ -16,6 +16,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { fetchAuthed } from "@/lib/clientAuth";
+import { useToast } from "@/components/ToastProvider";
 
 const ACCENT = "#D4537E";
 const INK = "#1a1a1a";
@@ -44,6 +45,7 @@ type State =
 
 export default function DraftsClient() {
   const [state, setState] = useState<State>({ kind: "loading" });
+  const toast = useToast();
 
   useEffect(() => {
     (async () => {
@@ -166,7 +168,7 @@ export default function DraftsClient() {
                           error?: string;
                           hint?: string;
                         };
-                        alert(
+                        toast.error(
                           `Impossibile eliminare: ${body.hint || body.error || res.statusText}`
                         );
                         return;
@@ -180,10 +182,11 @@ export default function DraftsClient() {
                             }
                           : prev
                       );
+                      toast.success("Bozza eliminata");
                       // Notifica TopBar (badge count) di rinfrescare il count
                       window.dispatchEvent(new Event("begift:drafts-changed"));
                     } catch (e) {
-                      alert(`Errore di rete: ${(e as Error).message}`);
+                      toast.error(`Errore di rete: ${(e as Error).message}`);
                     }
                   }}
                 />
