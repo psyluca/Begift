@@ -23,15 +23,19 @@ export const KB_PRODUCT = {
 };
 
 export const KB_FLOWS = {
-  intent_picker: {
-    path: "/start",
+  // Hub unificato per fare un regalo. 3 path: contenuto tuo, catalogo,
+  // mail forward. Update 2026-05-22: /start rimpiazzato da /regalo come
+  // entry-point principale (e' il flow flagship aggiornato col nuovo
+  // hub a 3 card).
+  regalo_hub: {
+    path: "/regalo",
     description:
-      "Picker guidato 2-3 step. Step 1: nome destinatario. Step 2: cosa regalare. Step 3 (solo per 'ho gia' qualcosa'): mail o file.",
+      "Hub unificato del flow regalo. 3 vie: 1) Qualcosa di tuo (foto/audio/video/PDF/messaggio dal proprio computer), 2) Catalogo (esperienze GYG + VivaTicket + 24Bottles), 3) Mail di conferma da inoltrare.",
   },
   manual_create: {
     path: "/create",
     description:
-      "Flusso completo manuale. Scegli occasione, contenuto (foto/video/audio/link), packaging, messaggio. Per chi sa gia' cosa vuole regalare.",
+      "Flusso completo manuale. Scegli occasione, contenuto (foto/video/audio/link), packaging, messaggio. Per chi sa gia' cosa vuole regalare. Accessibile anche da /regalo/contenuto (path 'Qualcosa di tuo' del hub).",
   },
   email_parser: {
     path: "/forward-mail",
@@ -43,10 +47,10 @@ export const KB_FLOWS = {
     supported_merchants: "Funziona meglio con i partner ufficiali GetYourGuide (esperienze) e VivaTicket (concerti, sport, teatro). Prova comunque a inoltrare mail da TicketOne, Booking, Smartbox, Trenitalia: spesso BeGift le capisce.",
   },
   experiences_shop: {
-    path: "/discover",
+    path: "/regalo/catalogo",
     description:
-      "Catalogo curato di esperienze e biglietti giftabili. Esperienze (tour, cene, weekend) via GetYourGuide; eventi (concerti, sport, teatro, opera) via VivaTicket. Click → pagina dettaglio → 'Acquista su partner' → vai a pagare. Dopo acquisto, mail di conferma da inoltrare per creare il pacco.",
-    partners: "GetYourGuide (esperienze) e VivaTicket via Awin (eventi). Due partner ufficiali, scope distinto.",
+      "Catalogo unificato di esperienze, biglietti e regali fisici. Esperienze (tour, cene, weekend) via GetYourGuide; eventi (concerti, sport, teatro, opera) via VivaTicket; oggetti fisici (es. borracce 24Bottles) via TradeDoubler. Click → pagina dettaglio → 'Acquista su partner' → vai a pagare. Dopo acquisto, mail di conferma da inoltrare per creare il pacco. (La vecchia URL /discover esiste ancora come alias per back-compat.)",
+    partners: "GetYourGuide (esperienze), VivaTicket via Awin (eventi), 24Bottles via TradeDoubler (regali fisici). Tre partner ufficiali, scope distinti.",
   },
   drafts: {
     path: "/drafts",
