@@ -175,9 +175,13 @@ export default function HomePage() {
           {[
             // Ordine aggiornato 2026-05-22 (vedi /regalo/page.tsx):
             // 1° Contenuto (barriera bassa, posizionamento "wrapper"),
-            // 2° Catalogo (esplorazione + affiliate), 3° Mail (avanzato).
+            // 2° Catalogo (esperienze digitali GYG+VVT),
+            // 3° Fisici (oggetti spediti — categoria editoriale distinta:
+            //    "il regalo prima del regalo", pacco digitale anticipato),
+            // 4° Mail (avanzato).
             { href: "/regalo/contenuto", emoji: "💌", label: "Qualcosa di tuo" },
             { href: "/regalo/catalogo",  emoji: "🎁", label: "Catalogo" },
+            { href: "/regalo/fisici",    emoji: "📦", label: "Regali fisici" },
             { href: "/regalo/mail",      emoji: "📧", label: "Mail" },
           ].map((p) => (
             <Link
