@@ -55,18 +55,14 @@ interface PathCard {
   accentLine: string;
 }
 
+// Ordine aggiornato 2026-05-22 (decisione UX Luca):
+// 1° "Qualcosa di tuo" — barriera piu' bassa, comunica subito che
+//    BeGift e' lo "scatolatore magico" non un marketplace (differenza
+//    chiave da Amoore/Sneaky.it). Posizionamento + onboarding.
+// 2° "Catalogo" — esplorazione/scoperta, path commerciale (affiliate).
+// 3° "Mail" — utente avanzato che gia' sa cosa fa, in fondo dove non
+//    distrae chi non conosce ancora il forward.
 const PATHS: PathCard[] = [
-  {
-    href: "/regalo/catalogo",
-    emoji: "🎁",
-    badge: "Scopri",
-    title: "Un'esperienza dal catalogo",
-    description:
-      "Concerti, tour, cene, partite, musical, weekend. Lo scegli qui, lo acquisti sul partner, BeGift lo trasforma in un pacco da aprire.",
-    details: ["Concerti VivaTicket", "Esperienze GetYourGuide", "Eventi sportivi", "Musical & opera"],
-    gradient: "linear-gradient(135deg, #FCE4EC 0%, #FFE0B2 100%)",
-    accentLine: "#D4537E",
-  },
   {
     href: "/regalo/contenuto",
     emoji: "💌",
@@ -77,6 +73,17 @@ const PATHS: PathCard[] = [
     details: ["Foto e video", "Audio e voce", "PDF e voucher", "Messaggi e lettere"],
     gradient: "linear-gradient(135deg, #EDE7F6 0%, #FCE4EC 100%)",
     accentLine: "#6B5BCC",
+  },
+  {
+    href: "/regalo/catalogo",
+    emoji: "🎁",
+    badge: "Scopri",
+    title: "Un'esperienza dal catalogo",
+    description:
+      "Concerti, tour, cene, partite, musical, weekend. Lo scegli qui, lo acquisti sul partner, BeGift lo trasforma in un pacco da aprire.",
+    details: ["Concerti VivaTicket", "Esperienze GetYourGuide", "Eventi sportivi", "Musical & opera"],
+    gradient: "linear-gradient(135deg, #FCE4EC 0%, #FFE0B2 100%)",
+    accentLine: "#D4537E",
   },
   {
     href: "/regalo/mail",

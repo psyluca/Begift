@@ -173,8 +173,11 @@ export default function HomePage() {
           }}
         >
           {[
-            { href: "/regalo/catalogo",  emoji: "🎁", label: "Catalogo" },
+            // Ordine aggiornato 2026-05-22 (vedi /regalo/page.tsx):
+            // 1° Contenuto (barriera bassa, posizionamento "wrapper"),
+            // 2° Catalogo (esplorazione + affiliate), 3° Mail (avanzato).
             { href: "/regalo/contenuto", emoji: "💌", label: "Qualcosa di tuo" },
+            { href: "/regalo/catalogo",  emoji: "🎁", label: "Catalogo" },
             { href: "/regalo/mail",      emoji: "📧", label: "Mail" },
           ].map((p) => (
             <Link
