@@ -56,12 +56,12 @@ interface PathCard {
 }
 
 // Ordine aggiornato 2026-05-22 (decisione UX Luca):
-// 1° "Qualcosa di tuo" — barriera piu' bassa, comunica subito che
-//    BeGift e' lo "scatolatore magico" non un marketplace (differenza
-//    chiave da Amoore/Sneaky.it). Posizionamento + onboarding.
-// 2° "Catalogo" — esplorazione/scoperta, path commerciale (affiliate).
-// 3° "Mail" — utente avanzato che gia' sa cosa fa, in fondo dove non
-//    distrae chi non conosce ancora il forward.
+// 1° "Qualcosa di tuo" — barriera piu' bassa, posizionamento "scatolatore magico"
+// 2° "Esperienza dal catalogo" — esperienze digitali (GYG + VVT), affiliate
+// 3° "Regalo prima del regalo" — oggetti fisici spediti (24Bottles via TradeDoubler)
+//     Categoria editoriale distinta: il sender sa che l'oggetto arriva per posta
+//     mentre il pacco BeGift digitale viene aperto subito → "anticipiamo l'emozione"
+// 4° "Mail" — utente avanzato che gia' sa cosa fa, in fondo
 const PATHS: PathCard[] = [
   {
     href: "/regalo/contenuto",
@@ -84,6 +84,17 @@ const PATHS: PathCard[] = [
     details: ["Concerti VivaTicket", "Esperienze GetYourGuide", "Eventi sportivi", "Musical & opera"],
     gradient: "linear-gradient(135deg, #FCE4EC 0%, #FFE0B2 100%)",
     accentLine: "#D4537E",
+  },
+  {
+    href: "/regalo/fisici",
+    emoji: "📦",
+    badge: "Anticipa",
+    title: "Il regalo prima del regalo",
+    description:
+      "Borracce, lunch box, accessori spediti a casa di chi li riceve. BeGift apre il pacco digitale oggi, l'oggetto arriva nei giorni successivi.",
+    details: ["24Bottles", "Lunch box & snack", "Accessori", "Regalo da spedire"],
+    gradient: "linear-gradient(135deg, #FFF3E0 0%, #FCE4EC 100%)",
+    accentLine: "#E8A04A",
   },
   {
     href: "/regalo/mail",
