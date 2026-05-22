@@ -40,7 +40,9 @@ const CALENDAR: CalendarEntry[] = [
   { month: 2, day: 14, label: "San Valentino", emoji: "❤️", href: "/san-valentino", noticeWindow: 21 },
   { month: 3, day: 8, label: "Festa della Donna", emoji: "🌷", href: "/create?occasion=other", noticeWindow: 14 },
   { month: 3, day: 19, label: "Festa del Papa'", emoji: "🌳", href: "/festa-papa", noticeWindow: 28 },
-  { month: 6, day: 19, label: "Festa del Papa'", emoji: "🌳", href: "/festa-papa", noticeWindow: 28 },
+  // 2026-05-22: rimossa la voce 19 giugno "Festa del Papa'" (errata —
+  // in IT e' solo il 19 marzo, San Giuseppe. La data US/UK e' la
+  // terza domenica di giugno, ma BeGift e' italiano).
   { month: 5, day: 10, label: "Festa della Mamma", emoji: "💐", href: "/festa-mamma", noticeWindow: 28 },
   { month: 6, day: 2, label: "Festa della Repubblica", emoji: "🇮🇹", href: "/create?occasion=other", noticeWindow: 7 },
   { month: 8, day: 15, label: "Ferragosto", emoji: "☀️", href: "/create?occasion=other", noticeWindow: 14 },
