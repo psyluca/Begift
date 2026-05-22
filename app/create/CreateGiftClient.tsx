@@ -345,6 +345,20 @@ function MessagePreview() {
   );
 }
 
+/**
+ * Etichette degli step di /create per la progress bar (P2 #14 UX audit).
+ * Indice 0..4 corrisponde a step 1..5. Restano in italiano hard-coded:
+ * /create e' un flow flagship italiano, traduzione i18n e' nice-to-have
+ * per il futuro ma non blocca.
+ */
+const CREATE_STEP_LABELS = [
+  "Per chi e l'occasione",
+  "Cosa ci metti",
+  "Messaggio",
+  "Pacchetto",
+  "Anteprima e invio",
+];
+
 export default function CreateGiftClient({ userId }: { userId: string }) {
   const { t, locale } = useI18n();
   const [step,    setStep]    = useState(1);
@@ -727,14 +741,87 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
   return (
     <main style={{minHeight:"100vh",background:LIGHT,fontFamily:"system-ui,sans-serif"}}>
       <style>{`input:focus,textarea:focus{border-color:${ACCENT}!important}.tile:hover{border-color:${ACCENT}!important;background:#fff5f8!important}`}</style>
-      {/* Header */}
-      <div style={{padding:"17px 24px",borderBottom:"1px solid #ede8e0",background:"#fff",display:"flex",alignItems:"center",gap:14}}>
-        <a href="/" style={{fontSize:21,fontWeight:800,color:DEEP,textDecoration:"none"}}>Be<span style={{color:ACCENT}}>Gift</span></a>
-        <div style={{flex:1,height:3,background:"#f0ece8",borderRadius:4}}>
-          <div style={{width:`${(step/5)*100}%`,height:"100%",background:ACCENT,borderRadius:4,transition:"width .4s"}}/>
+      {/* Header con progress bar — P2 #14 UX audit 2026-05-22.
+          Resa piu' prominente: barra alta 7px (era 3px), gradient
+          accent, label dello step corrente sotto. Sticky in alto cosi'
+          resta visibile mentre l'utente scrolla i contenuti del form. */}
+      <div
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 50,
+          background: "#fff",
+          borderBottom: "1px solid #ede8e0",
+        }}
+      >
+        <div style={{ padding: "14px 24px", display: "flex", alignItems: "center", gap: 14 }}>
+          <a
+            href="/"
+            style={{ fontSize: 21, fontWeight: 800, color: DEEP, textDecoration: "none", flexShrink: 0 }}
+          >
+            Be<span style={{ color: ACCENT }}>Gift</span>
+          </a>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div
+              style={{
+                position: "relative",
+                height: 7,
+                background: "#f0ece8",
+                borderRadius: 6,
+                overflow: "hidden",
+              }}
+              aria-label={`Progresso: step ${step} di 5`}
+              role="progressbar"
+              aria-valuenow={step}
+              aria-valuemin={1}
+              aria-valuemax={5}
+            >
+              <div
+                style={{
+                  width: `${Math.min(100, (step / 5) * 100)}%`,
+                  height: "100%",
+                  background: `linear-gradient(90deg, ${ACCENT}, #E8A04A)`,
+                  borderRadius: 6,
+                  transition: "width .42s cubic-bezier(.4,0,.2,1)",
+                }}
+              />
+            </div>
+            <div
+              style={{
+                marginTop: 4,
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "baseline",
+                gap: 10,
+                fontSize: 11.5,
+                color: MUTED,
+              }}
+            >
+              <span style={{ fontWeight: 600, color: DEEP }}>
+                {step <= 5 ? CREATE_STEP_LABELS[step - 1] : "Pronto"}
+              </span>
+              <span>Passo {Math.min(step, 5)} di 5</span>
+            </div>
+          </div>
+          {step > 1 && step <= 5 && (
+            <button
+              onClick={back}
+              aria-label="Torna al passo precedente"
+              style={{
+                background: "none",
+                border: "none",
+                color: MUTED,
+                cursor: "pointer",
+                fontSize: 13,
+                padding: "8px 10px",
+                borderRadius: 8,
+                flexShrink: 0,
+              }}
+            >
+              ← Indietro
+            </button>
+          )}
         </div>
-        <span style={{fontSize:12,color:MUTED}}>Step {step}/5</span>
-        {step>1&&<button onClick={back} style={{background:"none",border:"none",color:MUTED,cursor:"pointer",fontSize:13}}>← Back</button>}
       </div>
 
       <div style={{maxWidth:600,margin:"0 auto",padding:"32px 24px"}}>

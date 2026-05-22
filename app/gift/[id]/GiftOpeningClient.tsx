@@ -740,9 +740,43 @@ function ReactionBuilder({ gift, onSent, senderName = "Destinatario" }: { gift: 
       </h3>
       {rType === "emoji" && (
         <div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(6,1fr)", gap: 8, marginBottom: 16 }}>
+          {/* P2 #15 UX audit 2026-05-22: ridisegno picker emoji per
+              mobile. Grid auto-fit invece di rigid 6-col garantisce
+              che ogni button sia >=52px (tap target WCAG AA 44pt+).
+              Active state piu' visibile: ring rosa, bg rosato, scale
+              sottile. Transizione 140ms per feedback "tap" piacevole. */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(52px, 1fr))",
+              gap: 10,
+              marginBottom: 16,
+            }}
+          >
             {ALL_EMOJIS.map(e => (
-              <button key={e} onClick={() => setEmoji(e)} style={{ fontSize: 28, padding: "8px 0", borderRadius: 12, border: `2px solid ${emoji === e ? ACCENT : "#e0dbd5"}`, background: emoji === e ? "#fff5f8" : "#fff", cursor: "pointer" }}>{e}</button>
+              <button
+                key={e}
+                onClick={() => setEmoji(e)}
+                aria-label={`Scegli ${e}`}
+                aria-pressed={emoji === e}
+                style={{
+                  fontSize: 30,
+                  minHeight: 56,
+                  padding: "10px 0",
+                  borderRadius: 14,
+                  border: `2px solid ${emoji === e ? ACCENT : "#e0dbd5"}`,
+                  background: emoji === e ? "#fff5f8" : "#fff",
+                  boxShadow: emoji === e
+                    ? "0 4px 12px rgba(212,83,126,0.18)"
+                    : "none",
+                  transform: emoji === e ? "scale(1.06)" : "scale(1)",
+                  transition: "all 140ms ease",
+                  cursor: "pointer",
+                  lineHeight: 1,
+                }}
+              >
+                {e}
+              </button>
             ))}
           </div>
           {emoji && <div style={{ textAlign: "center", fontSize: 56, marginBottom: 14 }}>{emoji}</div>}
@@ -1176,6 +1210,40 @@ export default function GiftOpeningClient({ gift }: { gift: Gift }) {
         </div>
       )}
       <div style={{ maxWidth: 480, margin: "0 auto", padding: "14px 24px" }}>
+        {/* Skip animation button — P2 #8 UX audit 2026-05-22.
+            Visibile durante l'animazione di apertura (phase==="opening").
+            Salta direttamente alla schermata revealed se il destinatario
+            ha gia' visto l'animazione altre volte o e' impaziente. */}
+        {phase === "opening" && (
+          <button
+            onClick={() => {
+              cancelAnimationFrame(raf.current);
+              setLidY(10);
+              setPhase("revealed");
+              setOpened(true);
+            }}
+            aria-label="Salta animazione"
+            style={{
+              position: "fixed",
+              top: 12,
+              right: 12,
+              zIndex: 90,
+              background: "rgba(255,255,255,0.96)",
+              backdropFilter: "blur(6px)",
+              border: "1px solid #e8e4de",
+              borderRadius: 999,
+              padding: "6px 12px",
+              fontSize: 12,
+              fontWeight: 700,
+              color: MUTED,
+              cursor: "pointer",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+            }}
+          >
+            Salta →
+          </button>
+        )}
+
         {/* Opening stage */}
         {phase !== "revealed" && (
           <div style={{ display: "inline-block", position: "relative", textAlign: "center", width: "100%" }}>
@@ -1231,6 +1299,42 @@ export default function GiftOpeningClient({ gift }: { gift: Gift }) {
           <div className="reveal">
             <div style={{ fontSize: 22, letterSpacing: 8, color: ACCENT, marginBottom: 10, textAlign: "center" }}>✦ ✦ ✦</div>
             <GiftContent gift={gift}/>
+            {/* Replay animation — P2 #8 UX audit 2026-05-22.
+                Permette al destinatario di rivedere l'apertura quando vuole
+                (es. per condividerla, per riassaporare il momento).
+                Stato: reset phase a "idle", lidY a 82 (chiuso), audio
+                interrotto se attivo. Click sull'icona pacco lo riapre. */}
+            <div style={{ textAlign: "center", marginTop: 24 }}>
+              <button
+                onClick={() => {
+                  cancelAnimationFrame(raf.current);
+                  if (audioRef.current) {
+                    try { audioRef.current.pause(); audioRef.current.currentTime = 0; } catch {}
+                    setPlaying(false);
+                  }
+                  setLidY(82);
+                  setOpened(false);
+                  setPhase("idle");
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                style={{
+                  background: "transparent",
+                  border: "1.5px solid #e0dbd5",
+                  color: MUTED,
+                  borderRadius: 40,
+                  padding: "8px 18px",
+                  fontSize: 12.5,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                }}
+                aria-label="Rivedi l'apertura dall'inizio"
+              >
+                <span aria-hidden>↻</span> Rivedi l&apos;apertura
+              </button>
+            </div>
           </div>
         )}
 
@@ -1274,17 +1378,46 @@ export default function GiftOpeningClient({ gift }: { gift: Gift }) {
               <div style={{ textAlign: "center" }}>
                 <p style={{ fontWeight: 700, color: DEEP, fontSize: 16, margin: "0 0 6px" }}>{t("gift.liked_gift")}</p>
                 <p style={{ color: MUTED, fontSize: 14, margin: "0 0 16px" }}>{t("gift.send_reaction_to_sender")}</p>
-                <div style={{ display: "flex", justifyContent: "center", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
+                {/* Quick reactions bar — P2 #15 UX audit 2026-05-22:
+                    tap target esplicito 56x56, hover micro-scale, gap
+                    piu' generoso per non sbagliare emoji vicine col dito. */}
+                <div style={{ display: "flex", justifyContent: "center", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
                   {QUICK_EMOJIS.map(e => (
-                    <button key={e} onClick={async () => {
-                      await fetch("/api/reactions", { method: "POST", headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ giftId: gift.id, type: "emoji", emoji: e, senderName: senderName }) });
-                      setSentReaction({ type: "emoji", emoji: e });
-                    }} style={{ fontSize: 32, padding: "8px", borderRadius: 50, border: "1.5px solid #e0dbd5", background: "#fff", cursor: "pointer", lineHeight: 1 }}>
+                    <button
+                      key={e}
+                      onClick={async () => {
+                        await fetch("/api/reactions", { method: "POST", headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ giftId: gift.id, type: "emoji", emoji: e, senderName: senderName }) });
+                        setSentReaction({ type: "emoji", emoji: e });
+                      }}
+                      aria-label={`Reagisci con ${e}`}
+                      className="qr-btn"
+                      style={{
+                        fontSize: 34,
+                        minWidth: 56,
+                        minHeight: 56,
+                        width: 56,
+                        height: 56,
+                        padding: 0,
+                        borderRadius: 50,
+                        border: "1.5px solid #e0dbd5",
+                        background: "#fff",
+                        cursor: "pointer",
+                        lineHeight: 1,
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        transition: "all 140ms ease",
+                      }}
+                    >
                       {e}
                     </button>
                   ))}
                 </div>
+                <style>{`
+                  .qr-btn:hover { transform: scale(1.1); border-color: ${ACCENT}; background: #fff5f8; }
+                  .qr-btn:active { transform: scale(0.95); }
+                `}</style>
                 <button onClick={() => setShowReact(true)} style={{ background: ACCENT, color: "#fff", border: "none", borderRadius: 40, padding: "13px 28px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
                   {t("gift.react_differently")}
                 </button>

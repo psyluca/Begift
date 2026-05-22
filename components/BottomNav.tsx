@@ -134,12 +134,16 @@ export default function BottomNav() {
   // Voce SettingsIcon resta importata per uso futuro / TopBar; non
   // viene piu' renderizzata qui.
   void SettingsIcon;
+  // Order ricalcolato 2026-05-22 (P2 #10 UX audit): "create" e' ora
+  // l'item centrale (FAB rialzato), gli altri 4 distribuiti 2+2 ai lati.
+  // Home a sinistra estrema, ricorrenze a destra estrema (i due "navigation
+  // tabs" piu' di consumo). Dashboard + reactions affianco al FAB centrale.
   const items = [
-    { id: "home",       label: t("nav.home"),                onClick: () => router.push("/"),            icon: (a: boolean) => <HomeIcon active={a}/>,           active: pathname === "/" },
-    { id: "create",     label: t("nav.create"),              onClick: () => router.push("/regalo"),      icon: (a: boolean) => <PlusIcon active={a}/>,           active: pathname === "/regalo" || pathname.startsWith("/regalo/") || pathname === "/create" },
-    { id: "dashboard",  label: t("nav.gifts"),               onClick: handleGiftClick,                   icon: (a: boolean) => <GiftIcon active={a}/>,           active: pathname === "/dashboard",   giftBadge: true },
-    { id: "reactions",  label: t("nav.reactions"),           onClick: handleReactionsClick,              icon: (a: boolean) => <BellIcon active={a}/>,           active: pathname === "/reactions",   reactionBadge: true },
-    { id: "ricorrenze", label: t("nav.reminders"),  onClick: () => router.push("/ricorrenze"),  icon: (a: boolean) => <CalendarHeartIcon active={a}/>,  active: pathname.startsWith("/ricorrenze") },
+    { id: "home",       label: t("nav.home"),       onClick: () => router.push("/"),           icon: (a: boolean) => <HomeIcon active={a}/>,           active: pathname === "/" },
+    { id: "dashboard",  label: t("nav.gifts"),      onClick: handleGiftClick,                  icon: (a: boolean) => <GiftIcon active={a}/>,           active: pathname === "/dashboard",   giftBadge: true },
+    { id: "create",     label: t("nav.create"),     onClick: () => router.push("/regalo"),     icon: (a: boolean) => <PlusIcon active={a}/>,           active: pathname === "/regalo" || pathname.startsWith("/regalo/") || pathname === "/create", isFab: true },
+    { id: "reactions",  label: t("nav.reactions"),  onClick: handleReactionsClick,             icon: (a: boolean) => <BellIcon active={a}/>,           active: pathname === "/reactions",   reactionBadge: true },
+    { id: "ricorrenze", label: t("nav.reminders"),  onClick: () => router.push("/ricorrenze"), icon: (a: boolean) => <CalendarHeartIcon active={a}/>,  active: pathname.startsWith("/ricorrenze") },
   ];
 
   return (
@@ -170,20 +174,123 @@ export default function BottomNav() {
         </div>
       )}
 
-      <nav style={{ position:"fixed", bottom:0, left:0, right:0, zIndex:100, background:"rgba(255,255,255,0.96)", backdropFilter:"blur(14px)", borderTop:"0.5px solid #e8e4de", display:"flex", paddingBottom:"env(safe-area-inset-bottom, 0px)" }}>
-        {items.map(item => (
-          <button key={item.id} onClick={item.onClick} style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:3, padding:"10px 4px 11px", background:"none", border:"none", cursor:"pointer", position:"relative" }}>
-            <div style={{ position:"relative", display:"inline-flex" }}>
-              {item.icon(item.active)}
-              {(item as any).giftBadge     && <Badge count={giftBadge}/>}
-              {(item as any).reactionBadge && <Badge count={reactionBadge}/>}
-            </div>
-            <span style={{ fontSize:10, fontWeight:item.active?700:500, color:item.active?ACCENT:MUTED, letterSpacing:".02em" }}>
-              {item.label}
-            </span>
-            {item.active && <div style={{ position:"absolute", bottom:0, width:28, height:2, borderRadius:2, background:ACCENT }}/>}
-          </button>
-        ))}
+      <nav
+        style={{
+          position: "fixed",
+          bottom: 0, left: 0, right: 0,
+          zIndex: 100,
+          background: "rgba(255,255,255,0.96)",
+          backdropFilter: "blur(14px)",
+          borderTop: "0.5px solid #e8e4de",
+          display: "flex",
+          paddingBottom: "env(safe-area-inset-bottom, 0px)",
+          overflow: "visible", // permette al FAB di sporgere sopra
+        }}
+      >
+        {items.map(item => {
+          const isFab = (item as { isFab?: boolean }).isFab === true;
+          if (isFab) {
+            return (
+              <button
+                key={item.id}
+                onClick={item.onClick}
+                aria-label={item.label}
+                style={{
+                  flex: 1,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "flex-start",
+                  gap: 4,
+                  padding: "4px 4px 10px",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  position: "relative",
+                }}
+              >
+                {/* FAB rialzato: circle con accent gradient + ombra brand.
+                    margin-top negativo lo fa "sporgere" sopra la nav bar
+                    creando la classica forma centrale ad alto contrasto.
+                    P2 #10 UX audit 2026-05-22. */}
+                <div
+                  style={{
+                    marginTop: -22,
+                    width: 56,
+                    height: 56,
+                    borderRadius: "50%",
+                    background: `linear-gradient(135deg, ${ACCENT} 0%, #E8A04A 100%)`,
+                    color: "#fff",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    boxShadow: "0 8px 22px rgba(212,83,126,0.45)",
+                    border: "3px solid #fff",
+                    transform: item.active ? "scale(1.05)" : "scale(1)",
+                    transition: "transform 180ms ease, box-shadow 180ms ease",
+                  }}
+                >
+                  {/* SVG plus sempre bianco — distinct dal PlusIcon scuro
+                      degli altri item. Rende il FAB visivamente diverso. */}
+                  <svg
+                    width="26"
+                    height="26"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden
+                  >
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
+                </div>
+                <span
+                  style={{
+                    fontSize: 10,
+                    fontWeight: item.active ? 700 : 600,
+                    color: item.active ? ACCENT : DEEP,
+                    letterSpacing: ".02em",
+                  }}
+                >
+                  {item.label}
+                </span>
+              </button>
+            );
+          }
+          return (
+            <button
+              key={item.id}
+              onClick={item.onClick}
+              aria-label={item.label}
+              style={{
+                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 3,
+                padding: "10px 4px 11px",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                position: "relative",
+              }}
+            >
+              <div style={{ position: "relative", display: "inline-flex" }}>
+                {item.icon(item.active)}
+                {(item as any).giftBadge     && <Badge count={giftBadge}/>}
+                {(item as any).reactionBadge && <Badge count={reactionBadge}/>}
+              </div>
+              <span style={{ fontSize: 10, fontWeight: item.active ? 700 : 500, color: item.active ? ACCENT : MUTED, letterSpacing: ".02em" }}>
+                {item.label}
+              </span>
+              {item.active && <div style={{ position: "absolute", bottom: 0, width: 28, height: 2, borderRadius: 2, background: ACCENT }}/>}
+            </button>
+          );
+        })}
       </nav>
     </>
   );

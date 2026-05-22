@@ -22,6 +22,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import NewsletterSignup from "@/components/NewsletterSignup";
 
 const MUTED = "#888";
 const LIGHT_BORDER = "#e8e4de";
@@ -66,6 +67,25 @@ export default function Footer() {
       opacity: wrapperOpacity,
     }}>
       <div style={{ maxWidth: 640, margin: "0 auto" }}>
+        {/* Newsletter signup — visibile in tutte le pagine eccetto
+            quelle "immersive" (gia' nascoste in cima al componente).
+            Sull'apertura regalo /gift/ usa la modalita' discreta:
+            non mostriamo il form li' (l'utente sta aprendo un regalo,
+            non e' il momento di chiedere iscrizione). P2 #13 UX audit. */}
+        {!isGiftOpening && (
+          <div
+            style={{
+              marginBottom: 18,
+              paddingBottom: 18,
+              borderBottom: `0.5px solid ${LIGHT_BORDER}`,
+              textAlign: "left",
+              color: "#1a1a1a",
+            }}
+          >
+            <NewsletterSignup source="footer" variant="card" />
+          </div>
+        )}
+
         <div style={{ display: "flex", justifyContent: "center", gap: 12, flexWrap: "wrap", marginBottom: 8 }}>
           <Link href="/per-chi" style={{ color: MUTED, textDecoration: "none" }}>Per chi è</Link>
           <span aria-hidden="true">·</span>
