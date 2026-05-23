@@ -163,7 +163,7 @@ const config: OccasionConfig = {
     },
     {
       q: "Quanto costa fare un regalo di compleanno su BeGift?",
-      a: "BeGift è gratuito per i tuoi primi regali. Nessuna carta di credito richiesta in fase di registrazione. Paghi solo se aggiungi una parte concreta dal catalogo (cena, spa, biglietto evento) — in quel caso paghi il valore del voucher, senza commissioni aggiuntive da BeGift.",
+      a: "Creare il pacco digitale è sempre gratis, senza limiti di quantità. Nessuna carta di credito richiesta, nessun abbonamento. Paghi solo se aggiungi una parte concreta dal catalogo (cena, spa, biglietto evento) — in quel caso paghi il valore del voucher al fornitore, senza commissioni aggiuntive da BeGift.",
     },
     {
       q: "Il destinatario deve installare un'app?",

@@ -540,7 +540,7 @@ export default function OccasionLanding({ config }: { config: OccasionConfig }) 
             Pronto a sorprendere?
           </h2>
           <p style={{ fontSize: 15, color: MUTED, margin: "0 0 28px" }}>
-            Il primo regalo è gratis. Bastano 60 secondi.
+            Creare il regalo è sempre gratis. Bastano 60 secondi.
           </p>
           <Link href={`/create?occasion=${config.occasionParam}`} style={{
             background: ACCENT, color: "#fff", borderRadius: 50,

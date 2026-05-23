@@ -44,7 +44,7 @@ const config: OccasionConfig = {
     },
     {
       q: "Quanto costa un regalo di San Valentino con BeGift?",
-      a: "BeGift è gratis per i primi regali che crei. Non serve carta di credito né abbonamento per iniziare.",
+      a: "Creare il regalo digitale è sempre gratis, senza limiti di quantità. Non serve carta di credito né abbonamento. Si paga solo se aggiungi un'esperienza vera dal catalogo (cena, weekend, biglietto): in quel caso paghi il valore del voucher, senza commissioni di BeGift.",
     },
     {
       q: "Posso inviarlo insieme a un regalo fisico?",
