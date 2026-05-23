@@ -33,6 +33,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.9,
     },
     {
+      // Matrimonio — landing SEO long-form lanciata 2026-05-23.
+      // Stagione apr-set, priority weekly nei mesi caldi.
+      url: `${baseUrl}/matrimonio`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.92,
+    },
+    {
       url: `${baseUrl}/laurea`,
       lastModified: now,
       changeFrequency: "monthly",
