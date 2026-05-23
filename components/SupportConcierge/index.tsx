@@ -85,6 +85,13 @@ export default function SupportConcierge() {
   // personale BeGift, non aiuta sui flussi B2B. Per supporto la
   // massaggiatrice scrive a Luca via mail (vedi Settings business).
   if (pathname.startsWith("/business")) return null;
+  // Nascondi su /gift/[id]: c'e' gia' GiftChat (la chat tra mittente e
+  // destinatario di quel regalo) come FAB in basso-destra. Due FAB
+  // identici (entrambi rosa 💬) confondevano l'utente — segnalato da
+  // Luca il 2026-05-23. Qui il Concierge non aggiunge contesto: chi
+  // apre un regalo ha bisogno di parlare col mittente, non con l'AI.
+  // Resta visibile altrove (dashboard, drafts, create, settings, ecc.).
+  if (pathname.startsWith("/gift/")) return null;
 
   const sendMessage = async (text: string) => {
     if (!text.trim() || sending) return;
@@ -162,7 +169,12 @@ export default function SupportConcierge() {
 
   return (
     <>
-      {/* FAB */}
+      {/* FAB — icona ✨ (non 💬) e gradient pesca-oro per distinguere
+          visivamente dall'eventuale GiftChat che usa 💬 + accent pieno.
+          Bottom 90 invece di 20: la BottomNav (fixed bottom: 0, ~74px
+          d'altezza con safe-area) altrimenti copre l'item "reazioni" e
+          "ricorrenze". Segnalazione di Luca 2026-05-23: "Quello dell'ai
+          copre le reazioni nella bottom nav su mobile". */}
       {!open && (
         <button
           type="button"
@@ -170,24 +182,24 @@ export default function SupportConcierge() {
           aria-label="Apri chat di aiuto"
           style={{
             position: "fixed",
-            bottom: 20,
+            bottom: 90,
             right: 20,
-            width: 60,
-            height: 60,
+            width: 56,
+            height: 56,
             borderRadius: "50%",
-            background: ACCENT,
+            background: `linear-gradient(135deg, ${ACCENT} 0%, #E8A04A 100%)`,
             color: "#fff",
-            border: "none",
+            border: "2px solid #fff",
             cursor: "pointer",
             boxShadow: "0 8px 24px rgba(212,83,126,.4)",
-            fontSize: 28,
+            fontSize: 26,
             zIndex: 9998,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
           }}
         >
-          💬
+          ✨
         </button>
       )}
 
@@ -198,10 +210,13 @@ export default function SupportConcierge() {
           aria-label="Aiuto BeGift"
           style={{
             position: "fixed",
-            bottom: 20,
+            // Match alla nuova posizione del FAB (bottom 90), evita la
+            // sovrapposizione con la BottomNav fissa quando il pannello
+            // e' aperto su schermi piccoli.
+            bottom: 90,
             right: 20,
             width: "min(380px, calc(100vw - 20px))",
-            height: "min(560px, calc(100vh - 40px))",
+            height: "min(560px, calc(100vh - 110px))",
             background: CARD,
             borderRadius: 18,
             boxShadow: "0 16px 48px rgba(0,0,0,.18)",
