@@ -25,6 +25,8 @@
 
 import Link from "next/link";
 import Script from "next/script";
+import { useEffect } from "react";
+import { track } from "@/lib/analytics";
 
 const ACCENT = "#D4537E";
 const DEEP = "#1a1a1a";
@@ -52,13 +54,61 @@ export interface OccasionConfig {
   faq: { q: string; a: string }[];
   /** Query string per pre-selezionare template in /create */
   occasionParam: string;
+
+  // ── Estensioni SEO long-form (growth plan 2026-05-23) ────────
+  // Tutti opzionali: le 8 occasion-pages esistenti continuano a
+  // funzionare senza setterli (rendering condizionale).
+
+  /**
+   * Paragrafi extra dopo l'intro corto. Ogni elemento puo' essere
+   * un paragrafo (string) o un blocco con sottotitolo ({h?, p}).
+   * Target: portare la pagina a 1500-2500 parole per ranking SEO.
+   */
+  longBody?: Array<string | { h: string; p: string }>;
+  /**
+   * Idee regalo concrete per l'occasione — sezione "ispirazione".
+   * Ogni idea linka al catalogo con filtri precompilati, oppure
+   * a una landing fisica/esperienze. Riduce decision fatigue.
+   */
+  giftIdeas?: Array<{
+    title: string;
+    desc: string;
+    href: string;
+    emoji?: string;
+  }>;
+  /**
+   * Internal linking: altre occasioni correlate (slug).
+   * Render in fondo come "Altre idee regalo".
+   */
+  relatedOccasions?: Array<{ slug: string; label: string; emoji?: string }>;
+  /**
+   * Schema.org HowTo steps (oltre ai FAQPage gia' presenti).
+   * Se omesso, deriva i passi da `steps`. Triggera rich snippet
+   * "step-by-step" su Google.
+   */
+  howToName?: string;
+  /**
+   * Keyword principale per OG image dinamica + h1 fallback.
+   * Es: "regalo laurea originale 2026".
+   */
+  keyword?: string;
 }
 
 export default function OccasionLanding({ config }: { config: OccasionConfig }) {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://begift.app";
   const pageUrl = `${baseUrl}/${config.slug}`;
 
-  // JSON-LD structured data per SEO
+  // Analytics: track view della occasion-page una volta per session.
+  // Plausible non logga la slug per default — l'evento custom rende
+  // possibile vedere quale occasion ha piu' traffico SEO. Utile per
+  // capire dove indirizzare effort sulla creazione di nuove pagine.
+  useEffect(() => {
+    track("occasion_page_view", { slug: config.slug });
+  }, [config.slug]);
+
+  // JSON-LD structured data per SEO. Include HowTo schema (oltre a
+  // FAQPage gia' presente) — Google rende step-by-step nei rich snippet
+  // se la pagina ha sia HowTo che FAQPage di buona qualita'.
   const structuredData = {
     "@context": "https://schema.org",
     "@graph": [
@@ -91,6 +141,17 @@ export default function OccasionLanding({ config }: { config: OccasionConfig }) 
           "@type": "Question",
           name: item.q,
           acceptedAnswer: { "@type": "Answer", text: item.a },
+        })),
+      },
+      {
+        "@type": "HowTo",
+        name: config.howToName || `Come fare un ${config.h1.toLowerCase()}`,
+        description: config.intro,
+        step: config.steps.map((step, i) => ({
+          "@type": "HowToStep",
+          position: i + 1,
+          name: step.title,
+          text: step.desc,
         })),
       },
     ],
@@ -152,6 +213,52 @@ export default function OccasionLanding({ config }: { config: OccasionConfig }) 
           <p style={{ fontSize: 16, color: DEEP, lineHeight: 1.75, margin: 0 }}>
             {config.intro}
           </p>
+          {/* Long-body opzionale: paragrafi extra per portare la pagina a
+              1500-2500 parole come da growth plan. Ogni elemento puo'
+              essere un paragrafo (string) o un blocco con sottotitolo. */}
+          {config.longBody && config.longBody.length > 0 && (
+            <div style={{ marginTop: 28 }}>
+              {config.longBody.map((block, i) =>
+                typeof block === "string" ? (
+                  <p
+                    key={i}
+                    style={{
+                      fontSize: 16,
+                      color: DEEP,
+                      lineHeight: 1.75,
+                      margin: "0 0 18px",
+                    }}
+                  >
+                    {block}
+                  </p>
+                ) : (
+                  <div key={i} style={{ marginBottom: 24 }}>
+                    <h2
+                      style={{
+                        fontSize: 22,
+                        fontWeight: 800,
+                        color: DEEP,
+                        margin: "12px 0 10px",
+                        letterSpacing: "-.2px",
+                      }}
+                    >
+                      {block.h}
+                    </h2>
+                    <p
+                      style={{
+                        fontSize: 16,
+                        color: DEEP,
+                        lineHeight: 1.75,
+                        margin: 0,
+                      }}
+                    >
+                      {block.p}
+                    </p>
+                  </div>
+                )
+              )}
+            </div>
+          )}
         </section>
 
         {/* ── COME FUNZIONA ────────────────────────────────── */}
@@ -227,6 +334,111 @@ export default function OccasionLanding({ config }: { config: OccasionConfig }) 
           </div>
         </section>
 
+        {/* ── IDEE REGALO CONCRETE ──────────────────────────── */}
+        {/* Sezione "ispirazione" opzionale. Ogni card linka al catalogo
+            con filtri precompilati (es. /regalo/catalogo?categoria=X) —
+            riduce decision fatigue dell'utente che sta valutando.
+            Il growth plan vuole 6-8 idee per occasion-page. */}
+        {config.giftIdeas && config.giftIdeas.length > 0 && (
+          <section style={{ padding: "8px 24px 56px" }}>
+            <div style={{ maxWidth: 960, margin: "0 auto" }}>
+              <h2
+                style={{
+                  fontSize: 26,
+                  fontWeight: 800,
+                  color: DEEP,
+                  textAlign: "center",
+                  margin: "0 0 10px",
+                  letterSpacing: "-.3px",
+                }}
+              >
+                Idee regalo per questa occasione
+              </h2>
+              <p
+                style={{
+                  fontSize: 14,
+                  color: MUTED,
+                  textAlign: "center",
+                  margin: "0 0 28px",
+                }}
+              >
+                Spunti concreti. Tutti aprono il catalogo con i filtri giusti già pronti.
+              </p>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+                  gap: 14,
+                }}
+              >
+                {config.giftIdeas.map((idea, i) => (
+                  <Link
+                    key={i}
+                    href={idea.href}
+                    onClick={() =>
+                      // Misura quale idea concreta porta piu' click
+                      // verso il catalogo / create. Permette di iterare
+                      // sull'ordering delle gift ideas.
+                      track("occasion_idea_clicked", {
+                        slug: config.slug,
+                        idea: idea.title,
+                      })
+                    }
+                    style={{
+                      background: "#fff",
+                      borderRadius: 16,
+                      padding: "20px 18px",
+                      textDecoration: "none",
+                      color: DEEP,
+                      border: "1px solid #e8e4de",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 8,
+                      transition: "transform .14s, box-shadow .14s",
+                    }}
+                  >
+                    {idea.emoji && (
+                      <span style={{ fontSize: 28, lineHeight: 1 }}>
+                        {idea.emoji}
+                      </span>
+                    )}
+                    <h3
+                      style={{
+                        fontSize: 16,
+                        fontWeight: 800,
+                        color: DEEP,
+                        margin: 0,
+                      }}
+                    >
+                      {idea.title}
+                    </h3>
+                    <p
+                      style={{
+                        fontSize: 13,
+                        color: MUTED,
+                        margin: 0,
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      {idea.desc}
+                    </p>
+                    <span
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 700,
+                        color: ACCENT,
+                        marginTop: "auto",
+                      }}
+                    >
+                      Vedi nel catalogo →
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* ── FAQ ───────────────────────────────────────────── */}
         <section style={{ background: "#fff", padding: "56px 24px 60px" }}>
           <div style={{ maxWidth: 720, margin: "0 auto" }}>
@@ -262,6 +474,59 @@ export default function OccasionLanding({ config }: { config: OccasionConfig }) 
             </div>
           </div>
         </section>
+
+        {/* ── INTERNAL LINKING (altre occasioni) ─────────────── */}
+        {/* Pill di link alle altre occasion-pages — passa SEO juice
+            tra le pagine del cluster + offre "next step" all'utente
+            che era arrivato qui per sbaglio. */}
+        {config.relatedOccasions && config.relatedOccasions.length > 0 && (
+          <section style={{ padding: "0 24px 8px" }}>
+            <div
+              style={{
+                maxWidth: 720,
+                margin: "0 auto",
+                background: "#fff",
+                borderRadius: 16,
+                border: "1px solid #e8e4de",
+                padding: "22px 22px 20px",
+              }}
+            >
+              <h2
+                style={{
+                  fontSize: 16,
+                  fontWeight: 800,
+                  color: DEEP,
+                  margin: "0 0 14px",
+                }}
+              >
+                Altre idee per altre occasioni
+              </h2>
+              <div
+                style={{ display: "flex", flexWrap: "wrap", gap: 8 }}
+              >
+                {config.relatedOccasions.map((rel) => (
+                  <Link
+                    key={rel.slug}
+                    href={`/${rel.slug}`}
+                    style={{
+                      padding: "8px 14px",
+                      border: "1px solid #e8e4de",
+                      borderRadius: 50,
+                      background: LIGHT,
+                      color: DEEP,
+                      fontSize: 13,
+                      fontWeight: 600,
+                      textDecoration: "none",
+                    }}
+                  >
+                    {rel.emoji ? `${rel.emoji} ` : ""}
+                    {rel.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* ── CTA FINALE ────────────────────────────────────── */}
         <section style={{
