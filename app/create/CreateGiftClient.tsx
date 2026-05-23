@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useI18n } from "@/lib/i18n";
 import { useUpload } from "@/hooks/useUpload";
 import type { Packaging } from "@/types";
-import GiftSVG from "@/components/GiftSVG";
+import PackagingPicker from "@/components/PackagingPicker";
 import InAppSend from "@/components/InAppSend";
 import { AIMessageHelper } from "@/components/AIMessageHelper";
 import { ShareButton } from "@/components/ShareButton";
@@ -1205,63 +1205,28 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
             </div>
           )}
           <h2 style={{fontSize:24,fontWeight:800,color:DEEP,margin:"0 0 20px"}}>{t("create.packaging_title")}</h2>
-          <div style={{display:"flex",gap:20,flexWrap:"wrap",alignItems:"flex-start",justifyContent:"center"}}>
-            <div style={{width:152,flexShrink:0,background:"#f0ece8",borderRadius:18,padding:"12px 8px 8px"}}>
-              <GiftSVG paper={pkg.paperColor} ribbon={pkg.ribbonColor} bow={pkg.bowColor} bowType={pkg.bowType} animated={true} theme={(pkg as any).theme||"standard"}/>
-              <p style={{fontSize:11,color:MUTED,textAlign:"center",margin:"6px 0 0"}}>{t("create.preview")}</p>
-            </div>
-            <div style={{flex:1,minWidth:200}}>
-              <Sw label={t("create.paper")} opts={PAPERS} field="paperColor"/>
-              <Sw label={t("create.ribbon")} opts={RIBBONS} field="ribbonColor"/>
-              <Sw label={t("create.bow")} opts={RIBBONS} field="bowColor"/>
-              <div style={{marginBottom:16}}>
-                <p style={{fontSize:11,fontWeight:700,color:DEEP,margin:"0 0 8px",textTransform:"uppercase",letterSpacing:".07em"}}>{t("create.bow_type")}</p>
-                <div style={{display:"flex",flexWrap:"wrap",gap:6}}>{BOWS.map(b=><button key={b.id} onClick={()=>setPkg(p=>({...p,bowType:b.id as any}))} style={{padding:"6px 12px",borderRadius:40,fontSize:12,fontWeight:600,background:pkg.bowType===b.id?DEEP:"#fff",color:pkg.bowType===b.id?"#fff":DEEP,border:`1.5px solid ${pkg.bowType===b.id?DEEP:"#ddd"}`,cursor:"pointer"}}>{b.label}</button>)}</div>
-              </div>
-              <div style={{marginBottom:16}}>
-                <p style={{fontSize:11,fontWeight:700,color:DEEP,margin:"0 0 8px",textTransform:"uppercase",letterSpacing:".07em"}}>{t("create.special_edition")}</p>
-                <div style={{display:"flex",flexWrap:"wrap",gap:6}}>{THEMES.map(t=><button key={t.id} onClick={()=>setPkg(p=>({...p,theme:t.id} as any))} style={{padding:"6px 12px",borderRadius:40,fontSize:12,fontWeight:600,background:(pkg as any).theme===t.id?ACCENT:"#fff",color:(pkg as any).theme===t.id?"#fff":DEEP,border:`1.5px solid ${(pkg as any).theme===t.id?ACCENT:"#ddd"}`,cursor:"pointer"}}>{t.label}</button>)}</div>
-              </div>
-              <div style={{marginBottom:16}}>
-                <p style={{fontSize:11,fontWeight:700,color:DEEP,margin:"0 0 8px",textTransform:"uppercase",letterSpacing:".07em"}}>{t("create.animation")}</p>
-                <div style={{display:"flex",flexDirection:"column",gap:5}}>{ANIMS.map(a=><button key={a.id} onClick={()=>setPkg(p=>({...p,openAnimation:a.id as any}))} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 12px",borderRadius:10,background:pkg.openAnimation===a.id?"#fff5f8":"#fff",border:`1.5px solid ${pkg.openAnimation===a.id?ACCENT:"#e0dbd5"}`,cursor:"pointer",textAlign:"left"}}><div style={{width:7,height:7,borderRadius:"50%",background:pkg.openAnimation===a.id?ACCENT:"#ddd"}}/><div><div style={{fontSize:13,fontWeight:700,color:DEEP}}>{a.label}</div><div style={{fontSize:11,color:MUTED}}>{t("create." + a.desc)}</div></div></button>)}</div>
-              </div>
-              <div>
-                <p style={{fontSize:11,fontWeight:700,color:DEEP,margin:"0 0 8px",textTransform:"uppercase",letterSpacing:".07em"}}>{t("create.sound")}</p>
-                <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:10}}>{SOUNDS.map(s=>(
-                    <div key={s.id} style={{display:"flex",alignItems:"center",gap:0}}>
-                      <button onClick={()=>setPkg(p=>({...p,sound:s.id as any}))} style={{padding:"6px 11px",borderRadius:s.id!=="none"?"40px 0 0 40px":"40px",fontSize:12,fontWeight:600,background:pkg.sound===s.id?DEEP:"#fff",color:pkg.sound===s.id?"#fff":DEEP,border:`1.5px solid ${pkg.sound===s.id?DEEP:"#ddd"}`,cursor:"pointer"}}>{s.id==="none"?t("create.sound_none"):s.label}</button>
-                      {s.id!=="none"&&<button onClick={()=>playPreview(s.id)} style={{padding:"6px 8px",borderRadius:"0 40px 40px 0",fontSize:12,background:pkg.sound===s.id?"#444":"#f0ece8",color:pkg.sound===s.id?"#fff":"#888",border:`1.5px solid ${pkg.sound===s.id?DEEP:"#ddd"}`,borderLeft:"none",cursor:"pointer"}}>▶</button>}
-                    </div>
-                  ))}</div>
-                <div>
-                  <p style={{fontSize:11,fontWeight:700,color:DEEP,margin:"0 0 6px",textTransform:"uppercase",letterSpacing:".07em"}}>{t("create.upload_music")}</p>
-                  {customSoundName ? (
-                    <div style={{background:"#f0faf5",border:"1px solid #b2dfce",borderRadius:12,padding:"10px 12px"}}>
-                      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
-                        <span style={{fontSize:13,color:"#1a7a4a",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>🎵 {customSoundName}</span>
-                        <button onClick={()=>playPreview("custom",customSoundUrl)} style={{background:"none",border:"none",color:"#1a7a4a",cursor:"pointer",fontSize:14}}>▶</button>
-                        <button onClick={()=>{setCustomSoundUrl("");setCustomSoundName("");setCustomSoundTitle("");setPkg(p=>({...p,sound:"bells" as any}));}} style={{background:"none",border:"none",color:"#888",cursor:"pointer",fontSize:16}}>×</button>
-                      </div>
-                      <input type="text" placeholder={t("create.song_title_placeholder")} value={customSoundTitle} onChange={e=>setCustomSoundTitle(e.target.value)} style={{width:"100%",fontSize:12,padding:"6px 10px",border:"1px solid #b2dfce",borderRadius:8,outline:"none",background:"#fff",color:"#1a1a1a",boxSizing:"border-box"}}/>
-                    </div>
-                  ) : (
-                    <label style={{display:"block",background:"#fff",border:"1.5px dashed #d5cfc8",borderRadius:12,padding:"12px",textAlign:"center",cursor:"pointer"}}>
-                      <span style={{fontSize:12,color:MUTED}}>MP3, M4A, WAV (max 10MB)</span>
-                      <input type="file" accept="audio/*" style={{display:"none"}} onChange={async e=>{
-                        const file=e.target.files?.[0]; if(!file) return;
-                        if(file.size>10*1024*1024){alert("File troppo grande (max 10MB)");return;}
-                        const url=await upload(file,"gift-media");
-                        setCustomSoundUrl(url);
-                        setCustomSoundName(file.name);
-                        setPkg(p=>({...p,sound:"custom" as any}));
-                      }}/>
-                    </label>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* Uniformato al PackagingPicker del flusso parsing (/gift/[id]/edit)
+              — Luca 2026-05-23: "la grafica di personalizzazione del percorso
+              crea è diversa da quella del percorso parsing.. rendila uniforme
+              e preferisco quella del percorso parsing". */}
+          <PackagingPicker
+            pkg={pkg}
+            onPkgChange={(p)=>setPkg(p)}
+            customSoundUrl={customSoundUrl}
+            customSoundName={customSoundName}
+            customSoundTitle={customSoundTitle}
+            onCustomSoundChange={(url,name)=>{
+              setCustomSoundUrl(url);
+              setCustomSoundName(name);
+            }}
+            onCustomSoundTitleChange={(title)=>setCustomSoundTitle(title)}
+            onCustomSoundClear={()=>{
+              setCustomSoundUrl("");
+              setCustomSoundName("");
+              setCustomSoundTitle("");
+            }}
+            showThemePicker
+          />
           {result && isEditing ? (
             <div style={{display:"flex",flexDirection:"column",gap:10,marginTop:22}}>
               <button onClick={updatePackaging} disabled={loading} style={{display:"block",width:"100%",background:loading?"#e0dbd5":ACCENT,color:"#fff",border:"none",borderRadius:40,padding:"15px",fontSize:15,fontWeight:700,cursor:"pointer"}}>{loading?t("create.saving"):t("create.save_changes")}</button>
@@ -1275,64 +1240,26 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
         {/* S5 — packaging for link/message or confirm for file */}
         {step===5&&!isFile&&<>
           <h2 style={{fontSize:24,fontWeight:800,color:DEEP,margin:"0 0 20px"}}>{t("create.packaging_title")}</h2>
-          <div style={{display:"flex",gap:20,flexWrap:"wrap",alignItems:"flex-start",justifyContent:"center",marginBottom:16}}>
-            <div style={{width:152,flexShrink:0,background:"#f0ece8",borderRadius:18,padding:"12px 8px 8px"}}>
-              <GiftSVG paper={pkg.paperColor} ribbon={pkg.ribbonColor} bow={pkg.bowColor} bowType={pkg.bowType} animated={true} theme={(pkg as any).theme||"standard"}/>
-              <p style={{fontSize:11,color:MUTED,textAlign:"center",margin:"6px 0 0"}}>{t("create.preview")}</p>
-            </div>
-            <div style={{flex:1,minWidth:200}}>
-              <Sw label={t("create.paper")} opts={PAPERS} field="paperColor"/>
-              <Sw label={t("create.ribbon")} opts={RIBBONS} field="ribbonColor"/>
-              <Sw label={t("create.bow")} opts={RIBBONS} field="bowColor"/>
-              <div style={{marginBottom:16}}>
-                <p style={{fontSize:11,fontWeight:700,color:DEEP,margin:"0 0 8px",textTransform:"uppercase",letterSpacing:".07em"}}>{t("create.special_edition")}</p>
-                <div style={{display:"flex",flexWrap:"wrap",gap:6}}>{THEMES.map(t=><button key={t.id} onClick={()=>setPkg(p=>({...p,theme:t.id} as any))} style={{padding:"6px 12px",borderRadius:40,fontSize:12,fontWeight:600,background:(pkg as any).theme===t.id?ACCENT:"#fff",color:(pkg as any).theme===t.id?"#fff":DEEP,border:`1.5px solid ${(pkg as any).theme===t.id?ACCENT:"#ddd"}`,cursor:"pointer"}}>{t.label}</button>)}</div>
-              </div>
-              <div style={{marginBottom:16}}>
-                <p style={{fontSize:11,fontWeight:700,color:DEEP,margin:"0 0 8px",textTransform:"uppercase",letterSpacing:".07em"}}>{t("create.animation")}</p>
-                <div style={{display:"flex",flexDirection:"column",gap:5}}>{ANIMS.map(a=><button key={a.id} onClick={()=>setPkg(p=>({...p,openAnimation:a.id as any}))} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 12px",borderRadius:10,background:pkg.openAnimation===a.id?"#fff5f8":"#fff",border:`1.5px solid ${pkg.openAnimation===a.id?ACCENT:"#e0dbd5"}`,cursor:"pointer",textAlign:"left"}}><div style={{width:7,height:7,borderRadius:"50%",background:pkg.openAnimation===a.id?ACCENT:"#ddd"}}/><div><div style={{fontSize:13,fontWeight:700,color:DEEP}}>{a.label}</div><div style={{fontSize:11,color:MUTED}}>{t("create." + a.desc)}</div></div></button>)}</div>
-              </div>
-              <div>
-                <p style={{fontSize:11,fontWeight:700,color:DEEP,margin:"0 0 8px",textTransform:"uppercase",letterSpacing:".07em"}}>{t("create.sound")}</p>
-                <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:10}}>{SOUNDS.map(s=>(
-                    <div key={s.id} style={{display:"flex",alignItems:"center",gap:0}}>
-                      <button onClick={()=>setPkg(p=>({...p,sound:s.id as any}))} style={{padding:"6px 11px",borderRadius:s.id!=="none"?"40px 0 0 40px":"40px",fontSize:12,fontWeight:600,background:pkg.sound===s.id?DEEP:"#fff",color:pkg.sound===s.id?"#fff":DEEP,border:`1.5px solid ${pkg.sound===s.id?DEEP:"#ddd"}`,cursor:"pointer"}}>{s.id==="none"?t("create.sound_none"):s.label}</button>
-                      {s.id!=="none"&&<button onClick={()=>playPreview(s.id)} style={{padding:"6px 8px",borderRadius:"0 40px 40px 0",fontSize:12,background:pkg.sound===s.id?"#444":"#f0ece8",color:pkg.sound===s.id?"#fff":"#888",border:`1.5px solid ${pkg.sound===s.id?DEEP:"#ddd"}`,borderLeft:"none",cursor:"pointer"}}>▶</button>}
-                    </div>
-                  ))}</div>
-                <div style={{marginTop:8}}>
-                  <p style={{fontSize:11,fontWeight:700,color:DEEP,margin:"0 0 6px",textTransform:"uppercase",letterSpacing:".07em"}}>{t("create.upload_music")}</p>
-                  {customSoundName ? (
-                    <div style={{background:"#f0faf5",border:"1px solid #b2dfce",borderRadius:12,padding:"10px 12px"}}>
-                      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
-                        <span style={{fontSize:13,color:"#1a7a4a",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>🎵 {customSoundName}</span>
-                        <button onClick={()=>playPreview("custom",customSoundUrl)} style={{background:"none",border:"none",color:"#1a7a4a",cursor:"pointer",fontSize:14}}>▶</button>
-                        <button onClick={()=>{setCustomSoundUrl("");setCustomSoundName("");setCustomSoundTitle("");setPkg(p=>({...p,sound:"bells" as any}));}} style={{background:"none",border:"none",color:"#888",cursor:"pointer",fontSize:16}}>×</button>
-                      </div>
-                      <input
-                        type="text"
-                        placeholder={t("create.song_title_placeholder")}
-                        value={customSoundTitle}
-                        onChange={e=>setCustomSoundTitle(e.target.value)}
-                        style={{width:"100%",fontSize:12,padding:"6px 10px",border:"1px solid #b2dfce",borderRadius:8,outline:"none",background:"#fff",color:"#1a1a1a",boxSizing:"border-box"}}
-                      />
-                    </div>
-                  ) : (
-                    <label style={{display:"block",background:"#fff",border:"1.5px dashed #d5cfc8",borderRadius:12,padding:"12px",textAlign:"center",cursor:"pointer"}}>
-                      <span style={{fontSize:12,color:MUTED}}>MP3, M4A, WAV (max 10MB)</span>
-                      <input type="file" accept="audio/*" style={{display:"none"}} onChange={async e=>{
-                        const file=e.target.files?.[0]; if(!file) return;
-                        if(file.size>10*1024*1024){alert("File troppo grande (max 10MB)");return;}
-                        const url=await upload(file,"gift-media");
-                        setCustomSoundUrl(url);setCustomSoundName(file.name);
-                        setPkg(p=>({...p,sound:"custom" as any}));
-                      }}/>
-                    </label>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* Uniformato al PackagingPicker condiviso — vedi step 4 isFile
+              sopra per la nota completa. */}
+          <PackagingPicker
+            pkg={pkg}
+            onPkgChange={(p)=>setPkg(p)}
+            customSoundUrl={customSoundUrl}
+            customSoundName={customSoundName}
+            customSoundTitle={customSoundTitle}
+            onCustomSoundChange={(url,name)=>{
+              setCustomSoundUrl(url);
+              setCustomSoundName(name);
+            }}
+            onCustomSoundTitleChange={(title)=>setCustomSoundTitle(title)}
+            onCustomSoundClear={()=>{
+              setCustomSoundUrl("");
+              setCustomSoundName("");
+              setCustomSoundTitle("");
+            }}
+            showThemePicker
+          />
           {result && isEditing ? (
             <div style={{display:"flex",flexDirection:"column",gap:10,marginTop:8}}>
               <button onClick={updatePackaging} disabled={loading} style={{display:"block",width:"100%",background:loading?"#e0dbd5":ACCENT,color:"#fff",border:"none",borderRadius:40,padding:"15px",fontSize:15,fontWeight:700,cursor:"pointer"}}>{loading?t("create.saving"):t("create.save_changes")}</button>

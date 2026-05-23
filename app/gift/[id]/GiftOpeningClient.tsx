@@ -41,18 +41,38 @@ const DEFAULT_SOUNDS: Record<string, string> = {
 function playSound(id: string, customUrl?: string) {
   if (id === "none") return null;
 
-  // Usa URL predefinito o custom
+  // Usa URL predefinito o custom. Se la riproduzione fallisce (file 404,
+  // bucket non popolato, CORS, formato non supportato) ricadiamo sulla
+  // sintesi Web Audio API. Prima del 2026-05-23 il fallback era
+  // unreachable perche' il branch `if (url)` aveva un early return —
+  // segnalazione di Luca "i suoni non si sentono", probabile causa
+  // file mancanti in Supabase storage.
   const url = customUrl || DEFAULT_SOUNDS[id];
   if (url) {
     try {
       const audio = new Audio(url);
       audio.volume = 0.7;
-      audio.play().catch(() => {});
+      // L'evento 'error' si triggera prima ancora del play() su 404 / CORS
+      audio.addEventListener("error", () => playSoundSynth(id), { once: true });
+      audio.play().catch(() => playSoundSynth(id));
       return audio;
-    } catch (_) {}
+    } catch (_) {
+      playSoundSynth(id);
+    }
     return null;
   }
 
+  playSoundSynth(id);
+  return null;
+}
+
+/**
+ * Fallback sintetico via Web Audio API per ognuno dei preset suoni.
+ * Suona ok ma non bello come i sample reali — usato solo quando il
+ * file remote non e' disponibile. Estratto da playSound() il 2026-05-23
+ * per renderlo richiamabile come fallback.
+ */
+function playSoundSynth(id: string) {
   try {
     const AC = window.AudioContext || (window as any).webkitAudioContext;
     const ctx = new AC();
