@@ -371,19 +371,42 @@ export default function OccasionLanding({ config }: { config: OccasionConfig }) 
                   gap: 14,
                 }}
               >
-                {config.giftIdeas.map((idea, i) => (
-                  <Link
-                    key={i}
-                    href={idea.href}
-                    onClick={() =>
-                      // Misura quale idea concreta porta piu' click
-                      // verso il catalogo / create. Permette di iterare
-                      // sull'ordering delle gift ideas.
-                      track("occasion_idea_clicked", {
-                        slug: config.slug,
-                        idea: idea.title,
-                      })
-                    }
+                {config.giftIdeas.map((idea, i) => {
+                  // Funnel split: ogni gift idea va o verso /create
+                  // (regalo digitale, no revenue diretto) o verso
+                  // /regalo/catalogo (voucher esperienze/biglietti,
+                  // revenue path via affiliate). Emettiamo un evento
+                  // dedicato per il secondo cosi' nel dashboard Plausible
+                  // possiamo isolare il funnel SEO -> catalogo, che e'
+                  // la metrica chiave per il growth plan 100k.
+                  const goesToCatalog =
+                    idea.href.startsWith("/regalo/catalogo") ||
+                    idea.href.startsWith("/catalogo");
+                  return (
+                    <Link
+                      key={i}
+                      href={idea.href}
+                      onClick={() => {
+                        // Evento generico mantenuto per backward compat:
+                        // misura quale idea concreta porta piu' click
+                        // totali a prescindere dalla destinazione.
+                        track("occasion_idea_clicked", {
+                          slug: config.slug,
+                          idea: idea.title,
+                        });
+                        if (goesToCatalog) {
+                          // Evento dedicato funnel revenue: usato nel
+                          // dashboard Plausible come Goal "SEO -> Catalogo".
+                          // `href` permette di vedere quale categoria
+                          // (esperienze, concerti, perdue, ecc.) attira
+                          // piu' intent da una specifica occasion-page.
+                          track("occasion_page_to_catalog_click", {
+                            slug: config.slug,
+                            idea: idea.title,
+                            href: idea.href,
+                          });
+                        }
+                      }}
                     style={{
                       background: "#fff",
                       borderRadius: 16,
@@ -433,7 +456,8 @@ export default function OccasionLanding({ config }: { config: OccasionConfig }) 
                       Vedi nel catalogo →
                     </span>
                   </Link>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </section>
