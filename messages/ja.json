@@ -188,6 +188,7 @@
     "occasion_applied": "✓ プリセットを適用しました — 後で編集できます",
     "occasion_change": "機会を変更",
     "recipient_label": "受取人の名前",
+    "recipient_preview_empty": "誰へ？",
     "ready": "完了！",
     "gift_ready_for": "{name}さんへのギフトが完成しました。",
     "login_title": "サインインしてギフトを作成",

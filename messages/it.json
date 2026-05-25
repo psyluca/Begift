@@ -188,6 +188,7 @@
     "occasion_applied": "✓ Preset applicato — puoi comunque ritoccarlo",
     "occasion_change": "Cambia occasione",
     "recipient_label": "Nome del destinatario",
+    "recipient_preview_empty": "Per chi…?",
     "ready": "Pronto!",
     "gift_ready_for": "Il regalo per {name} è pronto.",
     "login_title": "Accedi per creare un regalo",

@@ -911,9 +911,88 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
             </div>
           )}
 
+          {/* Preview "cartellino regalo" — riprende il linguaggio visivo
+              del PackagingPicker: anteprima SVG card morbida + chip rows.
+              Mostra dinamicamente "Per [nome]" / "Da [mittente]" mentre
+              l'utente scrive, dando feedback immediato di cosa vedrà chi
+              riceve. */}
+          <div style={{
+            background:"linear-gradient(135deg, #fff5f8 0%, #fff 60%)",
+            border:`1px solid ${name.trim()?"#f9c8d9":"#e8e4de"}`,
+            borderRadius:18,
+            padding:"18px 16px 16px",
+            marginBottom:18,
+            transition:"border-color .18s",
+            boxShadow:"0 2px 12px rgba(212, 83, 126, 0.04)",
+          }}>
+            <div style={{display:"flex",alignItems:"center",gap:12}}>
+              {/* Tag SVG */}
+              <svg width="56" height="56" viewBox="0 0 64 64" style={{flexShrink:0}} aria-hidden="true">
+                {/* Bow */}
+                <ellipse cx="22" cy="14" rx="9" ry="6" fill={ACCENT} opacity="0.85"/>
+                <ellipse cx="38" cy="14" rx="9" ry="6" fill={ACCENT} opacity="0.85"/>
+                <circle cx="30" cy="14" r="3" fill="#B8456A"/>
+                {/* Tag string */}
+                <line x1="30" y1="17" x2="30" y2="24" stroke={DEEP} strokeWidth="1.2"/>
+                {/* Tag body */}
+                <path d="M 14 27 L 46 27 L 50 32 L 46 56 L 14 56 L 14 27 Z" fill="#fff" stroke={ACCENT} strokeWidth="1.5" strokeLinejoin="round"/>
+                <circle cx="46" cy="29" r="1.5" fill={ACCENT}/>
+              </svg>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:11,color:MUTED,fontWeight:600,letterSpacing:0.3,textTransform:"uppercase",marginBottom:2}}>
+                  {t("create.recipient_label")}
+                </div>
+                <div style={{fontSize:18,fontWeight:800,color:name.trim()?DEEP:"#c8c0b7",lineHeight:1.2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                  {name.trim() ? `Per ${name.trim()}` : t("create.recipient_preview_empty")}
+                </div>
+                {senderAlias.trim() && (
+                  <div style={{fontSize:13,color:MUTED,marginTop:4,fontStyle:"italic",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                    da {senderAlias.trim()}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Chip quick-fill destinatari — coerenti con q_recipient_type
+              che usiamo nel feedback post-apertura. Click → setName().
+              L'utente puo' sempre sovrascrivere col nome proprio. */}
           <p style={{fontSize:13,color:MUTED,margin:"0 0 8px"}}>{t("create.recipient_label")}</p>
+          <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:10}}>
+            {([
+              {label:"Mamma",emoji:"💝"},
+              {label:"Papà",emoji:"👔"},
+              {label:"Partner",emoji:"💕"},
+              {label:"Amica",emoji:"🌟"},
+              {label:"Sorella",emoji:"✨"},
+              {label:"Fratello",emoji:"🧢"},
+            ]).map(chip => {
+              const active = name.trim().toLowerCase() === chip.label.toLowerCase();
+              return (
+                <button
+                  key={chip.label}
+                  type="button"
+                  onClick={() => setName(chip.label)}
+                  style={{
+                    background: active ? ACCENT : "#fff",
+                    color: active ? "#fff" : DEEP,
+                    border: `1.5px solid ${active ? ACCENT : "#e0dbd5"}`,
+                    borderRadius: 999,
+                    padding: "7px 13px",
+                    fontSize: 13,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    fontFamily: "inherit",
+                    transition: "all .14s",
+                  }}
+                >
+                  <span style={{marginRight:5}}>{chip.emoji}</span>{chip.label}
+                </button>
+              );
+            })}
+          </div>
           <input
-            style={INP}
+            style={{...INP, borderColor: name.trim() ? "#f9c8d9" : "#e0dbd5"}}
             placeholder={t("create.recipient_placeholder")}
             value={name}
             onChange={e=>setName(e.target.value)}
@@ -923,7 +1002,7 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
           />
           <p style={{fontSize:13,color:MUTED,margin:"16px 0 8px"}}>{t("create.sender_label")}</p>
           <input
-            style={INP}
+            style={{...INP, borderColor: senderAlias.trim() ? "#f9c8d9" : "#e0dbd5"}}
             placeholder={t("create.sender_placeholder")}
             value={senderAlias}
             onChange={e=>setSenderAlias(e.target.value)}

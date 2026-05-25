@@ -188,6 +188,7 @@
     "occasion_applied": "✓ Preset applied — you can still tweak it",
     "occasion_change": "Change occasion",
     "recipient_label": "Recipient's name",
+    "recipient_preview_empty": "For whom…?",
     "ready": "Ready!",
     "gift_ready_for": "The gift for {name} is ready.",
     "login_title": "Sign in to create a gift",

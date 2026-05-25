@@ -188,6 +188,7 @@
     "occasion_applied": "✓ 预设已应用 — 可以继续调整",
     "occasion_change": "更改场合",
     "recipient_label": "收件人姓名",
+    "recipient_preview_empty": "送给谁…？",
     "ready": "完成！",
     "gift_ready_for": "送给{name}的礼物已准备好。",
     "login_title": "登录以创建礼物",
