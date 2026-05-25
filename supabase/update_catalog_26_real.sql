@@ -32,11 +32,11 @@ UPDATE public.experiences SET
 -- gyg-rome-pasta-class → Roma: lezione di preparazione della pasta a Trastevere con tour gastronomico
 UPDATE public.experiences SET
   title = 'Roma: lezione di preparazione della pasta a Trastevere con tour gastronomico',
-  external_url = 'https://www.getyourguide.com/it-it/roma-l33/roma-tour-gastronomico-dello-street-food-a-trastevere-t261067/',
+  external_url = 'https://www.getyourguide.com/roma-l33/roma-tour-gastronomico-dello-street-food-a-trastevere-t261067/',
   image_url = 'https://cdn.getyourguide.com/image/format=auto,fit=crop,gravity=auto,quality=60,height=565,dpr=2/tour_img/638f4522d732b.jpeg',
   price_min_cents = 8300,
   price_max_cents = NULL,
-  affiliate_url_template = 'https://www.getyourguide.com/it-it/roma-l33/roma-tour-gastronomico-dello-street-food-a-trastevere-t261067/?partner_id=17&cmp={gift_id}',
+  affiliate_url_template = 'https://www.getyourguide.com/roma-l33/roma-tour-gastronomico-dello-street-food-a-trastevere-t261067/?partner_id=17&cmp={gift_id}',
   active = true
  WHERE external_id = 'gyg-rome-pasta-class';
 
