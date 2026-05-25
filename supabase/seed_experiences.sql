@@ -43,13 +43,13 @@ BEGIN
     (partner_id, external_id, title, description, image_url, city, country, category, duration_minutes, price_min_cents, tags, rating, reviews_count, affiliate_url_template)
   VALUES
     (v_gyg_id, 'gyg-rome-pasta-class',
-     'Roma: lezione di preparazione della pasta a Trastevere con tour gastronomico',
+     'Roma: lezione di pasta a Trastevere con tour street food',
      'Impara a fare carbonara, cacio e pepe e tiramisu in una cucina romana storica. Cena inclusa, vino abbondante.',
      'https://cdn.getyourguide.com/image/format=auto,fit=crop,gravity=auto,quality=60,height=565,dpr=2/tour_img/638f4522d732b.jpeg',
      'Roma', 'IT', 'food', 240, 8300,
      ARRAY['foodie', 'couples', 'date-night', 'romantic'],
      4.9, 5640,
-     'https://www.getyourguide.com/roma-l33/roma-tour-gastronomico-dello-street-food-a-trastevere-t261067/?partner_id=17&cmp={gift_id}')
+     'https://www.getyourguide.com/rome-l33/rome-trastevere-street-food-tour-t261067/?partner_id=17&cmp={gift_id}')
   ON CONFLICT DO NOTHING;
 
   -- ===== MILANO =====

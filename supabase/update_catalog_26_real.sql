@@ -29,14 +29,17 @@ UPDATE public.experiences SET
   active = true
  WHERE external_id = 'gyg-rome-colosseum';
 
--- gyg-rome-pasta-class → Roma: lezione di preparazione della pasta a Trastevere con tour gastronomico
+-- gyg-rome-pasta-class → Roma: lezione di preparazione della pasta a Trastevere con tour gastronomico (t261067)
+-- NOTA: usato lo slug INGLESE (rome-l33/rome-trastevere-street-food-tour) perche'
+-- e' l'URL canonico stabile su .com. Il dominio italiano (.it) usa uno slug
+-- diverso e cambia anche il TLD: meglio non mescolare i due nel catalogo.
 UPDATE public.experiences SET
-  title = 'Roma: lezione di preparazione della pasta a Trastevere con tour gastronomico',
-  external_url = 'https://www.getyourguide.com/roma-l33/roma-tour-gastronomico-dello-street-food-a-trastevere-t261067/',
+  title = 'Roma: lezione di pasta a Trastevere con tour street food',
+  external_url = 'https://www.getyourguide.com/rome-l33/rome-trastevere-street-food-tour-t261067/',
   image_url = 'https://cdn.getyourguide.com/image/format=auto,fit=crop,gravity=auto,quality=60,height=565,dpr=2/tour_img/638f4522d732b.jpeg',
   price_min_cents = 8300,
   price_max_cents = NULL,
-  affiliate_url_template = 'https://www.getyourguide.com/roma-l33/roma-tour-gastronomico-dello-street-food-a-trastevere-t261067/?partner_id=17&cmp={gift_id}',
+  affiliate_url_template = 'https://www.getyourguide.com/rome-l33/rome-trastevere-street-food-tour-t261067/?partner_id=17&cmp={gift_id}',
   active = true
  WHERE external_id = 'gyg-rome-pasta-class';
 
