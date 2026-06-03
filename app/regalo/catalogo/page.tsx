@@ -106,13 +106,18 @@ export default async function CatalogoPage({ searchParams }: Props) {
   // 2026-05-22: i regali fisici (is_physical_gift=true) hanno una pagina
   // dedicata /regalo/fisici. Qui filtriamo per escluderli (catalogo
   // esperienze digitali). Pattern .neq gestisce anche NULL legacy.
+  //
+  // 2026-06-03: limite aumentato da 60 a 200 dopo l'import di 76 nuove
+  // esperienze (import_catalog_2026-06-03.sql). Catalogo totale ~170
+  // esperienze digitali a giugno 2026. Quando supereremo le 300
+  // introdurremo paginazione vera (page + page_size in URL params).
   const admin = createSupabaseAdmin();
   let q = admin
     .from("experiences")
     .select("*, partner:experience_partners(slug, display_name)")
     .eq("active", true)
     .neq("is_physical_gift", true)
-    .limit(60);
+    .limit(200);
 
   // Applica filtro tipo (categoria OR tag) lato SQL quando possibile
   if (tipoFilter.categories?.length) {
