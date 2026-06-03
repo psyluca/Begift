@@ -104,43 +104,31 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly",
       priority: 0.5,
     },
-    // ── Catalogo esperienze + landing SEO dinamiche ─────────
+    // ── Hub /regalo + catalogo esperienze ─────────
+    // /regalo è l'hub unificato lanciato 2026-05-21 (sostituisce /start).
     {
-      url: `${baseUrl}/discover`,
+      url: `${baseUrl}/regalo`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.95,
+    },
+    {
+      url: `${baseUrl}/regalo/catalogo`,
       lastModified: now,
       changeFrequency: "daily",
       priority: 0.9,
     },
     {
-      url: `${baseUrl}/start`,
+      url: `${baseUrl}/regalo/fisici`,
       lastModified: now,
       changeFrequency: "weekly",
       priority: 0.85,
     },
-    // /regali-a/[city] - le città principali del catalogo
-    ...["roma", "milano", "firenze", "venezia", "napoli", "lucca"].map(
-      (city) => ({
-        url: `${baseUrl}/regali-a/${city}`,
-        lastModified: now,
-        changeFrequency: "weekly" as const,
-        priority: 0.8,
-      })
-    ),
-    // /regali-per/[occasion] - occasioni mappate a tag catalogo
-    ...[
-      "coppia",
-      "anniversario",
-      "festa-mamma",
-      "festa-papa",
-      "foodie",
-      "compleanno",
-      "amici",
-    ].map((occ) => ({
-      url: `${baseUrl}/regali-per/${occ}`,
-      lastModified: now,
-      changeFrequency: "weekly" as const,
-      priority: 0.8,
-    })),
+    // NOTA 2026-06-03: rimosse dal sitemap le route /regali-a/[city],
+    // /regali-per/[occasion] e /start. Ora redirezionano 301 a URL canoniche
+    // (vedi next.config.mjs). Google le riconoscerà come deprecate e
+    // smetterà di tenerle in indice. /discover rimosso perché sostituito
+    // da /regalo/catalogo.
     {
       url: `${baseUrl}/security`,
       lastModified: now,
