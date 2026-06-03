@@ -103,11 +103,15 @@ export default async function CatalogoPage({ searchParams }: Props) {
     BUDGETS.find((b) => b.slug === budgetSlug) || BUDGETS[0];
 
   // ── Query catalogo ────────────────────────────────────────────
+  // 2026-05-22: i regali fisici (is_physical_gift=true) hanno una pagina
+  // dedicata /regalo/fisici. Qui filtriamo per escluderli (catalogo
+  // esperienze digitali). Pattern .neq gestisce anche NULL legacy.
   const admin = createSupabaseAdmin();
   let q = admin
     .from("experiences")
     .select("*, partner:experience_partners(slug, display_name)")
     .eq("active", true)
+    .neq("is_physical_gift", true)
     .limit(60);
 
   // Applica filtro tipo (categoria OR tag) lato SQL quando possibile
