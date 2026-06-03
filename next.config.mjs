@@ -95,6 +95,48 @@ const nextConfig = {
       },
     ];
   },
+  /**
+   * Redirect 301 per consolidare URL canoniche e ripulire pagine SEO
+   * programmatiche (thin content) ora sostituite da occasion-page long-form.
+   *
+   * Background (2026-06-03):
+   * Google Search Console mostrava 25 pagine "Rilevate ma non indicizzate"
+   * — segnale di low quality complessivo del dominio. Tra queste, le pagine
+   * /regali-per/[occasion] e /regali-a/[city] erano landing SEO con poco
+   * contenuto, ora rese ridondanti dalle 4 occasion-page long-form
+   * (/laurea, /matrimonio, /compleanno, /anniversario).
+   *
+   * Strategia: redirect 301 verso la URL canonica (preserva eventuali
+   * backlink residui, consolida link equity, segnala a Google che il
+   * vecchio URL è obsoleto e non va più indicizzato).
+   *
+   * Nota: il file dinamico app/regali-per/[occasion]/page.tsx e
+   * app/regali-a/[city]/page.tsx restano in repo come fallback ma non
+   * vengono mai raggiunti perché il redirect è valutato PRIMA del routing
+   * Next.js.
+   */
+  async redirects() {
+    return [
+      // /regali-per/[occasion] → occasion-page canonica
+      { source: "/regali-per/anniversario", destination: "/anniversario", permanent: true },
+      { source: "/regali-per/compleanno",   destination: "/compleanno",   permanent: true },
+      { source: "/regali-per/laurea",       destination: "/laurea",       permanent: true },
+      { source: "/regali-per/festa-mamma",  destination: "/festa-mamma",  permanent: true },
+      { source: "/regali-per/festa-papa",   destination: "/festa-papa",   permanent: true },
+      // varianti senza canonico diretto → hub /regalo
+      { source: "/regali-per/coppia",  destination: "/regalo", permanent: true },
+      { source: "/regali-per/amici",   destination: "/regalo", permanent: true },
+      { source: "/regali-per/foodie",  destination: "/regalo", permanent: true },
+      // catch-all per future varianti /regali-per/X
+      { source: "/regali-per/:slug",   destination: "/regalo", permanent: true },
+
+      // /regali-a/[city] → catalogo (no canonico per-città attualmente)
+      { source: "/regali-a/:city",     destination: "/regalo/catalogo", permanent: true },
+
+      // /start era vecchio intent picker, ora flusso unificato in /regalo
+      { source: "/start",              destination: "/regalo", permanent: true },
+    ];
+  },
 };
 
 export default withNextIntl(nextConfig);
