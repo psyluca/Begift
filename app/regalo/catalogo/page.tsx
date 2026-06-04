@@ -102,10 +102,15 @@ export default async function CatalogoPage({ searchParams }: Props) {
   const budgetFilter =
     BUDGETS.find((b) => b.slug === budgetSlug) || BUDGETS[0];
 
-  // ── Query catalogo ────────────────────────────────────────────
+// ── Query catalogo ────────────────────────────────────────────
   // 2026-05-22: i regali fisici (is_physical_gift=true) hanno una pagina
   // dedicata /regalo/fisici. Qui filtriamo per escluderli (catalogo
   // esperienze digitali). Pattern .neq gestisce anche NULL legacy.
+  //
+  // 2026-06-03: limite aumentato da 60 a 200 dopo l'import di 76 nuove
+  // esperienze (import_catalog_2026-06-03.sql). Catalogo totale ~170
+  // esperienze digitali a giugno 2026. Quando supereremo le 300
+  // introdurremo paginazione vera (page + page_size in URL params).
   //
   // 2026-06-04: filtro auto-hide eventi scaduti.
   // event_date IS NULL → esperienza evergreen (GYG tour, cooking, ecc.)
@@ -122,8 +127,7 @@ export default async function CatalogoPage({ searchParams }: Props) {
     .eq("active", true)
     .neq("is_physical_gift", true)
     .or(`event_date.is.null,event_date.gte.${todayIso}`)
-    .limit(60);
-
+    .limit(200);
   // Applica filtro tipo (categoria OR tag) lato SQL quando possibile
   if (tipoFilter.categories?.length) {
     q = q.in("category", tipoFilter.categories);
