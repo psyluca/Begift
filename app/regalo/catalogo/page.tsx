@@ -102,7 +102,7 @@ export default async function CatalogoPage({ searchParams }: Props) {
   const budgetFilter =
     BUDGETS.find((b) => b.slug === budgetSlug) || BUDGETS[0];
 
-  // ── Query catalogo ────────────────────────────────────────────
+// ── Query catalogo ────────────────────────────────────────────
   // 2026-05-22: i regali fisici (is_physical_gift=true) hanno una pagina
   // dedicata /regalo/fisici. Qui filtriamo per escluderli (catalogo
   // esperienze digitali). Pattern .neq gestisce anche NULL legacy.
@@ -111,14 +111,23 @@ export default async function CatalogoPage({ searchParams }: Props) {
   // esperienze (import_catalog_2026-06-03.sql). Catalogo totale ~170
   // esperienze digitali a giugno 2026. Quando supereremo le 300
   // introdurremo paginazione vera (page + page_size in URL params).
+  //
+  // 2026-06-04: filtro auto-hide eventi scaduti.
+  // event_date IS NULL → esperienza evergreen (GYG tour, cooking, ecc.)
+  //                       o VVT multi-data ("sedi varie"): sempre visibile.
+  // event_date >= CURRENT_DATE → evento con data fissa (concerto VVT)
+  //                       ancora futuro o in corso oggi: visibile.
+  // event_date < CURRENT_DATE → evento passato: NASCOSTO automaticamente.
+  // Vedi migration 030_event_date.sql + backfill_event_dates_2026-06-04.sql.
+  const todayIso = new Date().toISOString().slice(0, 10);
   const admin = createSupabaseAdmin();
   let q = admin
     .from("experiences")
     .select("*, partner:experience_partners(slug, display_name)")
     .eq("active", true)
     .neq("is_physical_gift", true)
+    .or(`event_date.is.null,event_date.gte.${todayIso}`)
     .limit(200);
-
   // Applica filtro tipo (categoria OR tag) lato SQL quando possibile
   if (tipoFilter.categories?.length) {
     q = q.in("category", tipoFilter.categories);
