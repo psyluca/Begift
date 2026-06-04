@@ -22,9 +22,12 @@ const withNextIntl = createNextIntlPlugin();
  */
 const CSP = [
   "default-src 'self'",
-  // Plausible Analytics: script servito da plausible.io.
-  // Le chiamate di ingestione eventi vanno in connect-src (vedi sotto).
-  "script-src 'self' 'unsafe-inline' https://plausible.io",
+  // Plausible Analytics: script servito da plausible.io. Da rimuovere
+  // dopo il cutover a PostHog (target 12-15 giugno 2026).
+  // PostHog Cloud EU: script /static/array.js + ingestione eventi
+  // serviti da eu.i.posthog.com (Frankfurt). Aggiunto 2026-06-04
+  // durante la migrazione dual-write Plausible→PostHog.
+  "script-src 'self' 'unsafe-inline' https://plausible.io https://eu.i.posthog.com https://eu-assets.i.posthog.com",
   // fonts.googleapis.com serve per i fogli di stile di Google Fonts
   // (es. font Caveat caricato in alcune pagine). Senza, il CSP blocca
   // il <link rel="stylesheet"> verso fonts.googleapis.com.
@@ -39,8 +42,11 @@ const CSP = [
   // fonts.gstatic.com e' il CDN da cui Google Fonts serve i file .woff2.
   // Va in coppia con fonts.googleapis.com in style-src.
   "font-src 'self' data: https://fonts.gstatic.com",
-  // connect-src include plausible.io per il POST /api/event degli eventi custom.
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://plausible.io",
+  // connect-src include plausible.io per il POST /api/event degli eventi
+  // custom (Plausible legacy, fino al 22 giu 2026). Aggiunto anche
+  // eu.i.posthog.com (PostHog Cloud EU) per il POST /e/ degli eventi
+  // PostHog durante il dual-write 2026-06-04.
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://plausible.io https://eu.i.posthog.com",
   // frame-src: domini consentiti per <iframe> embed dentro i regali.
   // Senza questa direttiva, fallback a default-src 'self' bloccava
   // gli embed YouTube/Spotify/Vimeo (bug riportato 2026-04-25).

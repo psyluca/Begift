@@ -99,10 +99,17 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  // Plausible v2 loader: ogni sito ha uno script ID univoco
-  // (es. "pa-C41qcDQ_sOn1XdnmFbmrd"). Non serve piu' data-domain.
-  // Lo script ID e' fornito da Plausible nella dashboard del sito.
+  // Plausible v2 loader (legacy, fino al 22 giugno 2026): script ID
+  // fornito da Plausible nella dashboard del sito.
   const plausibleScriptId = process.env.NEXT_PUBLIC_PLAUSIBLE_SCRIPT_ID;
+
+  // PostHog Cloud EU loader (target dal 2026-06-04). Key fornita da
+  // PostHog (settings → Project API key). Host EU per GDPR.
+  // Per i prossimi 5-7 giorni entrambi i tracker sono attivi
+  // (dual-write) per validare i numeri prima di disattivare Plausible.
+  const posthogKey = process.env.NEXT_PUBLIC_POSTHOG_KEY;
+  const posthogHost = process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://eu.i.posthog.com";
+
   return (
     <html lang="it">
       <head>
@@ -118,11 +125,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(baseGraph) }}
         />
-        {/* Plausible Analytics v2 - caricato solo se env var e' settata.
-            Cookie-less, GDPR-compliant. Lo stub plausible() inline
-            crea una queue per gli eventi custom chiamati prima che lo
-            script async sia caricato — quando arriva, flush della queue
-            + pageview iniziale. */}
+        {/* Plausible Analytics v2 — caricato solo se env var e' settata.
+            Cookie-less, GDPR-compliant. Da rimuovere dopo il cutover a
+            PostHog (target: 12-15 giugno 2026). */}
         {plausibleScriptId && (
           <>
             <script
@@ -136,6 +141,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               }}
             />
           </>
+        )}
+        {/* PostHog Cloud EU — analytics di destinazione. Free tier 1M
+            events/mese, host Frankfurt (GDPR). Person profiles disabilitati
+            di default → niente cookie-banner aggiuntivo richiesto. */}
+        {posthogKey && (
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `!function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys getNextSurveyStep onSessionId".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);posthog.init("${posthogKey}",{api_host:"${posthogHost}",person_profiles:"identified_only",capture_pageview:true,capture_pageleave:true,autocapture:false});`,
+            }}
+          />
         )}
       </head>
       <body style={{ margin: 0, padding: 0, paddingBottom: 64 }}>
