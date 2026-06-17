@@ -1,11 +1,11 @@
 "use client";
 import { useI18n } from "@/lib/i18n";
-import { useState, Suspense, useRef } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 import { useSearchParams } from "next/navigation";
 import { useFeatureFlag } from "@/lib/featureFlags";
 import { createSupabaseOAuthClient } from "@/lib/supabase/client";
 import { Capacitor } from "@capacitor/core";
+import { useState, Suspense, useRef, useEffect } from "react";
 // Browser è caricato dinamicamente dentro signInWithGoogle (solo native)
 
 const ACCENT = "#D4537E", DEEP = "#1a1a1a", MUTED = "#888", LIGHT = "#f7f5f2";
@@ -20,6 +20,7 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState<string | null>(null);
   const [socialLoading, setSocialLoading] = useState<"google" | "apple" | null>(null);
+const [isNative, setIsNative] = useState(false);
   const refs = useRef<(HTMLInputElement|null)[]>([]);
   const params = useSearchParams();
   const socialLoginEnabled = useFeatureFlag("ENABLE_SOCIAL_LOGIN");
@@ -37,6 +38,12 @@ function LoginForm() {
     }
   );
 
+// Hydration-safe: Capacitor.isNativePlatform() ritorna valori diversi
+  // su SSR (false) vs CSR dentro WebView native (true). Usiamo useState
+  // per evitare hydration mismatch warning di Next.js.
+  useEffect(() => {
+    setIsNative(Capacitor.isNativePlatform());
+  }, []);
   const sendOtp = async () => {
     if (!email.trim()) return;
     setLoading(true); setError(null);
@@ -95,51 +102,34 @@ function LoginForm() {
       setError(err.message);
     }
   };
+
   const signInWithApple = async () => {
     setSocialLoading("apple");
     setError(null);
     const next = params.get("next") ?? "/dashboard";
 
     if (Capacitor.isNativePlatform()) {
-      // Native iOS: usa il plugin community per il native Apple Sign In sheet.
-      // L'identityToken ricevuto viene poi scambiato con Supabase via signInWithIdToken.
-      const { SignInWithApple } = await import("@capacitor-community/apple-sign-in");
-      try {
-        const result = await SignInWithApple.authorize({
-          clientId: "app.begift.mobile",
-          redirectURI: "app.begift.mobile://oauth-callback",
-          scopes: "email name",
-          state: crypto.randomUUID(),
-          nonce: crypto.randomUUID(),
-        });
-
-        const identityToken = result?.response?.identityToken;
-        if (!identityToken) {
-          setSocialLoading(null);
-          setError("Nessun token ricevuto da Apple Sign In");
-          return;
-        }
-
-        const supabaseClient = createSupabaseOAuthClient();
-        const { error: err } = await supabaseClient.auth.signInWithIdToken({
-          provider: "apple",
-          token: identityToken,
-        });
-        if (err) {
-          setSocialLoading(null);
-          setError(err.message);
-          return;
-        }
-        // Sessione stabilita, vai al next
-        window.location.href = next;
-      } catch (e: unknown) {
+      // Native: usa Browser plugin (SFSafariViewController) per Apple OAuth.
+      // Soluzione adottata perché @capacitor-community/apple-sign-in non
+      // supporta ancora Capacitor 8.x. Quando il plugin sarà aggiornato
+      // possiamo tornare al native Apple Sign In sheet. Apple Guideline 4.8
+      // è comunque soddisfatta perché è ancora "Sign in with Apple" via OAuth.
+      const oauth = createSupabaseOAuthClient();
+      const { data, error: err } = await oauth.auth.signInWithOAuth({
+        provider: "apple",
+        options: {
+          redirectTo: `app.begift.mobile://oauth-callback?next=${encodeURIComponent(next)}`,
+          skipBrowserRedirect: true,
+        },
+      });
+      if (err) {
         setSocialLoading(null);
-        const msg = e instanceof Error ? e.message : String(e);
-        if (msg.includes("canceled") || msg.includes("cancelled")) {
-          // Utente ha cancellato il dialog, no error popup
-          return;
-        }
-        setError(msg);
+        setError(err.message);
+        return;
+      }
+      if (data?.url) {
+        const { Browser } = await import("@capacitor/browser");
+        await Browser.open({ url: data.url, presentationStyle: "popover" });
       }
       return;
     }
