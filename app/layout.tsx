@@ -12,6 +12,7 @@ import Footer from "@/components/Footer";
 import { UsernameOnboarding } from "@/components/UsernameOnboarding";
 import { PushAutoHeal } from "@/components/PushAutoHeal";
 import SupportConcierge from "@/components/SupportConcierge";
+import { CapacitorAuthListener } from "@/components/CapacitorAuthListener";
 import { ToastProvider } from "@/components/ToastProvider";
 import { baseGraph } from "@/lib/structured-data";
 
@@ -160,6 +161,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 feature flag NEXT_PUBLIC_FEATURE_SUPPORT_CONCIERGE: se
                 false ritorna null senza render del bottone. */}
             <SupportConcierge/>
+            <CapacitorAuthListener/>
           </ToastProvider>
         </I18nProvider>
       </body>

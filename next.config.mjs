@@ -24,7 +24,7 @@ const CSP = [
   "default-src 'self'",
   // Plausible Analytics: script servito da plausible.io.
   // Le chiamate di ingestione eventi vanno in connect-src (vedi sotto).
-  "script-src 'self' 'unsafe-inline' https://plausible.io",
+`script-src 'self' 'unsafe-inline' ${process.env.NODE_ENV === 'development' ? "'unsafe-eval' " : ''}https://plausible.io`,
   // fonts.googleapis.com serve per i fogli di stile di Google Fonts
   // (es. font Caveat caricato in alcune pagine). Senza, il CSP blocca
   // il <link rel="stylesheet"> verso fonts.googleapis.com.

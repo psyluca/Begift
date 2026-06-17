@@ -5,6 +5,8 @@ import { createBrowserClient } from "@supabase/ssr";
 import { useSearchParams } from "next/navigation";
 import { useFeatureFlag } from "@/lib/featureFlags";
 import { createSupabaseOAuthClient } from "@/lib/supabase/client";
+import { Capacitor } from "@capacitor/core";
+// Browser è caricato dinamicamente dentro signInWithGoogle (solo native)
 
 const ACCENT = "#D4537E", DEEP = "#1a1a1a", MUTED = "#888", LIGHT = "#f7f5f2";
 
@@ -17,7 +19,7 @@ function LoginForm() {
   const [otp,     setOtp]     = useState(["","","","","",""]);
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState<string | null>(null);
-  const [socialLoading, setSocialLoading] = useState<"google" | null>(null);
+  const [socialLoading, setSocialLoading] = useState<"google" | "apple" | null>(null);
   const refs = useRef<(HTMLInputElement|null)[]>([]);
   const params = useSearchParams();
   const socialLoginEnabled = useFeatureFlag("ENABLE_SOCIAL_LOGIN");
@@ -54,13 +56,33 @@ function LoginForm() {
     setSocialLoading("google");
     setError(null);
     const next = params.get("next") ?? "/dashboard";
-    // Uses the OAuth client with flowType=implicit (see
-    // lib/supabase/client.ts for the rationale). With implicit flow
-    // tokens come back in the URL hash, so we point `redirectTo`
-    // directly at our client-side /auth/finalize bridge — it lets
-    // supabase-js auto-parse the hash + establish the session in
-    // localStorage, then forwards to `next`. No server-side code
-    // exchange involved.
+
+    // Native (iOS/Android Capacitor): apri OAuth in SFSafariViewController
+    // via Browser plugin, callback torna via custom URL scheme.
+    // Web: flow classico con redirect implicito (invariato).
+    if (Capacitor.isNativePlatform()) {
+      const oauth = createSupabaseOAuthClient();
+      const { data, error: err } = await oauth.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `app.begift.mobile://oauth-callback?next=${encodeURIComponent(next)}`,
+          skipBrowserRedirect: true,
+        },
+      });
+      if (err) {
+        setSocialLoading(null);
+        setError(err.message);
+        return;
+      }
+      if (data?.url) {
+        const { Browser } = await import("@capacitor/browser");
+        await Browser.open({ url: data.url, presentationStyle: "popover" });
+      }
+      // Il callback viene gestito da CapacitorAuthListener (montato in layout)
+      return;
+    }
+
+    // Web: flow esistente identico (non rompe regressioni)
     const oauth = createSupabaseOAuthClient();
     const { error: err } = await oauth.auth.signInWithOAuth({
       provider: "google",
@@ -72,7 +94,68 @@ function LoginForm() {
       setSocialLoading(null);
       setError(err.message);
     }
-    // On success the browser redirects to Google; no need to clear state.
+  };
+  const signInWithApple = async () => {
+    setSocialLoading("apple");
+    setError(null);
+    const next = params.get("next") ?? "/dashboard";
+
+    if (Capacitor.isNativePlatform()) {
+      // Native iOS: usa il plugin community per il native Apple Sign In sheet.
+      // L'identityToken ricevuto viene poi scambiato con Supabase via signInWithIdToken.
+      const { SignInWithApple } = await import("@capacitor-community/apple-sign-in");
+      try {
+        const result = await SignInWithApple.authorize({
+          clientId: "app.begift.mobile",
+          redirectURI: "app.begift.mobile://oauth-callback",
+          scopes: "email name",
+          state: crypto.randomUUID(),
+          nonce: crypto.randomUUID(),
+        });
+
+        const identityToken = result?.response?.identityToken;
+        if (!identityToken) {
+          setSocialLoading(null);
+          setError("Nessun token ricevuto da Apple Sign In");
+          return;
+        }
+
+        const supabaseClient = createSupabaseOAuthClient();
+        const { error: err } = await supabaseClient.auth.signInWithIdToken({
+          provider: "apple",
+          token: identityToken,
+        });
+        if (err) {
+          setSocialLoading(null);
+          setError(err.message);
+          return;
+        }
+        // Sessione stabilita, vai al next
+        window.location.href = next;
+      } catch (e: unknown) {
+        setSocialLoading(null);
+        const msg = e instanceof Error ? e.message : String(e);
+        if (msg.includes("canceled") || msg.includes("cancelled")) {
+          // Utente ha cancellato il dialog, no error popup
+          return;
+        }
+        setError(msg);
+      }
+      return;
+    }
+
+    // Web: classico OAuth via Supabase
+    const oauth = createSupabaseOAuthClient();
+    const { error: err } = await oauth.auth.signInWithOAuth({
+      provider: "apple",
+      options: {
+        redirectTo: `${window.location.origin}/auth/finalize?next=${encodeURIComponent(next)}`,
+      },
+    });
+    if (err) {
+      setSocialLoading(null);
+      setError(err.message);
+    }
   };
 
   const handleOtpChange = (i: number, val: string) => {
@@ -194,6 +277,23 @@ function LoginForm() {
           below as the always-available fallback. */}
       {socialLoginEnabled && (
         <>
+{Capacitor.isNativePlatform() && (
+  <button
+    onClick={signInWithApple}
+    disabled={socialLoading !== null}
+    style={{
+      display:"flex", alignItems:"center", justifyContent:"center", gap:10,
+      width:"100%", background:"#000", color:"#fff",
+      border:"1.5px solid #000", borderRadius:40, padding:"13px 24px",
+      fontSize:15, fontWeight:600, cursor: socialLoading ? "wait" : "pointer",
+      marginBottom:12, fontFamily:"inherit",
+      transition:"background .15s",
+    }}
+  >
+    <AppleGlyph />
+    {socialLoading === "apple" ? t("auth.connecting") : "Continua con Apple"}
+  </button>
+)}
           <button
             onClick={signInWithGoogle}
             disabled={socialLoading !== null}
@@ -260,5 +360,18 @@ export default function LoginPage() {
         <LoginForm/>
       </Suspense>
     </main>
+  );
+}
+
+/**
+ * Apple logo glyph — bianco su nero. Disegno ufficiale Apple per
+ * Sign in with Apple buttons (vedi HIG:
+ * https://developer.apple.com/design/human-interface-guidelines/sign-in-with-apple).
+ */
+function AppleGlyph() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+      <path fill="#fff" d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+    </svg>
   );
 }
