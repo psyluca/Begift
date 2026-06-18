@@ -28,6 +28,7 @@
 import { useI18n } from "@/lib/i18n";
 import { useState } from "react";
 import { track } from "@/lib/analytics";
+import { Capacitor } from "@capacitor/core";
 
 const ACCENT = "#D4537E";
 
@@ -62,6 +63,29 @@ export function ShareButton({
     e.preventDefault();
     if (busy) return;
     setBusy(true);
+      // 1. Capacitor Share plugin (native iOS/Android share sheet con tutte le app installate).
+      if (Capacitor.isNativePlatform()) {
+        track("share_clicked", { method: "capacitor_native" });
+        try {
+          const { Share } = await import("@capacitor/share");
+          await Share.share({
+            title: t("share.share_title"),
+            text,
+            url: giftUrl,
+            dialogTitle: t("share.button_label"),
+          });
+          setBusy(false);
+          return;
+        } catch (err: unknown) {
+          const e = err as { message?: string };
+          if (e?.message?.toLowerCase().includes("cancel")) {
+            setBusy(false);
+            return;
+          }
+          // Altri errori: cadiamo nel Web Share / fallback wa.me
+        }
+      }
+
     const usedNative = typeof navigator !== "undefined" && typeof navigator.share === "function";
     track("share_clicked", { method: usedNative ? "web_share_api" : "wa_fallback" });
     try {

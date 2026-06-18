@@ -20,7 +20,7 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState<string | null>(null);
   const [socialLoading, setSocialLoading] = useState<"google" | "apple" | null>(null);
-const [isNative, setIsNative] = useState(false);
+  const [isNative, setIsNative] = useState(false);
   const refs = useRef<(HTMLInputElement|null)[]>([]);
   const params = useSearchParams();
   const socialLoginEnabled = useFeatureFlag("ENABLE_SOCIAL_LOGIN");
@@ -38,12 +38,13 @@ const [isNative, setIsNative] = useState(false);
     }
   );
 
-// Hydration-safe: Capacitor.isNativePlatform() ritorna valori diversi
+  // Hydration-safe: Capacitor.isNativePlatform() ritorna valori diversi
   // su SSR (false) vs CSR dentro WebView native (true). Usiamo useState
   // per evitare hydration mismatch warning di Next.js.
   useEffect(() => {
     setIsNative(Capacitor.isNativePlatform());
   }, []);
+
   const sendOtp = async () => {
     if (!email.trim()) return;
     setLoading(true); setError(null);
@@ -267,7 +268,7 @@ const [isNative, setIsNative] = useState(false);
           below as the always-available fallback. */}
       {socialLoginEnabled && (
         <>
-{Capacitor.isNativePlatform() && (
+{isNative && (
   <button
     onClick={signInWithApple}
     disabled={socialLoading !== null}

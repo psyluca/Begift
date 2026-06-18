@@ -13,6 +13,7 @@ import { UsernameOnboarding } from "@/components/UsernameOnboarding";
 import { PushAutoHeal } from "@/components/PushAutoHeal";
 import SupportConcierge from "@/components/SupportConcierge";
 import { CapacitorAuthListener } from "@/components/CapacitorAuthListener";
+import { CapacitorDeepLinkListener } from "@/components/CapacitorDeepLinkListener";
 import { ToastProvider } from "@/components/ToastProvider";
 import { baseGraph } from "@/lib/structured-data";
 
@@ -162,6 +163,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 false ritorna null senza render del bottone. */}
             <SupportConcierge/>
             <CapacitorAuthListener/>
+            <CapacitorDeepLinkListener/>
           </ToastProvider>
         </I18nProvider>
       </body>
