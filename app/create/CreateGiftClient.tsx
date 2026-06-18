@@ -11,6 +11,7 @@ import { SaveReminderPrompt } from "@/components/SaveReminderPrompt";
 import { MilestoneToast } from "@/components/MilestoneToast";
 import { SeasonalBanner } from "@/components/SeasonalBanner";
 import { track } from "@/lib/analytics";
+import { Capacitor } from "@capacitor/core";
 
 const ACCENT = "#D4537E", DEEP = "#1a1a1a", MUTED = "#888", LIGHT = "#f7f5f2";
 
@@ -362,6 +363,8 @@ const CREATE_STEP_LABELS = [
 export default function CreateGiftClient({ userId }: { userId: string }) {
   const { t, locale } = useI18n();
   const [step,    setStep]    = useState(1);
+  const [isNative, setIsNative] = useState(false);
+  useEffect(() => { setIsNative(Capacitor.isNativePlatform()); }, []);
   const [occasion, setOccasion] = useState<string | null>(null);
   const [name,    setName]    = useState("");
   const [senderAlias, setSenderAlias] = useState("");
@@ -490,6 +493,30 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
    *  bottone resterebbe disabilitato e l'utente non potrebbe creare il
    *  regalo. Le extras sono best-effort: se l'utente preme "Crea link"
    *  prima che finiscano, partono solo quelle gia' presenti. */
+  // Native-only photo picker via Capacitor Camera plugin (presenta
+  // il prompt iOS "Photo Library | Take Picture | Cancel").
+  const pickPhotoFromCamera = async () => {
+    try {
+      const { Camera, CameraResultType, CameraSource } = await import("@capacitor/camera");
+      const photo = await Camera.getPhoto({
+        quality: 80,
+        resultType: CameraResultType.Uri,
+        source: CameraSource.Prompt,
+      });
+      if (photo.webPath) {
+        const response = await fetch(photo.webPath);
+        const blob = await response.blob();
+        const file = new File([blob], `photo-${Date.now()}.jpg`, { type: blob.type || "image/jpeg" });
+        const synthetic = { target: { files: [file] } } as unknown as React.ChangeEvent<HTMLInputElement>;
+        await onPhotos(synthetic);
+      }
+    } catch (err: unknown) {
+      const e = err as { message?: string };
+      if (e?.message?.toLowerCase().includes("cancel")) return;
+      console.error("[CreateGiftClient] Camera error:", err);
+    }
+  };
+
   const onPhotos = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
     if (files.length === 0) return;
@@ -941,7 +968,7 @@ export default function CreateGiftClient({ userId }: { userId: string }) {
           {!uploading&&<>
             {/* Prima riga 2: Foto + Video (upload file grandi) */}
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:11,marginBottom:11}}>
-              <label className="tile" style={TILE_STYLE}>
+              <label className="tile" style={TILE_STYLE} onClick={(e) => { if (isNative) { e.preventDefault(); pickPhotoFromCamera(); } }}>
                 <div style={PREVIEW_WRAP}><PhotoPreview/></div>
                 <div style={TILE_LABEL}>{t("create.photo")}</div>
                 <div style={TILE_HINT}>{t("create.hint_photo")}</div>
